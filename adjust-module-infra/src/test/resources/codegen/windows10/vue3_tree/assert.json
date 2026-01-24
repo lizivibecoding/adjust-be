@@ -1,0 +1,49 @@
+[ {
+  "contentPath" : "java/InfraCategoryListReqVO",
+  "filePath" : "adjust-module-infra/adjust-module-infra-biz/src/main/java/com.hongguoyan/module/infra/controller/admin/demo/vo/InfraCategoryListReqVO.java"
+}, {
+  "contentPath" : "java/InfraCategoryRespVO",
+  "filePath" : "adjust-module-infra/adjust-module-infra-biz/src/main/java/com.hongguoyan/module/infra/controller/admin/demo/vo/InfraCategoryRespVO.java"
+}, {
+  "contentPath" : "java/InfraCategorySaveReqVO",
+  "filePath" : "adjust-module-infra/adjust-module-infra-biz/src/main/java/com.hongguoyan/module/infra/controller/admin/demo/vo/InfraCategorySaveReqVO.java"
+}, {
+  "contentPath" : "java/InfraCategoryController",
+  "filePath" : "adjust-module-infra/adjust-module-infra-biz/src/main/java/com.hongguoyan/module/infra/controller/admin/demo/InfraCategoryController.java"
+}, {
+  "contentPath" : "java/InfraCategoryDO",
+  "filePath" : "adjust-module-infra/adjust-module-infra-biz/src/main/java/com.hongguoyan/module/infra/dal/dataobject/demo/InfraCategoryDO.java"
+}, {
+  "contentPath" : "java/InfraCategoryMapper",
+  "filePath" : "adjust-module-infra/adjust-module-infra-biz/src/main/java/com.hongguoyan/module/infra/dal/mysql/demo/InfraCategoryMapper.java"
+}, {
+  "contentPath" : "xml/InfraCategoryMapper",
+  "filePath" : "adjust-module-infra/adjust-module-infra-biz/src/main/resources/mapper/demo/InfraCategoryMapper.xml"
+}, {
+  "contentPath" : "java/InfraCategoryServiceImpl",
+  "filePath" : "adjust-module-infra/adjust-module-infra-biz/src/main/java/com.hongguoyan/module/infra/service/demo/InfraCategoryServiceImpl.java"
+}, {
+  "contentPath" : "java/InfraCategoryService",
+  "filePath" : "adjust-module-infra/adjust-module-infra-biz/src/main/java/com.hongguoyan/module/infra/service/demo/InfraCategoryService.java"
+}, {
+  "contentPath" : "java/InfraCategoryServiceImplTest",
+  "filePath" : "adjust-module-infra/adjust-module-infra-biz/src/test/java/com.hongguoyan/module/infra/service/demo/InfraCategoryServiceImplTest.java"
+}, {
+  "contentPath" : "java/ErrorCodeConstants_手动操作",
+  "filePath" : "adjust-module-infra/adjust-module-infra-api/src/main/java/com.hongguoyan/module/infra/enums/ErrorCodeConstants_手动操作.java"
+}, {
+  "contentPath" : "sql/sql",
+  "filePath" : "sql/sql.sql"
+}, {
+  "contentPath" : "sql/h2",
+  "filePath" : "sql/h2.sql"
+}, {
+  "contentPath" : "vue/index",
+  "filePath" : "adjust-ui-admin-vue3/src/views/infra/demo/index.vue"
+}, {
+  "contentPath" : "vue/CategoryForm",
+  "filePath" : "adjust-ui-admin-vue3/src/views/infra/demo/CategoryForm.vue"
+}, {
+  "contentPath" : "ts/index",
+  "filePath" : "adjust-ui-admin-vue3/src/api/infra/demo/index.ts"
+} ]

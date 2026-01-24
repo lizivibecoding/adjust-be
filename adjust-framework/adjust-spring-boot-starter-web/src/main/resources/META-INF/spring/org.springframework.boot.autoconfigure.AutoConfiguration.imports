@@ -1,0 +1,7 @@
+com.hongguoyan.framework.apilog.config.AdjustApiLogAutoConfiguration
+com.hongguoyan.framework.jackson.config.AdjustJacksonAutoConfiguration
+com.hongguoyan.framework.swagger.config.AdjustSwaggerAutoConfiguration
+com.hongguoyan.framework.web.config.AdjustWebAutoConfiguration
+com.hongguoyan.framework.xss.config.AdjustXssAutoConfiguration
+com.hongguoyan.framework.banner.config.AdjustBannerAutoConfiguration
+com.hongguoyan.framework.encrypt.config.AdjustApiEncryptAutoConfiguration

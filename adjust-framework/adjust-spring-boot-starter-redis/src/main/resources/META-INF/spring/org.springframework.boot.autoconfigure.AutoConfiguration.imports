@@ -1,0 +1,2 @@
+com.hongguoyan.framework.redis.config.AdjustRedisAutoConfiguration
+com.hongguoyan.framework.redis.config.AdjustCacheAutoConfiguration

@@ -1,0 +1,4 @@
+com.hongguoyan.framework.idempotent.config.AdjustIdempotentConfiguration
+com.hongguoyan.framework.lock4j.config.AdjustLock4jConfiguration
+com.hongguoyan.framework.ratelimiter.config.AdjustRateLimiterConfiguration
+com.hongguoyan.framework.signature.config.AdjustApiSignatureAutoConfiguration

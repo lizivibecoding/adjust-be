@@ -1,0 +1,2 @@
+com.hongguoyan.framework.tracer.config.AdjustTracerAutoConfiguration
+com.hongguoyan.framework.tracer.config.AdjustMetricsAutoConfiguration

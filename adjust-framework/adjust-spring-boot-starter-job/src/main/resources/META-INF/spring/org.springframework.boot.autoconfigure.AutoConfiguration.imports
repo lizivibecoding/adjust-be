@@ -1,0 +1,2 @@
+com.hongguoyan.framework.quartz.config.AdjustQuartzAutoConfiguration
+com.hongguoyan.framework.quartz.config.AdjustAsyncAutoConfiguration

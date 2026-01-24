@@ -1,0 +1,1 @@
+package com.hongguoyan.module.crm.framework.permission.core;

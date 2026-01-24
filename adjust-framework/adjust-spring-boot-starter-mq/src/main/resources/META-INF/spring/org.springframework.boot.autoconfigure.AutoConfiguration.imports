@@ -1,0 +1,3 @@
+com.hongguoyan.framework.mq.redis.config.AdjustRedisMQProducerAutoConfiguration
+com.hongguoyan.framework.mq.redis.config.AdjustRedisMQConsumerAutoConfiguration
+com.hongguoyan.framework.mq.rabbitmq.config.AdjustRabbitMQAutoConfiguration

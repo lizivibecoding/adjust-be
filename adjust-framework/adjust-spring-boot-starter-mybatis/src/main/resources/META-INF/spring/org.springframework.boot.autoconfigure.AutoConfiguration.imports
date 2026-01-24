@@ -1,0 +1,3 @@
+com.hongguoyan.framework.datasource.config.AdjustDataSourceAutoConfiguration
+com.hongguoyan.framework.mybatis.config.AdjustMybatisAutoConfiguration
+com.hongguoyan.framework.translate.config.AdjustTranslateAutoConfiguration

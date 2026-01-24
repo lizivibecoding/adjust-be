@@ -1,0 +1,3 @@
+com.hongguoyan.framework.security.config.AdjustSecurityAutoConfiguration
+com.hongguoyan.framework.security.config.AdjustWebSecurityConfigurerAdapter
+com.hongguoyan.framework.operatelog.config.AdjustOperateLogConfiguration
