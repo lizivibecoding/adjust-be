@@ -15,16 +15,10 @@
         <!-- 各种 module 拓展 -->
         <module>adjust-module-system</module>
         <module>adjust-module-infra</module>
-<!--        <module>adjust-module-member</module>-->
-<!--        <module>adjust-module-bpm</module>-->
-<!--        <module>adjust-module-report</module>-->
-<!--        <module>adjust-module-mp</module>-->
-<!--        <module>adjust-module-pay</module>-->
-<!--        <module>adjust-module-mall</module>-->
-<!--        <module>adjust-module-crm</module>-->
-<!--        <module>adjust-module-erp</module>-->
-<!--        <module>adjust-module-ai</module>-->
-<!--        <module>adjust-module-iot</module>-->
+        <module>adjust-module-member</module>
+        <module>adjust-module-mp</module>
+        <module>adjust-module-pay</module>
+        <module>adjust-module-ai</module>
     </modules>
 
     <name>${project.artifactId}</name>

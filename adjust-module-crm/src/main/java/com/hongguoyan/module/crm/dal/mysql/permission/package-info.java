@@ -1,1 +1,0 @@
-package com.hongguoyan.module.crm.dal.mysql.permission;
