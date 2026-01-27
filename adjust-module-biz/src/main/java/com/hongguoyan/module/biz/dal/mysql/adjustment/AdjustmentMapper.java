@@ -62,7 +62,7 @@ public interface AdjustmentMapper extends BaseMapperX<AdjustmentDO> {
                 .eqIfPresent(AdjustmentDO::getReviewStatus, reqVO.getReviewStatus())
                 .eqIfPresent(AdjustmentDO::getReviewer, reqVO.getReviewer())
                 .betweenIfPresent(AdjustmentDO::getCreateTime, reqVO.getCreateTime())
-                .eqIfPresent(AdjustmentDO::getClicks, reqVO.getClicks())
+                .eqIfPresent(AdjustmentDO::getViewCount, reqVO.getViewCount())
                 .orderByDesc(AdjustmentDO::getId));
     }
 

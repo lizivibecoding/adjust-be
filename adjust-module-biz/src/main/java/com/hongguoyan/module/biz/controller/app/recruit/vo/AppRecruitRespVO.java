@@ -152,8 +152,8 @@ public class AppRecruitRespVO {
     @ExcelProperty("创建时间")
     private LocalDateTime createTime;
 
-    @Schema(description = "点击次数", requiredMode = Schema.RequiredMode.REQUIRED)
-    @ExcelProperty("点击次数")
-    private Long clicks;
+    @Schema(description = "浏览次数", requiredMode = Schema.RequiredMode.REQUIRED)
+    @ExcelProperty("浏览次数")
+    private Long viewCount;
 
 }

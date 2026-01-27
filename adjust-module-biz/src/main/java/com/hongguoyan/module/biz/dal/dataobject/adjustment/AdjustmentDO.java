@@ -197,9 +197,13 @@ public class AdjustmentDO extends BaseDO {
      */
     private Long reviewer;
     /**
-     * 点击次数
+     * 发布时间
      */
-    private Integer clicks;
+    private LocalDateTime publishTime;
+    /**
+     * 浏览次数
+     */
+    private Integer viewCount;
 
 
 }

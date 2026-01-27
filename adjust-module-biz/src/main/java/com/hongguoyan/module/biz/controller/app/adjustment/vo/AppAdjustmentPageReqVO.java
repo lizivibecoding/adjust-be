@@ -144,7 +144,7 @@ public class AppAdjustmentPageReqVO extends PageParam {
     @DateTimeFormat(pattern = FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND)
     private LocalDateTime[] createTime;
 
-    @Schema(description = "点击次数")
-    private Integer clicks;
+    @Schema(description = "浏览次数")
+    private Integer viewCount;
 
 }

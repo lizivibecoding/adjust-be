@@ -119,8 +119,8 @@ public class AppRecruitSaveReqVO {
     @Schema(description = "备注", example = "随便")
     private String remark;
 
-    @Schema(description = "点击次数", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotNull(message = "点击次数不能为空")
-    private Long clicks;
+    @Schema(description = "浏览次数", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull(message = "浏览次数不能为空")
+    private Long viewCount;
 
 }

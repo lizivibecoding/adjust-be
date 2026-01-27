@@ -160,9 +160,13 @@ public class RecruitDO extends BaseDO {
      */
     private String remark;
     /**
-     * 点击次数
+     * 发布时间
      */
-    private Long clicks;
+    private LocalDateTime publishTime;
+    /**
+     * 浏览次数
+     */
+    private Long viewCount;
 
 
 }

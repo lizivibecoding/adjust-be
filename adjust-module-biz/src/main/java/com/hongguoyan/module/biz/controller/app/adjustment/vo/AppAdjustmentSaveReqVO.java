@@ -147,8 +147,8 @@ public class AppAdjustmentSaveReqVO {
     @Schema(description = "审核人ID")
     private Long reviewer;
 
-    @Schema(description = "点击次数", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotNull(message = "点击次数不能为空")
-    private Integer clicks;
+    @Schema(description = "浏览次数", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull(message = "浏览次数不能为空")
+    private Integer viewCount;
 
 }
