@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>导师调剂详情</title>
+  <link rel="stylesheet" href="../assets/base.css" />
+  <style>
+    .page-title { text-align: center; font-size: 18px; font-weight: 600; margin: 6px 0 8px; }
+    .detail-title { font-size: 18px; font-weight: 700; line-height: 1.4; margin: 8px 0; }
+    .meta-row { display: flex; justify-content: space-between; align-items: center; color: #9aa3b2; font-size: 12px; margin-bottom: 12px; }
+    .meta-right { display: inline-flex; align-items: center; gap: 6px; }
+    .meta-eye { width: 14px; height: 10px; border: 2px solid #c9d3e6; border-radius: 999px; position: relative; }
+    .meta-eye::after { content: ""; width: 4px; height: 4px; background: #c9d3e6; border-radius: 50%; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+    .card-block { padding: 14px 16px; margin-bottom: 12px; }
+    .block-title { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; margin-bottom: 10px; }
+    .block-bar { width: 4px; height: 14px; border-radius: 999px; background: #2f6bff; }
+    .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f3f8; font-size: 13px; color: #3a4352; }
+    .info-row:last-child { border-bottom: none; }
+    .label { color: #8a94a6; min-width: 72px; }
+    .desc-box { background: #f4f6fb; border-radius: 12px; padding: 12px; font-size: 12px; color: #3a4352; line-height: 1.6; }
+    .action-bar { display: flex; gap: 12px; margin-top: 14px; }
+    .action-btn { flex: 1; border: none; border-radius: 999px; padding: 12px 0; font-size: 14px; cursor: pointer; text-align: center; }
+    .btn-share { background: #ffb154; color: #ffffff; }
+    .btn-delete { background: #ff6b6b; color: #ffffff; }
+    .btn-edit { background: #2f6bff; color: #ffffff; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="container">
+      <div class="page-title">考研调剂</div>
+      <div class="detail-title">江苏大学招有调剂</div>
+      <div class="meta-row">
+        <div>发布时间：2026-01-16 18:57</div>
+        <div class="meta-right">
+          <span class="meta-eye"></span>
+          <span>查看人数：0</span>
+        </div>
+      </div>
+
+      <div class="card card-block">
+        <div class="block-title"><span class="block-bar"></span>调剂基本详情</div>
+        <div class="info-row"><span class="label">调剂年份：</span><span>2026年</span></div>
+        <div class="info-row"><span class="label">学校名称：</span><span>中北大学</span></div>
+        <div class="info-row"><span class="label">学院名称：</span><span>材料科学与工程学院</span></div>
+        <div class="info-row"><span class="label">调剂专业：</span><span>（085601）材料工程-全日制</span></div>
+        <div class="info-row"><span class="label">调剂名额：</span><span>暂不确定</span></div>
+        <div class="info-row"><span class="label">联系方式：</span><span>981453801@qq.com</span></div>
+      </div>
+
+      <div class="card card-block">
+        <div class="block-title"><span class="block-bar"></span>调剂招生要求</div>
+        <div class="desc-box">国家线达标</div>
+      </div>
+
+      <div class="action-bar">
+        <button class="action-btn btn-share">分享调剂</button>
+        <button class="action-btn btn-delete">关闭调剂</button>
+        <a class="action-btn btn-edit" href="publish-edit.html">编辑调剂</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

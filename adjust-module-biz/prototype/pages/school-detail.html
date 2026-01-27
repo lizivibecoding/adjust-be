@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>院校详情</title>
+  <link rel="stylesheet" href="../assets/base.css" />
+  <style>
+    .header-section { background: linear-gradient(135deg, rgba(47, 107, 255, 0.15), rgba(47, 107, 255, 0.05)); border-radius: 16px; padding: 20px 16px; margin-bottom: 12px; }
+    .school-header { display: flex; align-items: flex-start; gap: 12px; }
+    .school-logo { width: 64px; height: 64px; border-radius: 50%; background: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--primary); flex-shrink: 0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+    .school-info { flex: 1; }
+    .school-name { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .school-meta { font-size: 13px; color: var(--muted); }
+    .nav-tabs { display: flex; background: #ffffff; border-radius: 16px; padding: 4px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); }
+    .nav-tab { flex: 1; text-align: center; padding: 10px 0; font-size: 13px; color: #6b7382; cursor: pointer; border-radius: 12px; transition: all 0.2s; }
+    .nav-tab.active { background: rgba(47, 107, 255, 0.12); color: var(--primary); font-weight: 600; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .intro-section { padding: 16px; margin-bottom: 12px; }
+    .intro-title { font-size: 14px; font-weight: 600; margin-bottom: 10px; }
+    .intro-text { font-size: 13px; color: #3a4352; line-height: 1.6; margin-bottom: 8px; }
+    .intro-more { color: var(--primary); font-size: 12px; cursor: pointer; }
+    .intro-images { display: flex; gap: 8px; margin-top: 12px; }
+    .intro-img { width: 80px; height: 60px; border-radius: 8px; background: #f0f3f8; flex-shrink: 0; }
+    .contact-section { padding: 16px; margin-bottom: 12px; }
+    .contact-item { padding: 10px 0; border-bottom: 1px solid #f0f3f8; font-size: 13px; }
+    .contact-item:last-child { border-bottom: none; }
+    .contact-label { color: var(--muted); margin-bottom: 4px; display: block; }
+    .contact-value { color: #3a4352; }
+    .contact-actions { display: flex; gap: 10px; margin-top: 12px; }
+    .contact-btn { flex: 1; padding: 10px; border-radius: 12px; background: #f4f6fb; text-align: center; font-size: 13px; color: #3a4352; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .contact-btn::before { content: "📞"; font-size: 16px; }
+    .contact-btn.website::before { content: "🔗"; }
+    .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 16px; margin-bottom: 12px; }
+    .info-item { background: #f4f6fb; border-radius: 12px; padding: 12px; }
+    .info-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    .info-value { font-size: 14px; font-weight: 600; color: #3a4352; }
+    .discipline-section { padding: 16px; margin-bottom: 12px; }
+    .discipline-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .discipline-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f3f8; }
+    .discipline-item:last-child { border-bottom: none; }
+    .discipline-name { font-size: 14px; font-weight: 600; color: #3a4352; }
+    .discipline-meta { display: flex; gap: 12px; font-size: 12px; color: var(--muted); }
+    .discipline-eval { color: var(--primary); font-weight: 600; }
+    .filter-bar { display: flex; gap: 10px; padding: 12px 16px; background: #ffffff; border-radius: 16px; margin-bottom: 12px; }
+    .filter-select { flex: 1; background: #f4f6fb; border-radius: 12px; padding: 10px 12px; font-size: 13px; color: #3a4352; border: none; }
+    .search-bar { flex: 2; background: #f4f6fb; border-radius: 12px; padding: 10px 12px; font-size: 13px; color: #3a4352; border: none; display: flex; align-items: center; gap: 8px; }
+    .search-bar::before { content: "🔍"; font-size: 16px; }
+    .major-list { display: grid; gap: 12px; }
+    .major-card { padding: 14px 16px; background: #ffffff; border-radius: 16px; }
+    .major-code { font-size: 16px; font-weight: 700; color: #3a4352; margin-bottom: 8px; }
+    .major-college { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+    .major-details { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #6b7382; }
+    .major-detail-item { display: flex; flex-direction: column; }
+    .major-detail-label { color: var(--muted); margin-bottom: 4px; }
+    .major-detail-value { color: #3a4352; font-weight: 600; }
+    .score-table { background: #ffffff; border-radius: 16px; overflow: hidden; overflow-x: auto; position: relative; }
+    .score-table::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 180px; pointer-events: none; box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08); z-index: 9; }
+    .table-header { display: grid; grid-template-columns: 2fr 1.5fr 1fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 1.2fr; gap: 8px; padding: 12px 16px; background: #f4f6fb; font-size: 12px; color: var(--muted); font-weight: 600; min-width: 800px; }
+    .table-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 1.2fr; gap: 8px; padding: 12px 16px; border-bottom: 1px solid #f0f3f8; font-size: 13px; color: #3a4352; min-width: 800px; }
+    .table-row:last-child { border-bottom: none; }
+    .table-cell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .table-cell:first-child { position: sticky; left: 0; z-index: 10; padding-right: 8px; }
+    .table-header .table-cell:first-child { background: #f4f6fb; z-index: 11; }
+    .table-row .table-cell:first-child { background: #ffffff; }
+    .score-note { background: #fff6df; color: #bf6a00; padding: 10px 14px; border-radius: 12px; font-size: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .score-note::before { content: "ℹ️"; font-size: 14px; }
+    .adjustment-list { display: grid; gap: 12px; }
+    .adjustment-card { padding: 14px 16px; background: #ffffff; border-radius: 16px; display: block; text-decoration: none; color: inherit; }
+    .adjustment-code { font-size: 16px; font-weight: 700; color: #3a4352; margin-bottom: 8px; }
+    .adjustment-college { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+    .adjustment-details { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #6b7382; }
+    .adjustment-detail-item { display: flex; flex-direction: column; }
+    .adjustment-detail-label { color: var(--muted); margin-bottom: 4px; }
+    .adjustment-detail-value { color: #3a4352; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="toast"></div>
+  <div class="page">
+    <div class="container">
+      <div class="header-section">
+        <div class="school-header">
+          <div class="school-logo">大</div>
+          <div class="school-info">
+            <div class="school-name">大连海洋大学</div>
+            <div class="school-meta">辽宁·A区 普通院校</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-tabs" data-tab-group>
+        <div class="nav-tab active" data-tab-item data-target="overview">概况</div>
+        <div class="nav-tab" data-tab-item data-target="adjustment">调剂</div>
+      </div>
+
+      <div class="tab-panel active" data-panel="overview">
+        <div class="card intro-section">
+          <div class="intro-title">简介</div>
+          <div class="intro-text">
+            大连海洋大学是我国北方地区唯一的以海洋和水产学科为特色的多科性高等院校，是辽宁省人民政府与国家海洋局共建高校、辽宁省"双一流"建设高校。学校创建于1952年，前身为东北水产技术学校，1958年升格为大连水产专科学校，1978年升格为大连水产学院，2010年更名为大连海洋大学。
+          </div>
+        </div>
+
+        <div class="card contact-section">
+          <div class="contact-item">
+            <span class="contact-label">学校邮箱</span>
+            <span class="contact-value">liuxian900@dlfu.edu.cn</span>
+          </div>
+          <div class="contact-item">
+            <span class="contact-label">院校地址</span>
+            <div class="contact-value">
+              <div>黄海校区：辽宁省大连市沙河口区黑石礁街52号</div>
+              <div style="margin-top: 4px;">渤海校区：辽宁省大连市甘井子区营平路288号</div>
+            </div>
+          </div>
+          <div class="contact-actions">
+            <div class="contact-btn">联系电话</div>
+            <div class="contact-btn website">学校官网</div>
+      </div>
+        </div>
+      </div>
+
+      <div class="tab-panel" data-panel="adjustment">
+        <div class="adjustment-list">
+          <a class="card adjustment-card" href="info-detail.html">
+            <div class="adjustment-code">071000-生物学</div>
+            <div class="adjustment-college">水产与生命学院</div>
+            <div class="adjustment-details">
+              <div class="adjustment-detail-item">
+                <span class="adjustment-detail-label">年份</span>
+                <span class="adjustment-detail-value">2024</span>
+              </div>
+              <div class="adjustment-detail-item">
+                <span class="adjustment-detail-label">学习方式</span>
+                <span class="adjustment-detail-value">全日制</span>
+              </div>
+              <div class="adjustment-detail-item">
+                <span class="adjustment-detail-label">招生人数</span>
+                <span class="adjustment-detail-value">8</span>
+              </div>
+            </div>
+          </a>
+
+          <a class="card adjustment-card" href="info-detail.html">
+            <div class="adjustment-code">085404-计算机技术</div>
+            <div class="adjustment-college">信息工程学院</div>
+            <div class="adjustment-details">
+              <div class="adjustment-detail-item">
+                <span class="adjustment-detail-label">年份</span>
+                <span class="adjustment-detail-value">2024</span>
+              </div>
+              <div class="adjustment-detail-item">
+                <span class="adjustment-detail-label">学习方式</span>
+                <span class="adjustment-detail-value">全日制</span>
+              </div>
+              <div class="adjustment-detail-item">
+                <span class="adjustment-detail-label">招生人数</span>
+                <span class="adjustment-detail-value">5</span>
+              </div>
+            </div>
+          </a>
+
+          <a class="card adjustment-card" href="info-detail.html">
+            <div class="adjustment-code">085404-计算机技术</div>
+            <div class="adjustment-college">信息工程学院</div>
+            <div class="adjustment-details">
+              <div class="adjustment-detail-item">
+                <span class="adjustment-detail-label">年份</span>
+                <span class="adjustment-detail-value">2024</span>
+              </div>
+              <div class="adjustment-detail-item">
+                <span class="adjustment-detail-label">学习方式</span>
+                <span class="adjustment-detail-value">非全日制</span>
+              </div>
+              <div class="adjustment-detail-item">
+                <span class="adjustment-detail-label">招生人数</span>
+                <span class="adjustment-detail-value">5</span>
+              </div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

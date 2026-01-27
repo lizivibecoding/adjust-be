@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>招生单位发布调剂</title>
+  <link rel="stylesheet" href="../assets/base.css" />
+  <style>
+    .info-tip { background: #eaf4ff; color: #4677b8; padding: 12px 14px; border-radius: 12px; font-size: 12px; margin-bottom: 12px; }
+    .form-card { padding: 8px 16px; margin-bottom: 14px; }
+    .form-item { padding: 14px 0; border-bottom: 1px solid #f0f3f8; }
+    .form-item:last-child { border-bottom: none; }
+    .form-label { font-size: 14px; font-weight: 600; display: block; margin-bottom: 8px; }
+    .form-input { background: #f4f6fb; border-radius: 12px; padding: 12px; font-size: 13px; color: #3a4352; }
+    .form-textarea { background: #f4f6fb; border-radius: 12px; padding: 12px; font-size: 13px; color: #3a4352; min-height: 120px; }
+    .placeholder { color: #9aa3b2; }
+    .form-helper { color: #9aa3b2; font-size: 12px; margin-top: 8px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="toast"></div>
+  <div class="page">
+    <div class="container">
+      <div class="info-tip">该页面为招生老师发布调剂专用！考生请勿发布！</div>
+
+      <div class="card form-card">
+        <div class="form-item">
+          <span class="form-label">1：学校名称</span>
+          <div class="form-input">中北大学</div>
+        </div>
+        <div class="form-item">
+          <span class="form-label">2：调剂专业</span>
+          <div class="form-input">(专业学位)材料工程-材料工程-全日制</div>
+          <span class="form-helper">继续添加调剂专业</span>
+        </div>
+        <div class="form-item">
+          <span class="form-label">3：调剂名额</span>
+          <div class="form-input">暂不确定</div>
+        </div>
+        <div class="form-item">
+          <span class="form-label">4：联系方式</span>
+          <div class="form-input placeholder">填写联系邮箱或QQ群等</div>
+        </div>
+        <div class="form-item">
+          <span class="form-label">5：调剂信息标题</span>
+          <div class="form-input placeholder">一句话总结，好的标题可吸引更多关注</div>
+        </div>
+        <div class="form-item">
+          <span class="form-label">6：调剂具体要求</span>
+          <div class="form-textarea placeholder">尽可能详细描述对调剂考生的要求，如：初试分数要求、是否过四六级、报考专业范围、本科学校层次等</div>
+        </div>
+      </div>
+
+      <button class="btn-primary" style="width:100%;" onclick="showToast('已提交审核')">发布调剂信息</button>
+    </div>
+  </div>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

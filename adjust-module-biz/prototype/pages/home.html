@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>考研调剂平台</title>
+  <link rel="stylesheet" href="../assets/base.css" />
+  <style>
+    .user-row { display: flex; align-items: center; gap: 12px; }
+    .avatar { width: 44px; height: 44px; border-radius: 50%; background: #dbe5ff; }
+    .user-info { flex: 1; }
+    .user-name { font-size: 16px; font-weight: 600; display: block; }
+    .user-id { font-size: 12px; color: var(--muted); }
+    .message-badge { min-width: 28px; height: 28px; border-radius: 999px; border: 1px solid #f0f3f8; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 12px; }
+    .category-btn { padding: 10px 16px; border-radius: 999px; background: #f2f4f9; color: #6b7382; font-size: 13px; cursor: pointer; white-space: nowrap; border: none; }
+    .category-btn:hover { background: rgba(47, 107, 255, 0.12); color: var(--primary); }
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 1000; display: none; }
+    .modal-overlay.active { display: flex; align-items: center; justify-content: center; }
+    .modal-content { background: #ffffff; border-radius: 16px; width: calc(var(--page-width) - 32px); max-width: 400px; max-height: 70vh; overflow-y: auto; padding: 20px; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .modal-title { font-size: 16px; font-weight: 600; }
+    .modal-close { width: 24px; height: 24px; border-radius: 50%; background: #f4f6fb; border: none; cursor: pointer; font-size: 18px; color: #6b7382; display: flex; align-items: center; justify-content: center; }
+    .modal-pills { display: flex; flex-wrap: wrap; gap: 10px; }
+    .modal-pill { padding: 10px 16px; border-radius: 999px; background: #f2f4f9; color: #6b7382; font-size: 13px; cursor: pointer; border: none; }
+    .modal-pill.active { background: rgba(47, 107, 255, 0.12); color: var(--primary); }
+    .banner-wrap { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .banner-track { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; height: 100%; }
+    .banner-track::-webkit-scrollbar { display: none; }
+    .banner-item { min-width: 100%; height: 100%; border-radius: 16px; scroll-snap-align: start; color: #fff; padding: 16px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 10px 24px rgba(47, 107, 255, 0.2); }
+    .banner-item.primary { background: linear-gradient(135deg, #3a73ff, #5b92ff); }
+    .banner-item.mint { background: linear-gradient(135deg, #39c0b6, #48d1c8); }
+    .banner-item.orange { background: linear-gradient(135deg, #ff9f43, #ffb36b); }
+    .banner-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+    .banner-desc { font-size: 12px; opacity: 0.9; }
+    .banner-cta { margin-top: 10px; font-size: 12px; opacity: 0.95; }
+    .update-card { background: #fff6df; border-radius: 16px; padding: 12px; min-height: 160px; display: flex; flex-direction: column; }
+    .update-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 12px; color: #ff6b6b; font-weight: 600; }
+    .update-time { color: #9aa3b2; font-weight: 400; }
+    .update-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f6e7c7; font-size: 12px; }
+    .update-row:last-child { border-bottom: none; }
+    .update-value { color: #ff6b6b; font-weight: 600; }
+    .quick-wrap { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 12px 0; }
+    .quick-card { padding: 14px; }
+    .quick-title { font-size: 14px; font-weight: 600; display: block; margin-bottom: 6px; }
+    .quick-desc { font-size: 12px; color: #6b7382; white-space: pre-line; }
+    .search-row { display: flex; align-items: center; gap: 10px; margin: 10px 0 16px; position: sticky; top: 8px; z-index: 20; background: var(--bg); padding: 8px 0; }
+    .search-shell { flex: 1; display: flex; align-items: center; gap: 10px; background: #ffffff; padding: 8px; border-radius: 999px; box-shadow: 0 8px 18px rgba(31, 42, 58, 0.08); }
+    .search-bar { flex: 1; display: flex; align-items: center; background: #f4f6fb; padding: 8px 12px; border-radius: 999px; }
+    .search-icon { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #c9d3e6; margin-right: 10px; position: relative; }
+    .search-icon::after { content: ""; position: absolute; width: 8px; height: 2px; background: #c9d3e6; right: -4px; bottom: 1px; transform: rotate(45deg); border-radius: 2px; }
+    .search-placeholder { color: #9aa3b2; font-size: 13px; flex: 1; }
+    .search-action { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 999px; background: #eaf1ff; color: var(--primary); font-size: 12px; cursor: pointer; white-space: nowrap; }
+    .filter-icon { width: 14px; height: 14px; border-radius: 4px; border: 2px solid var(--primary); position: relative; }
+    .filter-icon::after { content: ""; position: absolute; width: 6px; height: 2px; background: var(--primary); left: 50%; top: 50%; transform: translate(-50%, -50%); }
+    .list-card { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    .list-item { padding: 14px; border-radius: 16px; background: #ffffff; display: block; }
+    .list-item:last-child { margin-bottom: 0; }
+    .major-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .major-title { font-size: 16px; font-weight: 700; }
+    .heat { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #ff6b4a; }
+    .major-row { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #3a4352; }
+    .major-row .muted { color: #8a94a6; }
+    .major-row .location { display: inline-flex; align-items: center; gap: 4px; color: #8a94a6; }
+    .major-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 16px; font-size: 12px; color: #6b7382; margin-top: 10px; }
+    .major-update { border-top: 1px solid #f0f3f8; margin-top: 10px; padding-top: 8px; font-size: 12px; color: #8a94a6; display: flex; justify-content: space-between; align-items: center; }
+    .probability-tag { font-size: 11px; color: #ff9f43; background: rgba(255, 159, 67, 0.1); padding: 2px 6px; border-radius: 4px; }
+    .tag-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .chip { font-size: 11px; padding: 4px 8px; border-radius: 999px; background: #f2f4f9; color: #6b7382; }
+    .list-tabs { display: flex; gap: 8px; margin: 8px 0 12px; }
+    .list-tab { font-size: 12px; padding: 6px 12px; border-radius: 999px; background: #f2f4f9; color: #6b7382; cursor: pointer; }
+    .list-tab.active { background: rgba(47, 107, 255, 0.12); color: var(--primary); font-weight: 600; }
+    .list-panel { display: none; }
+    .list-panel.active { display: grid; }
+  </style>
+</head>
+<body data-tab="home">
+  <div class="toast"></div>
+  <div class="page">
+    <div class="container">
+      <div class="user-row">
+        <div class="avatar"></div>
+        <div class="user-info">
+          <span class="user-name">考生92741395</span>
+          <span class="user-id">ID 92741395</span>
+        </div>
+        <button class="category-btn" onclick="showCategoryModal()">工学</button>
+      </div>
+
+      <div class="banner-wrap">
+        <div class="banner-track">
+          <div class="banner-item primary">
+            <div class="banner-title">公众号精选｜调剂黄金72小时</div>
+            <div class="banner-desc">最新政策解读与择校策略，一键查看</div>
+            <div class="banner-cta">去查看 ></div>
+          </div>
+          <div class="banner-item mint">
+            <div class="banner-title">会员提醒｜开通VIP解锁历年数据</div>
+            <div class="banner-desc">同分去向、录取趋势、院校详情全量开放</div>
+            <div class="banner-cta">立即开通 ></div>
+          </div>
+        </div>
+        <div class="update-card">
+          <div class="update-head">
+            <span>调剂更新</span>
+            <span class="update-time">2025-07-16 18:07</span>
+          </div>
+          <div class="update-row">
+            <span>今日更新数据</span>
+            <span class="update-value">待更新</span>
+          </div>
+          <div class="update-row">
+            <span>今日更新院校</span>
+            <span class="update-value">待更新</span>
+          </div>
+          <div class="update-row">
+            <span>25考研累计数据</span>
+            <span class="update-value">26266</span>
+          </div>
+          <div class="update-row">
+            <span>25考研累计院校</span>
+            <span class="update-value">791</span>
+          </div>
+        </div>
+      </div>
+
+      
+
+      <div class="search-row">
+        <div class="search-shell">
+          <div class="search-bar" onclick="showToast('请输入关键词')">
+            <div class="search-icon"></div>
+            <span class="search-placeholder">输入学校/专业/代码，快速查询</span>
+          </div>
+          <a class="search-action" href="filter.html">
+            <span class="filter-icon"></span>
+            筛选
+          </a>
+        </div>
+      </div>
+
+      <div class="list-tabs" data-tab-group>
+        <div class="list-tab active" data-tab-item data-target="major">找专业</div>
+        <div class="list-tab" data-tab-item data-target="school">找院校</div>
+      </div>
+
+      <div class="list-card list-panel active" data-panel="major">
+        <a class="card list-item" href="info-detail.html">
+          <div class="major-head">
+            <div class="major-title">080550-机械</div>
+            <span class="heat">🔥 92</span>
+          </div>
+          <div class="major-row">
+            <span class="bold">上海交通大学</span>
+            <span class="location">• 上海</span>
+          </div>
+          <div class="major-grid">
+            <span>年份：2023</span>
+            <span>学习方式：全日制</span>
+            <span>统考招生：45人</span>
+            <span>调剂招生：19人</span>
+          </div>
+          <div class="major-update">
+            <span>更新：2023-03-21 00:00</span>
+            <span class="probability-tag">以往年分析今年调剂概率大</span>
+          </div>
+        </a>
+        <a class="card list-item" href="info-detail.html">
+          <div class="major-head">
+            <div class="major-title">081200-计算机</div>
+            <span class="heat">🔥 88</span>
+          </div>
+          <div class="major-row">
+            <span class="bold">华东理工大学</span>
+            <span class="location">• 上海</span>
+          </div>
+          <div class="major-grid">
+            <span>年份：2024</span>
+            <span>学习方式：全日制</span>
+            <span>统考招生：40人</span>
+            <span>调剂招生：12人</span>
+          </div>
+          <div class="major-update">
+            <span>更新：2024-03-18 10:30</span>
+            <span class="probability-tag">以往年分析今年调剂概率大</span>
+          </div>
+        </a>
+        <a class="card list-item" href="info-detail.html">
+          <div class="major-head">
+            <div class="major-title">083500-软件工程</div>
+            <span class="heat">🔥 85</span>
+          </div>
+          <div class="major-row">
+            <span class="bold">武汉理工大学</span>
+            <span class="location">• 湖北</span>
+          </div>
+          <div class="major-grid">
+            <span>年份：2025</span>
+            <span>学习方式：全日制</span>
+            <span>统考招生：36人</span>
+            <span>调剂招生：10人</span>
+          </div>
+          <div class="major-update">
+            <span>更新：2025-03-09 09:20</span>
+            <span class="probability-tag">以往年分析今年调剂概率大</span>
+          </div>
+        </a>
+      </div>
+
+      <div class="list-card list-panel" data-panel="school">
+        <a class="card list-item" href="school-detail.html">
+          <div class="major-title">北京工业大学</div>
+          <div class="major-row">
+            <span class="bold">综合类</span>
+            <span class="location">• 北京</span>
+          </div>
+          <div class="major-grid">
+            <span>年份：2024</span>
+            <span>院校层次：211</span>
+            <span>统考招生：32人</span>
+            <span>调剂招生：8人</span>
+          </div>
+          <div class="major-update">
+            <span>更新：2024-03-20 11:40</span>
+          </div>
+        </a>
+        <a class="card list-item" href="school-detail.html">
+          <div class="major-title">哈尔滨工业大学</div>
+          <div class="major-row">
+            <span class="bold">理工类</span>
+            <span class="location">• 黑龙江</span>
+          </div>
+          <div class="major-grid">
+            <span>年份：2025</span>
+            <span>院校层次：双一流</span>
+            <span>统考招生：28人</span>
+            <span>调剂招生：6人</span>
+          </div>
+          <div class="major-update">
+            <span>更新：2025-03-08 09:00</span>
+          </div>
+        </a>
+        <a class="card list-item" href="school-detail.html">
+          <div class="major-title">山东大学</div>
+          <div class="major-row">
+            <span class="bold">综合类</span>
+            <span class="location">• 山东</span>
+          </div>
+          <div class="major-grid">
+            <span>年份：2024</span>
+            <span>院校层次：985/211</span>
+            <span>统考招生：45人</span>
+            <span>调剂招生：10人</span>
+          </div>
+          <div class="major-update">
+            <span>更新：2024-03-18 10:20</span>
+          </div>
+        </a>
+        <a class="card list-item" href="school-detail.html">
+          <div class="major-title">武汉理工大学</div>
+          <div class="major-row">
+            <span class="bold">理工类</span>
+            <span class="location">• 湖北</span>
+          </div>
+          <div class="major-grid">
+            <span>年份：2025</span>
+            <span>院校层次：211</span>
+            <span>统考招生：30人</span>
+            <span>调剂招生：7人</span>
+          </div>
+          <div class="major-update">
+            <span>更新：2025-03-11 12:00</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="float-btn">调剂辅导</div>
+
+  <nav class="tabbar">
+    <a href="home.html" data-tab="home">调剂信息</a>
+    <a href="custom.html" data-tab="custom">调剂定制</a>
+    <a href="publish.html" data-tab="publish">发布调剂</a>
+    <a href="profile.html" data-tab="profile">我的</a>
+  </nav>
+  <div class="modal-overlay" id="categoryModal" onclick="closeCategoryModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">选择学科类别</div>
+        <button class="modal-close" onclick="closeCategoryModal(event)">×</button>
+      </div>
+      <div class="modal-pills">
+        <button class="modal-pill active" onclick="selectCategory('哲学', this)">哲学</button>
+        <button class="modal-pill" onclick="selectCategory('经济学', this)">经济学</button>
+        <button class="modal-pill" onclick="selectCategory('法学', this)">法学</button>
+        <button class="modal-pill" onclick="selectCategory('教育学', this)">教育学</button>
+        <button class="modal-pill" onclick="selectCategory('文学', this)">文学</button>
+        <button class="modal-pill" onclick="selectCategory('历史学', this)">历史学</button>
+        <button class="modal-pill" onclick="selectCategory('理学', this)">理学</button>
+        <button class="modal-pill" onclick="selectCategory('工学', this)">工学</button>
+        <button class="modal-pill" onclick="selectCategory('农学', this)">农学</button>
+        <button class="modal-pill" onclick="selectCategory('医学', this)">医学</button>
+        <button class="modal-pill" onclick="selectCategory('军事学', this)">军事学</button>
+        <button class="modal-pill" onclick="selectCategory('管理学', this)">管理学</button>
+        <button class="modal-pill" onclick="selectCategory('艺术学', this)">艺术学</button>
+        <button class="modal-pill" onclick="selectCategory('交叉学科', this)">交叉学科</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/app.js"></script>
+  <script>
+    function showCategoryModal() {
+      document.getElementById('categoryModal').classList.add('active');
+    }
+
+    function closeCategoryModal(event) {
+      if (event) {
+        event.stopPropagation();
+      }
+      document.getElementById('categoryModal').classList.remove('active');
+    }
+
+    function selectCategory(category, element) {
+      // 移除所有active状态
+      document.querySelectorAll('.modal-pill').forEach(function(pill) {
+        pill.classList.remove('active');
+      });
+      // 添加active状态到选中的项
+      element.classList.add('active');
+      // 更新按钮文本
+      document.querySelector('.category-btn').textContent = category;
+      // 关闭弹框
+      closeCategoryModal();
+      // 显示提示
+      showToast('已切换至：' + category);
+    }
+  </script>
+</body>
+</html>

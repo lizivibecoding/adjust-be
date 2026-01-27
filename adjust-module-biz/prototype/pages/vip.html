@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>会员中心</title>
+  <link rel="stylesheet" href="../assets/base.css" />
+  <style>
+    .page-title { text-align: center; font-size: 18px; font-weight: 600; margin: 6px 0 14px; }
+    .vip-card { padding: 16px; margin-bottom: 12px; border-radius: 16px; border: 1px solid #eef2f8; background: #ffffff; }
+    .vip-name { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .vip-price { font-size: 14px; color: #ff8c1a; font-weight: 600; margin-bottom: 10px; }
+    .vip-list { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: #3a4352; }
+    .vip-list span::before { content: "• "; color: #2f6bff; }
+    .vip-actions { display: flex; gap: 10px; margin-top: 12px; }
+    .vip-btn { flex: 1; border: none; border-radius: 999px; padding: 10px 0; font-size: 13px; cursor: pointer; }
+    .vip-btn.primary { background: #2f6bff; color: #ffffff; }
+    .vip-btn.ghost { background: #eaf1ff; color: #2f6bff; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="container">
+      <div class="page-title">VIP 购买</div>
+
+      <div class="vip-card">
+        <div class="vip-name">VIP</div>
+        <div class="vip-price">￥99 / 月</div>
+        <div class="vip-list">
+          <span>解锁历年调剂数据</span>
+          <span>查看调剂详情与分数线</span>
+          <span>调剂榜单完整权限</span>
+        </div>
+        <div class="vip-actions">
+          <!-- <button class="vip-btn ghost">查看权益</button> -->
+          <button class="vip-btn primary">立即开通</button>
+        </div>
+      </div>
+
+      <div class="vip-card">
+        <div class="vip-name">SVIP</div>
+        <div class="vip-price">￥299 / 月</div>
+        <div class="vip-list">
+          <span>VIP 全部权益</span>
+          <span>AI 智能匹配无限次</span>
+          <span>1v1 专家咨询服务</span>
+        </div>
+        <div class="vip-actions">
+          <!-- <button class="vip-btn ghost">查看权益</button> -->
+          <button class="vip-btn primary">立即开通</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

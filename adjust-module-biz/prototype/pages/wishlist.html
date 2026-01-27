@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>我的志愿表</title>
+  <link rel="stylesheet" href="../assets/base.css" />
+  <style>
+    .page-title { text-align: center; font-size: 18px; font-weight: 600; margin: 6px 0 16px; }
+    .wish-card { padding: 16px; margin-bottom: 12px; }
+    .wish-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .wish-number { font-size: 16px; font-weight: 600; color: var(--primary); }
+    .wish-label { font-size: 14px; font-weight: 600; color: #3a4352; }
+    .wish-content { background: #f4f6fb; border-radius: 12px; padding: 14px; min-height: 100px; }
+    .wish-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--muted); font-size: 13px; }
+    .wish-empty-icon { width: 48px; height: 48px; border-radius: 50%; background: #e7ecf3; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; font-size: 24px; }
+    .wish-info { display: grid; gap: 10px; }
+    .wish-item { display: flex; align-items: flex-start; gap: 8px; }
+    .wish-item-label { font-size: 12px; color: var(--muted); min-width: 60px; }
+    .wish-item-value { font-size: 13px; color: #3a4352; flex: 1; }
+    .wish-actions { display: flex; gap: 10px; margin-top: 12px; }
+    .btn-edit { background: #eaf1ff; color: var(--primary); border: none; border-radius: 12px; padding: 8px 16px; font-size: 12px; cursor: pointer; flex: 1; }
+    .btn-clear { background: #fff2e3; color: #ff9f43; border: none; border-radius: 12px; padding: 8px 16px; font-size: 12px; cursor: pointer; flex: 1; }
+    .btn-add { background: linear-gradient(135deg, #2f6bff, #4d8dff); color: #ffffff; border: none; border-radius: 12px; padding: 8px 16px; font-size: 12px; cursor: pointer; width: 100%; }
+  </style>
+</head>
+<body>
+  <div class="toast"></div>
+  <div class="page">
+    <div class="container">
+      <div class="page-title">我的志愿表</div>
+
+      <div class="card wish-card">
+        <div class="wish-header">
+          <div>
+            <span class="wish-number">一志愿</span>
+            <span class="wish-label">（第一优先级）</span>
+          </div>
+        </div>
+        <div class="wish-content">
+          <div class="wish-info">
+            <div class="wish-item">
+              <span class="wish-item-label">院校：</span>
+              <span class="wish-item-value">大连海洋大学</span>
+            </div>
+            <div class="wish-item">
+              <span class="wish-item-label">专业：</span>
+              <span class="wish-item-value">085404-计算机技术</span>
+            </div>
+            <div class="wish-item">
+              <span class="wish-item-label">学院：</span>
+              <span class="wish-item-value">信息工程学院</span>
+            </div>
+            <div class="wish-item">
+              <span class="wish-item-label">学习方式：</span>
+              <span class="wish-item-value">全日制</span>
+            </div>
+          </div>
+        </div>
+        <div class="wish-actions">
+          <button class="btn-edit" onclick="showToast('编辑一志愿')">编辑</button>
+          <button class="btn-clear" onclick="showToast('清空一志愿')">清空</button>
+        </div>
+      </div>
+
+      <div class="card wish-card">
+        <div class="wish-header">
+          <div>
+            <span class="wish-number">二志愿</span>
+            <span class="wish-label">（第二优先级）</span>
+          </div>
+        </div>
+        <div class="wish-content">
+          <div class="wish-empty">
+            <div class="wish-empty-icon">+</div>
+            <div>暂未添加调剂专业</div>
+            <div style="font-size: 12px; margin-top: 4px; color: #8a94a6;">点击下方按钮添加</div>
+          </div>
+        </div>
+        <div class="wish-actions">
+          <button class="btn-edit" onclick="showToast('编辑二志愿')">编辑</button>
+          <button class="btn-clear" onclick="showToast('清空二志愿')">清空</button>
+        </div>
+      </div>
+
+      <div class="card wish-card">
+        <div class="wish-header">
+          <div>
+            <span class="wish-number">三志愿</span>
+            <span class="wish-label">（第三优先级）</span>
+          </div>
+        </div>
+        <div class="wish-content">
+          <div class="wish-empty">
+            <div class="wish-empty-icon">+</div>
+            <div>暂未添加调剂专业</div>
+            <div style="font-size: 12px; margin-top: 4px; color: #8a94a6;">点击下方按钮添加</div>
+          </div>
+        </div>
+        <div class="wish-actions">
+          <button class="btn-edit" onclick="showToast('编辑三志愿')">编辑</button>
+          <button class="btn-clear" onclick="showToast('清空三志愿')">清空</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

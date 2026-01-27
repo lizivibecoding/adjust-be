@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>个人中心</title>
+  <link rel="stylesheet" href="../assets/base.css" />
+  <style>
+    .profile-header { display: flex; align-items: center; padding: 8px 0 18px; }
+    .avatar { width: 48px; height: 48px; border-radius: 50%; background: #dbe5ff; }
+    .profile-info { margin-left: 12px; flex: 1; }
+    .profile-name { font-size: 16px; font-weight: 600; }
+    .profile-phone { font-size: 12px; color: var(--muted); }
+    .profile-arrow { color: var(--muted); }
+    .vip-card { padding: 14px 16px; background: linear-gradient(135deg, #3a73ff, #5b92ff); color: #fff; margin-bottom: 12px; }
+    .vip-icons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+    .vip-icon { background: rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 10px 0; text-align: center; font-size: 12px; }
+    .quick-card { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 12px; margin-bottom: 12px; }
+    .quick-item { background: #f4f6fb; border-radius: 12px; text-align: center; font-size: 12px; padding: 12px 0; color: #3a4352; }
+    .order-card { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
+    .order-item { background: #ffffff; border-radius: 14px; padding: 12px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 8px 18px rgba(31, 42, 58, 0.06); }
+    .order-title { font-size: 14px; font-weight: 600; }
+    .order-desc { font-size: 12px; color: #8a94a6; margin-top: 4px; }
+    .order-icon { width: 36px; height: 36px; border-radius: 12px; background: #eaf1ff; display: flex; align-items: center; justify-content: center; color: #2f6bff; font-weight: 600; }
+    .menu-card { padding: 0 16px; }
+    .menu-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid #f0f3f8; font-size: 14px; }
+    .menu-item:last-child { border-bottom: none; }
+    .menu-arrow { color: var(--muted); }
+  </style>
+</head>
+<body data-tab="profile">
+  <div class="page">
+    <div class="container">
+      <div class="profile-header">
+        <div class="avatar"></div>
+        <div class="profile-info">
+          <div class="profile-name">考生92741395</div>
+          <div class="profile-phone">181****3929</div>
+        </div>
+      </div>
+
+      <div class="card vip-card">
+        <div class="space-between">
+          <span class="bold">会员中心</span>
+          <a class="btn-ghost" href="vip.html">开通VIP</a>
+        </div>
+        <div class="vip-icons">
+          <div class="vip-icon">院校数据</div>
+          <div class="vip-icon">政治刷题</div>
+          <div class="vip-icon">英语刷题</div>
+          <div class="vip-icon">专业课刷题</div>
+        </div>
+      </div>
+
+      <div class="order-card">
+        <a class="order-item" href="vip-orders.html">
+          <div>
+            <div class="order-title">我的订单</div>
+            <div class="order-desc">查看已解锁VIP</div>
+          </div>
+          <div class="order-icon">单</div>
+        </a>
+        <a class="order-item" href="vip-redeem.html">
+          <div>
+            <div class="order-title">兑换VIP</div>
+            <div class="order-desc">点我解锁新VIP</div>
+          </div>
+          <div class="order-icon">兑</div>
+        </a>
+      </div>
+
+      <div class="card menu-card">
+        <a class="menu-item" href="wishlist.html"><span>我的志愿表</span><span class="menu-arrow">></span></a>
+        <a class="menu-item" href="subscribed.html"><span>我的订阅的调剂</span><span class="menu-arrow">></span></a>
+        <a class="menu-item" href="my-published.html"><span>我发布的调剂</span><span class="menu-arrow">></span></a>
+        <a class="menu-item" href="my-applied.html"><span>我申请的调剂</span><span class="menu-arrow">></span></a>
+        <div class="menu-item"><span>联系客服</span><span class="menu-arrow">></span></div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="tabbar">
+    <a href="home.html" data-tab="home">调剂信息</a>
+    <a href="custom.html" data-tab="custom">调剂定制</a>
+    <a href="publish.html" data-tab="publish">发布调剂</a>
+    <a href="profile.html" data-tab="profile">我的</a>
+  </nav>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

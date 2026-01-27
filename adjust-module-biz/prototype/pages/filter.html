@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>筛选</title>
+  <link rel="stylesheet" href="../assets/base.css" />
+  <style>
+    .date-range { display: flex; align-items: center; gap: 10px; margin: 12px 0; }
+    .date-item { flex: 1; background: #f4f6fb; padding: 12px; border-radius: 999px; text-align: center; color: #9aa3b2; font-size: 13px; }
+    .date-sep { color: #6b7382; font-size: 12px; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 10px; }
+    .pill { padding: 10px 16px; border-radius: 999px; background: #f2f4f9; color: #6b7382; font-size: 13px; cursor: pointer; }
+    .pill.active { background: rgba(47, 107, 255, 0.12); color: var(--primary); }
+    .footer-actions { display: flex; gap: 12px; margin-top: 22px; }
+    .footer-actions .btn-primary, .footer-actions .btn-ghost { flex: 1; }
+  </style>
+</head>
+<body>
+  <div class="toast"></div>
+  <div class="page">
+    <div class="container">
+      <div>
+        <div class="section-title">发布时间</div>
+        <div class="date-range">
+          <div class="date-item">请选择开始时间</div>
+          <span class="date-sep">至</span>
+          <div class="date-item">请选择结束时间</div>
+        </div>
+        <div class="pill-row" data-tab-group>
+          <div class="pill" data-tab-item>今天</div>
+          <div class="pill" data-tab-item>近3天</div>
+          <div class="pill active" data-tab-item>近7天</div>
+          <div class="pill" data-tab-item>近15天</div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;">
+        <div class="space-between">
+          <div class="section-title">目标省份</div>
+          <div class="muted">A区</div>
+        </div>
+        <div class="pill-row">
+          <div class="pill">A区全部</div>
+        </div>
+        <div class="pill-row" style="margin-top: 10px;">
+          <div class="pill">北京市</div>
+          <div class="pill">天津市</div>
+          <div class="pill">上海市</div>
+          <div class="pill">江苏省</div>
+          <div class="pill">浙江省</div>
+          <div class="pill">福建省</div>
+          <div class="pill">山东省</div>
+          <div class="pill">河南省</div>
+          <div class="pill">湖北省</div>
+          <div class="pill active">湖南省</div>
+          <div class="pill">广东省</div>
+          <div class="pill">河北省</div>
+          <div class="pill">山西省</div>
+          <div class="pill">辽宁省</div>
+          <div class="pill">吉林省</div>
+          <div class="pill">黑龙江省</div>
+          <div class="pill">安徽省</div>
+          <div class="pill">江西省</div>
+          <div class="pill">重庆市</div>
+          <div class="pill">四川省</div>
+          <div class="pill">陕西省</div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;">
+        <div class="space-between">
+          <div class="section-title">目标省份</div>
+          <div class="muted">B区</div>
+        </div>
+        <div class="pill-row">
+          <div class="pill">B区全部</div>
+        </div>
+        <div class="pill-row" style="margin-top: 10px;">
+          <div class="pill">内蒙古</div>
+          <div class="pill">广西</div>
+          <div class="pill">海南省</div>
+          <div class="pill">贵州省</div>
+          <div class="pill">云南省</div>
+          <div class="pill">西藏</div>
+          <div class="pill">甘肃省</div>
+          <div class="pill">青海省</div>
+          <div class="pill">宁夏</div>
+          <div class="pill">新疆</div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;">
+        <div class="section-title">学习方式</div>
+        <div class="pill-row">
+          <div class="pill">全日制</div>
+          <div class="pill">非全日制</div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;">
+        <div class="section-title">学术类型</div>
+        <div class="pill-row">
+          <div class="pill">学硕</div>
+          <div class="pill">专硕</div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;">
+        <div class="section-title">学校属性</div>
+        <div class="pill-row">
+          <div class="pill">985</div>
+          <div class="pill">211</div>
+          <div class="pill">双一流</div>
+          <div class="pill">其他</div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;">
+        <div class="section-title">调剂类型</div>
+        <div class="pill-row">
+          <div class="pill">校内调剂</div>
+          <div class="pill">校外调剂</div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;">
+        <div class="section-title">专项计划</div>
+        <div class="pill-row">
+          <div class="pill">只看专项计划</div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;">
+        <div class="section-title">招生状态</div>
+        <div class="pill-row">
+          <div class="pill">已经停招</div>
+          <div class="pill">正常招生</div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;">
+        <div class="section-title">数学科目</div>
+        <div class="pill-row">
+          <div class="pill">数一</div>
+          <div class="pill">数二</div>
+          <div class="pill">数三</div>
+          <div class="pill">306</div>
+          <div class="pill">307</div>
+          <div class="pill">314</div>
+          <div class="pill">315</div>
+          <div class="pill">396</div>
+          <div class="pill">611</div>
+          <div class="pill">817</div>
+          <div class="pill">不考数学</div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;">
+        <div class="section-title">外语科目</div>
+        <div class="pill-row">
+          <div class="pill">英语一</div>
+          <div class="pill">英语二</div>
+          <div class="pill">俄语</div>
+          <div class="pill">日语</div>
+          <div class="pill">翻硕</div>
+          <div class="pill">二外</div>
+        </div>
+      </div>
+
+      <div class="footer-actions">
+        <button class="btn-ghost" onclick="showToast('已重置')">重置</button>
+        <button class="btn-primary" onclick="showToast('筛选已应用')">确定</button>
+      </div>
+    </div>
+  </div>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>调剂定制</title>
+  <link rel="stylesheet" href="../assets/base.css" />
+  <style>
+    .vip-tip { background: #eaf4ff; color: #4677b8; padding: 12px 14px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-size: 12px; }
+    .vip-card { padding: 16px; border-radius: 16px; background: linear-gradient(135deg, #3a73ff, #5b92ff); color: #fff; margin-bottom: 12px; }
+    .grid-item { padding: 16px; }
+    .grid-title { font-size: 14px; font-weight: 600; display: block; margin-bottom: 6px; }
+    .grid-desc { font-size: 12px; color: var(--muted); }
+  </style>
+</head>
+<body data-tab="custom">
+  <div class="page">
+    <div class="container">
+      <div class="vip-tip">
+        <span>“调剂定制VIP”才能使用定制功能哦</span>
+        <button class="btn-ghost">查看详情</button>
+      </div>
+
+      <div class="vip-card">
+        <div class="space-between">
+          <span class="bold">调剂定制VIP</span>
+          <span class="muted" style="color:#eaf1ff">2026-04-30到期</span>
+        </div>
+      </div>
+
+      <div class="grid">
+        <a class="card grid-item" href="custom-form.html">
+          <span class="grid-title">我的定制需求表</span>
+          <span class="grid-desc">未填写</span>
+        </a>
+        <a class="card grid-item" href="custom-ai-report.html">
+          <span class="grid-title">我的定制报告</span>
+          <span class="grid-desc">待生成</span>
+        </a>
+        <a class="card grid-item" href="hot-ranking.html">
+          <span class="grid-title">热门调剂排名</span>
+          <span class="grid-desc">各学科调剂捡漏</span>
+        </a>
+        <a class="card grid-item" href="same-score.html">
+          <span class="grid-title">同分调剂去向</span>
+          <span class="grid-desc">根据分数找调剂</span>
+        </a>
+        <a class="card grid-item" href="custom-report.html">
+          <span class="grid-title">调剂定制筛选</span>
+          <span class="grid-desc">最低分推荐调剂</span>
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <nav class="tabbar">
+    <a href="home.html" data-tab="home">调剂信息</a>
+    <a href="custom.html" data-tab="custom">调剂定制</a>
+    <a href="publish.html" data-tab="publish">发布调剂</a>
+    <a href="profile.html" data-tab="profile">我的</a>
+  </nav>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

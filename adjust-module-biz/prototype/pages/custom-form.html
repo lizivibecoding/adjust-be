@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>我的定制需求表</title>
+  <link rel="stylesheet" href="../assets/base.css" />
+  <style>
+    .form-card { padding: 14px 16px; margin-bottom: 16px; }
+    .tip { color: #ff6b6b; font-size: 12px; }
+    .form-item { padding: 14px 0; border-bottom: 1px solid #f0f3f8; }
+    .form-item:last-child { border-bottom: none; }
+    .form-label { font-size: 14px; font-weight: 600; display: block; margin-bottom: 8px; }
+    .form-input { background: #f4f6fb; border-radius: 12px; padding: 12px; font-size: 13px; color: #3a4352; }
+    .placeholder { color: #9aa3b2; }
+    .score-row { display: flex; align-items: center; padding: 6px 0; }
+    .score-label { width: 70px; font-size: 13px; color: #3a4352; }
+    .score-input { flex: 1; background: #f4f6fb; border-radius: 12px; padding: 10px 12px; font-size: 13px; }
+    .total { text-align: right; margin-top: 8px; font-size: 13px; color: #6b7382; }
+    .tabs { display: flex; background: #f2f4f9; padding: 4px; border-radius: 999px; margin-bottom: 16px; position: sticky; top: 8px; z-index: 20; }
+    .tab { flex: 1; text-align: center; font-size: 13px; padding: 8px 0; border-radius: 999px; color: #6b7382; cursor: pointer; }
+    .tab.active { background: #ffffff; color: var(--primary); font-weight: 600; box-shadow: 0 6px 14px rgba(31, 42, 58, 0.08); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+  </style>
+</head>
+<body>
+  <div class="toast"></div>
+  <div class="page">
+    <div class="container">
+      <div class="tabs" data-tab-group>
+        <div class="tab active" data-tab-item data-target="basic">基础信息</div>
+        <div class="tab" data-tab-item data-target="intent">调剂意向</div>
+      </div>
+
+      <div class="card form-card tab-panel active" data-panel="basic">
+        <div class="section-title">考生基础信息 <span class="tip">（提交后不可修改）</span></div>
+
+        <div class="form-item">
+          <span class="form-label">1：请填写本科学校全称</span>
+          <div class="form-input placeholder">请填写本科学校</div>
+        </div>
+        <div class="form-item">
+          <span class="form-label">2：请填写本科专业全称</span>
+          <div class="form-input placeholder">请填写本科专业</div>
+        </div>
+        <div class="form-item">
+          <span class="form-label">3：请选择一志愿报考学校</span>
+          <div class="form-input placeholder">请选择一志愿报考学校</div>
+        </div>
+        <div class="form-item">
+          <span class="form-label">4：请选择一志愿报考专业</span>
+          <div class="form-input placeholder">请选择一志愿报考专业</div>
+        </div>
+        <div class="form-item">
+          <span class="form-label">5：请选择一志愿报考研究方向</span>
+          <div class="form-input placeholder">请选择一志愿研究方向</div>
+        </div>
+        <div class="form-item">
+          <span class="form-label">6：请选择考试科目</span>
+          <div class="form-input placeholder">请选择考试科目</div>
+        </div>
+
+        <div class="form-item">
+          <span class="form-label">7：请输入各科考试成绩（一定要出分后再填）</span>
+          <div class="score-row">
+            <span class="score-label">第一门：</span>
+            <div class="score-input placeholder">请输入成绩</div>
+          </div>
+          <div class="score-row">
+            <span class="score-label">第二门：</span>
+            <div class="score-input placeholder">请输入成绩</div>
+          </div>
+          <div class="score-row">
+            <span class="score-label">第三门：</span>
+            <div class="score-input placeholder">请输入成绩</div>
+          </div>
+          <div class="score-row">
+            <span class="score-label">第四门：</span>
+            <div class="score-input placeholder">请输入成绩</div>
+          </div>
+          <div class="total">总分：0</div>
+        </div>
+      </div>
+
+      <div class="card form-card tab-panel" data-panel="intent">
+        <div class="section-title">调剂意向信息 <span class="tip">（提交后可再次修改）</span></div>
+
+        <div class="form-item">
+          <span class="form-label">1：请选择调剂时优先考虑的省市（最少3个）</span>
+          <div class="form-input placeholder">请选择考虑的省市</div>
+        </div>
+        <div class="form-item">
+          <span class="form-label">2：请选择一定不去的省份</span>
+          <div class="form-input placeholder">请选择一定不去的省份</div>
+        </div>
+        <div class="form-item">
+          <span class="form-label">3：请选择想要调剂的专业（最少1个）</span>
+          <div class="form-input placeholder">想要调剂的专业</div>
+        </div>
+        <div class="form-item">
+          <span class="form-label">4：请选择优先考虑调剂的学校层次</span>
+          <div class="form-input">优先考虑985/211高校</div>
+          <div class="form-input" style="margin-top:8px;">优先考虑双一流学科高校</div>
+          <div class="form-input" style="margin-top:8px;">没有要求，适合都会考虑</div>
+        </div>
+        <div class="form-item">
+          <span class="form-label">5：请选择优先考虑的学习方式</span>
+          <div class="form-input">只考虑全日制</div>
+          <div class="form-input" style="margin-top:8px;">只考虑非全日制</div>
+          <div class="form-input" style="margin-top:8px;">没有要求，适合都会考虑</div>
+        </div>
+        <div class="form-item">
+          <span class="form-label">6：请选择是否会考虑科研院所？</span>
+          <div class="form-input">完全不考虑科研院所</div>
+          <div class="form-input" style="margin-top:8px;">没有要求，适合都会考虑</div>
+        </div>
+        <div class="form-item">
+          <span class="form-label">7：是否接受跨专业</span>
+          <div class="form-input">是</div>
+          <div class="form-input" style="margin-top:8px;">否</div>
+        </div>
+        <div class="form-item">
+          <span class="form-label">8：调剂优先级</span>
+          <div class="form-input">优先院校层次</div>
+          <div class="form-input" style="margin-top:8px;">优先专业匹配度</div>
+        </div>
+      </div>
+
+      <button class="btn-primary" style="width:100%;" onclick="showToast('已提交需求表')">提交需求表</button>
+    </div>
+  </div>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

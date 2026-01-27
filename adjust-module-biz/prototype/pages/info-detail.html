@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>调剂信息详情</title>
+  <link rel="stylesheet" href="../assets/base.css" />
+  <style>
+    .top-banner { background: linear-gradient(135deg, rgba(47, 107, 255, 0.12), rgba(47, 107, 255, 0.04)); border-radius: 16px; padding: 14px; margin-bottom: 12px; }
+    .banner-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .school-info { display: flex; align-items: center; gap: 10px; }
+    .school-logo { width: 44px; height: 44px; border-radius: 50%; background: #e7ecf3; display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--primary); }
+    .school-name { font-size: 16px; font-weight: 600; }
+    .school-meta { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .btn-mini { font-size: 12px; padding: 6px 12px; border-radius: 999px; border: none; background: #eaf1ff; color: var(--primary); cursor: pointer; white-space: nowrap; text-decoration: none; display: inline-block; }
+    .major-card { padding: 16px; }
+    .major-title { font-size: 18px; font-weight: 700; }
+    .major-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
+    .tip-box { background: #f4f6fb; border-radius: 12px; padding: 12px; font-size: 12px; color: #6b7382; line-height: 1.6; margin-top: 12px; }
+    .detail-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 16px 0 10px; }
+    .detail-tab { text-align: center; font-size: 12px; padding: 8px 0; border-radius: 999px; background: #f2f4f9; color: #6b7382; cursor: pointer; }
+    .detail-tab.active { background: rgba(47, 107, 255, 0.12); color: var(--primary); font-weight: 600; }
+    .selection-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: #6b7382; margin-bottom: 12px; }
+    .switch-link { color: var(--primary); font-weight: 600; cursor: pointer; }
+    .panel { display: none; }
+    .panel.active { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    .block { padding: 16px; }
+    .block-title { font-size: 14px; font-weight: 600; margin-bottom: 10px; }
+    .info-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px; color: #3a4352; }
+    .label { color: var(--muted); }
+    .pill { background: #f4f6fb; color: #3a4352; font-size: 12px; padding: 8px 12px; border-radius: 999px; margin-bottom: 8px; display: inline-block; }
+    .table { border-top: 1px solid #f0f3f8; margin-top: 6px; }
+    .table-row { display: flex; padding: 8px 0; border-bottom: 1px solid #f0f3f8; font-size: 12px; color: #3a4352; }
+    .cell { flex: 1; }
+    .chart-card { padding: 16px; }
+    .chart-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+    .bar-chart { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; align-items: end; height: 140px; margin-top: 10px; }
+    .bar { background: rgba(47, 107, 255, 0.2); border-radius: 8px 8px 0 0; position: relative; }
+    .bar span { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 11px; color: var(--muted); }
+    .bar-label { text-align: center; font-size: 11px; color: var(--muted); margin-top: 6px; }
+    .pie-row { display: grid; grid-template-columns: 120px 1fr; gap: 12px; align-items: center; }
+    .pie { width: 120px; height: 120px; border-radius: 50%; background: conic-gradient(#2f6bff 0 40%, #12b76a 40% 70%, #f6a937 70% 100%); }
+    .legend { display: grid; gap: 6px; font-size: 12px; color: #6b7382; }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #2f6bff; }
+    .dot.green { background: #12b76a; }
+    .dot.orange { background: #f6a937; }
+    .stats-list { border: 1px solid #eef2f8; border-radius: 12px; overflow: hidden; margin-top: 10px; }
+    .stats-row { display: flex; justify-content: space-between; padding: 10px 12px; font-size: 12px; color: #6b7382; border-bottom: 1px solid #f0f3f8; }
+    .stats-row:last-child { border-bottom: none; }
+    .candidate-card { padding: 14px; }
+    .candidate-name { font-size: 14px; font-weight: 600; }
+    .candidate-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .score-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; text-align: center; font-size: 12px; }
+    .score-grid span { display: block; }
+    .notice-item { font-size: 12px; color: #6b7382; padding: 10px 0; border-bottom: 1px solid #f0f3f8; }
+    .notice-item:last-child { border-bottom: none; }
+    .action-buttons { display: flex; gap: 12px; margin-top: 20px; padding-bottom: 20px; }
+    .action-btn { flex: 1; padding: 12px 16px; border-radius: 999px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s; }
+    .action-btn.share { background: #eaf1ff; color: var(--primary); }
+    .action-btn.share:hover { background: rgba(47, 107, 255, 0.15); }
+    .action-btn.subscribe { background: linear-gradient(135deg, #2f6bff, #4d8dff); color: #ffffff; }
+    .action-btn.subscribe:hover { background: linear-gradient(135deg, #1f5ae0, #2f6bff); }
+    .action-icon { width: 16px; height: 16px; flex-shrink: 0; }
+    .action-icon svg { width: 100%; height: 100%; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  </style>
+</head>
+<body>
+  <div class="toast"></div>
+  <div class="page">
+    <div class="container">
+      <div class="card top-banner">
+        <div class="banner-row">
+          <div class="school-info">
+            <div class="school-logo">大</div>
+            <div>
+              <div class="school-name">大连海洋大学</div>
+              <div class="school-meta">辽宁 · 普通院校</div>
+            </div>
+          </div>
+          <a class="btn-mini" href="school-detail.html">查看院校</a>
+        </div>
+      </div>
+
+      <div class="card major-card">
+        <div class="major-title">085404-计算机技术</div>
+        <div class="major-sub">专硕 · 非全日制 · 信息工程学院</div>
+
+      </div>
+
+      <div class="detail-tabs" data-tab-group>
+        <div class="detail-tab active" data-tab-item data-target="info">调剂信息</div>
+        <div class="detail-tab" data-tab-item data-target="analysis">调剂分析</div>
+        <div class="detail-tab" data-tab-item data-target="list">录取名单</div>
+      </div>
+
+      <div class="selection-row">
+        <span>当前选择：2025，信息工程学院，非全日制</span>
+        <span class="switch-link">切换</span>
+      </div>
+
+      <div class="panel active" data-panel="info">
+        <div class="card block">
+          <div class="block-title">招生详情</div>
+          <div class="info-row"><span class="label">拟调剂招生人数</span><span>1人</span></div>
+          <div class="info-row"><span class="label">研究方向</span><span>不区分研究方向</span></div>
+          <div class="info-row"><span class="label">备注</span><span>以研招网公布为准</span></div>
+        </div>
+
+        <div class="card block">
+          <div class="block-title">调剂说明</div>
+          <div class="tip-box">
+            科目要求：第一单元 101 思想政治理论；第二单元 204 英语（二）；
+            第三单元 301 数学一/302 数学二；第四单元 不限。
+          </div>
+        </div>
+
+        <div class="card block">
+          <div class="block-title">复试参考书目</div>
+          <div class="pill">《数据结构（C语言版第2版）》</div>
+          <div class="pill">《数字电子技术基础（第三版）》</div>
+          <div class="pill">《操作系统》</div>
+        </div>
+
+        <div class="card block">
+          <div class="block-title">初试科目</div>
+          <div class="table">
+            <div class="table-row">
+              <span class="cell">101 思想政治理论</span>
+              <span class="cell">204 英语（二）</span>
+            </div>
+            <div class="table-row">
+              <span class="cell">301 数学一</span>
+              <span class="cell">819 高级语言程序设计（C语言）</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card block">
+          <div class="block-title">注意事项</div>
+          <div class="tip-box">
+            本站收录招生人数部分来自院校官网通知，部分来自网络；详情请以研招网调剂系统查询。
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" data-panel="analysis">
+        <div class="card chart-card">
+          <div class="chart-title">调剂录取初试分数分布</div>
+          <div class="bar-chart">
+            <div class="bar" style="height:48%"><span>1</span></div>
+            <div class="bar" style="height:72%"><span>2</span></div>
+            <div class="bar" style="height:20%"><span>0</span></div>
+            <div class="bar" style="height:24%"><span>0</span></div>
+            <div class="bar" style="height:68%"><span>2</span></div>
+          </div>
+          <div class="bar-chart" style="height:auto; margin-top: 6px;">
+            <div class="bar-label">260-264</div>
+            <div class="bar-label">264-268</div>
+            <div class="bar-label">268-272</div>
+            <div class="bar-label">272-276</div>
+            <div class="bar-label">276-279</div>
+          </div>
+        </div>
+
+        <div class="card chart-card">
+          <div class="chart-title">调剂录取一志愿院校层次占比</div>
+          <div class="pie-row">
+            <div class="pie"></div>
+            <div class="legend">
+              <div class="legend-item"><span class="dot"></span>985 工程 · 1 所</div>
+              <div class="legend-item"><span class="dot green"></span>211 工程 · 2 所</div>
+              <div class="legend-item"><span class="dot orange"></span>普通院校 · 2 所</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card chart-card">
+          <div class="chart-title">录取名单数据概览</div>
+          <div class="stats-list">
+            <div class="stats-row"><span>一志愿拟录取人数</span><span>2</span></div>
+            <div class="stats-row"><span>一志愿最高分</span><span>324</span></div>
+            <div class="stats-row"><span>一志愿最低分</span><span>278</span></div>
+            <div class="stats-row"><span>拟招收调剂人数</span><span>5</span></div>
+            <div class="stats-row"><span>调剂最低分</span><span>261</span></div>
+            <div class="stats-row"><span>调剂中位分</span><span>266</span></div>
+            <div class="stats-row"><span>调剂最高分</span><span>278</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" data-panel="list">
+        <div class="card candidate-card">
+          <div class="candidate-name">李**</div>
+          <div class="candidate-sub">一志愿报考：清华大学</div>
+          <div class="score-grid">
+            <div><span class="label">初试成绩</span><span>276</span></div>
+            <div><span class="label">复试分数</span><span>162</span></div>
+            <div><span class="label">总成绩</span><span>438</span></div>
+          </div>
+        </div>
+        <div class="card candidate-card">
+          <div class="candidate-name">卓**</div>
+          <div class="candidate-sub">一志愿报考：南京航空航天大学</div>
+          <div class="score-grid">
+            <div><span class="label">初试成绩</span><span>261</span></div>
+            <div><span class="label">复试分数</span><span>178.67</span></div>
+            <div><span class="label">总成绩</span><span>439.67</span></div>
+          </div>
+        </div>
+        <div class="card candidate-card">
+          <div class="candidate-name">成**</div>
+          <div class="candidate-sub">一志愿报考：辽宁工业大学</div>
+          <div class="score-grid">
+            <div><span class="label">初试成绩</span><span>266</span></div>
+            <div><span class="label">复试分数</span><span>154.67</span></div>
+            <div><span class="label">总成绩</span><span>420.67</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <button class="action-btn share" onclick="showToast('分享功能')">
+          <span class="action-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+              <polyline points="16 6 12 2 8 6"></polyline>
+              <line x1="12" y1="2" x2="12" y2="15"></line>
+            </svg>
+          </span>
+          <span>分享</span>
+        </button>
+        <button class="action-btn subscribe" onclick="showToast('已订阅')">
+          <span class="action-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+          </span>
+          <span>订阅</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

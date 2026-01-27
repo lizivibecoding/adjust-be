@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>发布调剂</title>
+  <link rel="stylesheet" href="../assets/base.css" />
+  <style>
+    .page-title { text-align: center; font-size: 18px; font-weight: 600; margin: 6px 0 16px; }
+    .search-bar { display: flex; align-items: center; background: #f4f6fb; padding: 12px 14px; border-radius: 999px; margin-bottom: 12px; }
+    .search-icon { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #c9d3e6; margin-right: 10px; position: relative; }
+    .search-icon::after { content: ""; position: absolute; width: 8px; height: 2px; background: #c9d3e6; right: -4px; bottom: 1px; transform: rotate(45deg); border-radius: 2px; }
+    .search-placeholder { color: #9aa3b2; font-size: 13px; }
+    .notice { background: #fff2e3; color: #bf6a00; border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-size: 13px; }
+    .notice-left { display: flex; align-items: center; gap: 8px; }
+    .notice-dot { width: 8px; height: 8px; border-radius: 50%; background: #ffb35c; }
+    .notice-btn { background: #ff9f43; color: #ffffff; border: none; border-radius: 999px; padding: 8px 14px; font-size: 12px; cursor: pointer; }
+    .post-card { padding: 14px 16px; margin-bottom: 12px; background: #ffffff; border: 1px solid #eef2f8; border-radius: 16px; box-shadow: 0 10px 22px rgba(31, 42, 58, 0.06); display: block; overflow: hidden; }
+    .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .logo { width: 36px; height: 36px; border-radius: 50%; background: #f0f3f8; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #2f6bff; flex-shrink: 0; }
+    .post-title { font-size: 14px; font-weight: 600; }
+    .post-divider { height: 1px; background: #f0f3f8; margin: 10px 0; }
+    .post-body { font-size: 13px; color: #3a4352; }
+    .post-footer { display: flex; justify-content: space-between; font-size: 12px; color: #8a94a6; margin-top: 8px; }
+  </style>
+</head>
+<body data-tab="publish">
+  <div class="page">
+    <div class="container">
+      <div class="page-title">考研调剂平台</div>
+
+      <div class="search-bar">
+        <div class="search-icon"></div>
+        <span class="search-placeholder">输入学校/专业，搜索招生单位发布的调剂</span>
+      </div>
+
+      <div class="notice">
+        <div class="notice-left">
+          <span class="notice-dot"></span>
+          <span>招生单位在线招调剂，导师&学生互动平台</span>
+        </div>
+        <button class="notice-btn" onclick="checkAuthAndPublish()">发布调剂</button>
+      </div>
+
+      <a class="card post-card" href="publish-detail.html">
+        <div class="post-header">
+          <div class="logo">康</div>
+          <div class="post-title">康复大学-青岛大学联合培养研究生</div>
+        </div>
+        <div class="post-divider"></div>
+        <div class="post-body"><span class="muted">调剂专业：</span>医学-(105500) (专业学位) 药学</div>
+        <div class="post-footer">
+          <span class="muted">2025-04-17 14:11</span>
+          <span class="muted">招生人数：暂不确定</span>
+        </div>
+      </a>
+
+      <a class="card post-card" href="publish-detail.html">
+        <div class="post-header">
+          <div class="logo">福</div>
+          <div class="post-title">福建师范大学【新闻传播学学硕】还招调剂</div>
+        </div>
+        <div class="post-divider"></div>
+        <div class="post-body"><span class="muted">调剂专业：</span>文学-(050300) 新闻传播学</div>
+        <div class="post-footer">
+          <span class="muted">2025-04-16 23:42</span>
+          <span class="muted">招生人数：3（1:2）</span>
+        </div>
+      </a>
+
+      <a class="card post-card" href="publish-detail.html">
+        <div class="post-header">
+          <div class="logo">林</div>
+          <div class="post-title">2025年中国林业科学研究院 收林业装备与信息化</div>
+        </div>
+        <div class="post-divider"></div>
+        <div class="post-body"><span class="muted">调剂专业：</span>工学-(082973) 林业装备与信息化</div>
+        <div class="post-footer">
+          <span class="muted">2025-04-16 15:56</span>
+          <span class="muted">招生人数：可接收学硕1名</span>
+        </div>
+      </a>
+
+      <a class="card post-card" href="publish-detail.html">
+        <div class="post-header">
+          <div class="logo">浙</div>
+          <div class="post-title">坐标杭州！浙江中医药大学有调剂名额</div>
+        </div>
+        <div class="post-divider"></div>
+        <div class="post-body"><span class="muted">调剂专业：</span>医学-(100800) 中药学</div>
+        <div class="post-footer">
+          <span class="muted">2025-04-15 15:22</span>
+          <span class="muted">招生人数：12</span>
+        </div>
+      </a>
+
+      <a class="card post-card" href="publish-detail.html">
+        <div class="post-header">
+          <div class="logo">川</div>
+          <div class="post-title">四川农业大学【农业工程】接受调剂</div>
+        </div>
+        <div class="post-divider"></div>
+        <div class="post-body"><span class="muted">调剂专业：</span>工学-(082800) 农业工程</div>
+        <div class="post-footer">
+          <span class="muted">2025-04-15 09:10</span>
+          <span class="muted">招生人数：5</span>
+        </div>
+      </a>
+
+      <a class="card post-card" href="publish-detail.html">
+        <div class="post-header">
+          <div class="logo">广</div>
+          <div class="post-title">广东工业大学【机械工程】调剂信息</div>
+        </div>
+        <div class="post-divider"></div>
+        <div class="post-body"><span class="muted">调剂专业：</span>工学-(080200) 机械工程</div>
+        <div class="post-footer">
+          <span class="muted">2025-04-14 22:05</span>
+          <span class="muted">招生人数：7</span>
+        </div>
+      </a>
+
+      <a class="card post-card" href="publish-detail.html">
+        <div class="post-header">
+          <div class="logo">西</div>
+          <div class="post-title">西南大学【教育学】调剂通知</div>
+        </div>
+        <div class="post-divider"></div>
+        <div class="post-body"><span class="muted">调剂专业：</span>教育学-(040100) 教育学</div>
+        <div class="post-footer">
+          <span class="muted">2025-04-14 18:42</span>
+          <span class="muted">招生人数：4</span>
+        </div>
+      </a>
+
+      <a class="card post-card" href="publish-detail.html">
+        <div class="post-header">
+          <div class="logo">上</div>
+          <div class="post-title">上海海事大学【物流工程】调剂</div>
+        </div>
+        <div class="post-divider"></div>
+        <div class="post-body"><span class="muted">调剂专业：</span>工学-(085600) 物流工程</div>
+        <div class="post-footer">
+          <span class="muted">2025-04-13 14:20</span>
+          <span class="muted">招生人数：6</span>
+        </div>
+      </a>
+
+      <a class="card post-card" href="info-detail.html">
+        <div class="post-header">
+          <div class="logo">南</div>
+          <div class="post-title">南京理工大学【材料工程】调剂信息</div>
+        </div>
+        <div class="post-divider"></div>
+        <div class="post-body"><span class="muted">调剂专业：</span>工学-(085600) 材料工程</div>
+        <div class="post-footer">
+          <span class="muted">2025-04-13 09:30</span>
+          <span class="muted">招生人数：2</span>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <nav class="tabbar">
+    <a href="home.html" data-tab="home">调剂信息</a>
+    <a href="custom.html" data-tab="custom">调剂定制</a>
+    <a href="publish.html" data-tab="publish">发布调剂</a>
+    <a href="profile.html" data-tab="profile">我的</a>
+  </nav>
+  <script src="../assets/app.js"></script>
+  <script>
+    // 检查是否已认证（这里用localStorage模拟，实际应该从服务器获取）
+    function checkAuthAndPublish() {
+      var isAuthenticated = localStorage.getItem('publish_authenticated');
+      if (isAuthenticated === 'true') {
+        location.href = 'publish-form.html';
+      } else {
+        location.href = 'publish-auth.html';
+      }
+    }
+  </script>
+</body>
+</html>

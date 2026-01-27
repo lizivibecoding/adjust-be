@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI 调剂报告</title>
+  <link rel="stylesheet" href="../assets/base.css" />
+  <style>
+    .report-card { padding: 16px; margin-bottom: 12px; }
+    .user-row { display: flex; align-items: center; gap: 12px; }
+    .avatar { width: 44px; height: 44px; border-radius: 50%; background: #dbe5ff; }
+    .user-info { flex: 1; }
+    .user-name { font-size: 14px; font-weight: 600; display: block; }
+    .user-sub { font-size: 12px; color: #6b7382; margin-top: 4px; }
+    .notice { background: #eaf4ff; color: #4677b8; padding: 10px 12px; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; margin-top: 12px; }
+    .notice-btn { border: 1px solid #7fb0ff; color: #2f6bff; padding: 6px 10px; border-radius: 8px; background: #ffffff; font-size: 12px; }
+    .radar-card { padding: 16px; margin-bottom: 12px; text-align: center; }
+    .radar-title { font-size: 12px; color: #6b7382; margin-bottom: 8px; }
+    .radar-wrap { position: relative; width: 220px; height: 200px; margin: 0 auto; }
+    .radar-label { position: absolute; font-size: 11px; color: #6b7382; }
+    .radar-label.top { top: -6px; left: 50%; transform: translateX(-50%); }
+    .radar-label.right { right: -6px; top: 40%; }
+    .radar-label.bottom-right { right: 8px; bottom: 14px; }
+    .radar-label.bottom-left { left: 8px; bottom: 14px; }
+    .radar-label.left { left: -6px; top: 40%; }
+    .analysis-box { border: 1px solid #bcd6ff; border-radius: 12px; padding: 12px; background: #ffffff; }
+    .analysis-item { display: flex; gap: 6px; margin-bottom: 10px; font-size: 12px; line-height: 1.6; color: #3a4352; }
+    .analysis-item:last-child { margin-bottom: 0; }
+    .analysis-key { color: #2f6bff; font-weight: 600; min-width: 42px; }
+    .section-title { font-size: 15px; font-weight: 600; margin: 14px 0 6px; text-align: center; }
+    .section-desc { font-size: 12px; color: #9aa3b2; text-align: center; margin-bottom: 12px; }
+    .jump-btn { text-align: center; margin-top: 14px; }
+    .link-btn { display: inline-flex; align-items: center; gap: 6px; color: #2f6bff; font-size: 13px; font-weight: 600; text-decoration: none; }
+    .link-btn::after { content: ">"; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="container">
+      <div class="card report-card">
+        <div class="user-row">
+          <div class="avatar"></div>
+          <div class="user-info">
+            <span class="user-name">微信用户 4vlg</span>
+            <div class="user-sub">（10007）北京理工大学</div>
+            <div class="user-sub">（085401）新一代电子信息技术</div>
+          </div>
+        </div>
+        <div class="notice">
+          <span>推荐结果较少，点击修改我的个人档案</span>
+          <button class="notice-btn">修改个人档案</button>
+        </div>
+      </div>
+
+      <div class="card radar-card">
+        <div class="radar-wrap">
+          <svg width="220" height="200" viewBox="0 0 220 200">
+            <polygon points="110,12 180,52 200,120 110,180 20,120 40,52" fill="none" stroke="#d9e3f2" stroke-width="1"/>
+            <polygon points="110,32 165,64 182,120 110,168 38,120 55,64" fill="none" stroke="#e5ecf6" stroke-width="1"/>
+            <polygon points="110,52 150,76 164,120 110,156 56,120 70,76" fill="none" stroke="#e5ecf6" stroke-width="1"/>
+            <polygon points="110,72 135,88 146,120 110,144 74,120 85,88" fill="none" stroke="#e5ecf6" stroke-width="1"/>
+            <polygon points="110,40 170,70 160,130 110,150 60,130 50,70" fill="rgba(125,163,255,0.25)" stroke="#7da3ff" stroke-width="1.2"/>
+            <circle cx="110" cy="40" r="3" fill="#7da3ff"/>
+            <circle cx="170" cy="70" r="3" fill="#7da3ff"/>
+            <circle cx="160" cy="130" r="3" fill="#7da3ff"/>
+            <circle cx="110" cy="150" r="3" fill="#7da3ff"/>
+            <circle cx="60" cy="130" r="3" fill="#7da3ff"/>
+            <circle cx="50" cy="70" r="3" fill="#7da3ff"/>
+          </svg>
+          <div class="radar-label top">背景</div>
+          <div class="radar-label right">地区</div>
+          <div class="radar-label bottom-right">英语</div>
+          <div class="radar-label bottom-left">类型</div>
+          <div class="radar-label left">总分</div>
+        </div>
+      </div>
+
+      <div class="card report-card analysis-box">
+        <div class="analysis-item"><span class="analysis-key">背景：</span><span>你的院校背景尚可，属于调剂生中的主流水平。若想脱颖而出，需要在复试中展现出色的专业素养和潜力。</span></div>
+        <div class="analysis-item"><span class="analysis-key">总分：</span><span>你的分数已过线，建议精准定位，重点关注与分数匹配的院校和专业。</span></div>
+        <div class="analysis-item"><span class="analysis-key">类型：</span><span>学硕/专硕两则皆可，意味着能同时检索两大名额库，机会更多，但需高效权衡取舍。</span></div>
+        <div class="analysis-item"><span class="analysis-key">英语：</span><span>良好的英语水平能为你的复试表现提供有力支持，请保持信心。</span></div>
+        <div class="analysis-item"><span class="analysis-key">地区：</span><span>你的目标范围内可选院校很多，这是巨大优势，请做好分类。</span></div>
+      </div>
+
+      <div class="jump-btn">
+        <a class="link-btn" href="custom-report.html">推荐院校专业</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

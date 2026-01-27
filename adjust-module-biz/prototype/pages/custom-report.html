@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>推荐院校专业</title>
+  <link rel="stylesheet" href="../assets/base.css" />
+  <style>
+    .level-tabs { display: flex; gap: 8px; background: #f2f4f9; padding: 4px; border-radius: 999px; margin: 4px 0 12px; }
+    .level-tab { flex: 1; text-align: center; font-size: 12px; padding: 6px 0; border-radius: 999px; color: var(--muted); cursor: pointer; }
+    .level-tab.active { background: #ffffff; color: var(--primary); font-weight: 600; box-shadow: 0 6px 14px rgba(31, 42, 58, 0.08); }
+    .filter-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+    .filter-select { appearance: none; -webkit-appearance: none; -moz-appearance: none; background: #f0f3f8; border: none; border-radius: 999px; padding: 6px 28px 6px 12px; font-size: 12px; color: #566070; width: 100%; position: relative; }
+    .filter-wrap { position: relative; }
+    .filter-wrap::after { content: ""; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid #b3bccb; pointer-events: none; }
+    .list-wrap { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: grid; }
+    .match-card { padding: 14px; }
+    .match-head { display: flex; align-items: center; justify-content: space-between; }
+    .match-title { font-size: 15px; font-weight: 700; color: #1f2a3d; }
+    .badge { padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+    .badge.easy { background: rgba(18, 183, 106, 0.12); color: var(--success); }
+    .badge.mid { background: rgba(247, 144, 9, 0.15); color: var(--warning); }
+    .badge.hard { background: rgba(245, 73, 73, 0.12); color: #f54949; }
+    .school-line { display: flex; align-items: center; gap: 8px; margin-top: 8px; color: #2f3a4a; font-size: 13px; }
+    .school-logo { width: 22px; height: 22px; border-radius: 50%; background: #eef2f8; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; color: #6b7382; }
+    .location { color: #9aa3b2; font-size: 12px; }
+    .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 12px; margin-top: 10px; font-size: 12px; color: #6b7382; }
+    .score-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0f3f8; text-align: center; }
+    .score-label { font-size: 11px; color: #9aa3b2; }
+    .score-value { font-size: 16px; font-weight: 700; color: #1f2a3d; margin-top: 4px; }
+    .foot-row { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; font-size: 12px; color: #9aa3b2; }
+    .foot-badge { color: #ff5b5b; font-weight: 600; }
+    .wishlist-btn { padding: 6px 12px; background: rgba(47, 107, 255, 0.12); color: var(--primary); border-radius: 12px; font-size: 12px; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 4px; }
+    .wishlist-btn::before { content: "📋"; font-size: 14px; }
+    .match-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding-top: 12px; border-top: 1px solid #f0f3f8; }
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 1000; display: none; }
+    .modal-overlay.active { display: flex; align-items: center; justify-content: center; }
+    .modal-content { background: #ffffff; border-radius: 16px; width: calc(var(--page-width) - 32px); max-width: 400px; padding: 20px; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .modal-title { font-size: 16px; font-weight: 600; }
+    .modal-close { width: 24px; height: 24px; border-radius: 50%; background: #f4f6fb; border: none; cursor: pointer; font-size: 18px; color: #6b7382; display: flex; align-items: center; justify-content: center; }
+    .wish-options { display: flex; flex-direction: column; gap: 12px; }
+    .wish-option { padding: 14px 16px; background: #f4f6fb; border-radius: 12px; font-size: 14px; color: #3a4352; cursor: pointer; border: none; text-align: left; }
+    .wish-option:hover { background: rgba(47, 107, 255, 0.12); color: var(--primary); }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="container">
+      <div class="level-tabs" data-tab-group>
+        <div class="level-tab active" data-tab-item data-target="all">全部</div>
+        <div class="level-tab" data-tab-item data-target="rush">冲刺</div>
+        <div class="level-tab" data-tab-item data-target="steady">求稳</div>
+        <div class="level-tab" data-tab-item data-target="safe">保底</div>
+      </div>
+
+      <div class="filter-row">
+        <div class="filter-wrap">
+          <select class="filter-select">
+            <option>院校位置</option>
+            <option>辽宁</option>
+            <option>北京</option>
+            <option>上海</option>
+            <option>广东</option>
+          </select>
+        </div>
+        <div class="filter-wrap">
+          <select class="filter-select">
+            <option>院校层次</option>
+            <option>985</option>
+            <option>211</option>
+            <option>双一流</option>
+            <option>普通院校</option>
+          </select>
+        </div>
+        <div class="filter-wrap">
+          <select class="filter-select">
+            <option>学习方式</option>
+            <option>全日制</option>
+            <option>非全日制</option>
+            <option>无要求</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="list-wrap tab-panel active" data-panel="all">
+        <div class="card match-card">
+          <div class="match-head">
+            <div class="match-title">085404-计算机技术</div>
+            <span class="badge mid">中</span>
+          </div>
+          <div class="school-line">
+            <span class="school-logo">大</span>
+            <span>大连海洋大学</span>
+            <span class="location">• 辽宁</span>
+          </div>
+          <div class="info-grid">
+            <span>年份：2025</span>
+            <span>学习方式：非全日制</span>
+            <span>信息工程学院</span>
+            <span>调剂招生：1人</span>
+          </div>
+          <div class="score-row">
+            <div>
+              <div class="score-label">录取最低分</div>
+              <div class="score-value">261</div>
+            </div>
+            <div>
+              <div class="score-label">录取中位分</div>
+              <div class="score-value">266</div>
+            </div>
+            <div>
+              <div class="score-label">录取最高分</div>
+              <div class="score-value">278</div>
+            </div>
+          </div>
+          <div class="foot-row">
+            <span>该院校与您毕业院校排名差距</span>
+            <span class="foot-badge">较大</span>
+          </div>
+          <div class="match-actions">
+            <button class="wishlist-btn" onclick="showWishlistModal(event)">加入志愿单</button>
+          </div>
+        </div>
+
+        <div class="card match-card">
+          <div class="match-head">
+            <div class="match-title">085404-计算机技术</div>
+            <span class="badge hard">难</span>
+          </div>
+          <div class="school-line">
+            <span class="school-logo">交</span>
+            <span>大连交通大学</span>
+            <span class="location">• 辽宁</span>
+          </div>
+          <div class="info-grid">
+            <span>年份：2025</span>
+            <span>学习方式：非全日制</span>
+            <span>轨道智能工程学院</span>
+            <span>调剂招生：4人</span>
+          </div>
+          <div class="score-row">
+            <div>
+              <div class="score-label">录取最低分</div>
+              <div class="score-value">274</div>
+            </div>
+            <div>
+              <div class="score-label">录取中位分</div>
+              <div class="score-value">278.5</div>
+            </div>
+            <div>
+              <div class="score-label">录取最高分</div>
+              <div class="score-value">283</div>
+            </div>
+          </div>
+          <div class="foot-row">
+            <span>该院校与您毕业院校排名差距</span>
+            <span class="foot-badge">较大</span>
+          </div>
+          <div class="match-actions">
+            <button class="wishlist-btn" onclick="showWishlistModal(event)">加入志愿单</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="list-wrap tab-panel" data-panel="rush">
+        <div class="card match-card">
+          <div class="match-head">
+            <div class="match-title">085404-计算机技术</div>
+            <span class="badge hard">难</span>
+          </div>
+          <div class="school-line">
+            <span class="school-logo">交</span>
+            <span>大连交通大学</span>
+            <span class="location">• 辽宁</span>
+          </div>
+          <div class="info-grid">
+            <span>年份：2025</span>
+            <span>学习方式：非全日制</span>
+            <span>轨道智能工程学院</span>
+            <span>调剂招生：4人</span>
+          </div>
+          <div class="score-row">
+            <div>
+              <div class="score-label">录取最低分</div>
+              <div class="score-value">274</div>
+            </div>
+            <div>
+              <div class="score-label">录取中位分</div>
+              <div class="score-value">278.5</div>
+            </div>
+            <div>
+              <div class="score-label">录取最高分</div>
+              <div class="score-value">283</div>
+            </div>
+          </div>
+          <div class="foot-row">
+            <span>该院校与您毕业院校排名差距</span>
+            <span class="foot-badge">较大</span>
+          </div>
+          <div class="match-actions">
+            <button class="wishlist-btn" onclick="showWishlistModal(event)">加入志愿单</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="list-wrap tab-panel" data-panel="steady">
+        <div class="card match-card">
+          <div class="match-head">
+            <div class="match-title">085404-计算机技术</div>
+            <span class="badge mid">中</span>
+          </div>
+          <div class="school-line">
+            <span class="school-logo">大</span>
+            <span>大连海洋大学</span>
+            <span class="location">• 辽宁</span>
+          </div>
+          <div class="info-grid">
+            <span>年份：2025</span>
+            <span>学习方式：非全日制</span>
+            <span>信息工程学院</span>
+            <span>调剂招生：1人</span>
+          </div>
+          <div class="score-row">
+            <div>
+              <div class="score-label">录取最低分</div>
+              <div class="score-value">261</div>
+            </div>
+            <div>
+              <div class="score-label">录取中位分</div>
+              <div class="score-value">266</div>
+            </div>
+            <div>
+              <div class="score-label">录取最高分</div>
+              <div class="score-value">278</div>
+            </div>
+          </div>
+          <div class="foot-row">
+            <span>该院校与您毕业院校排名差距</span>
+            <span class="foot-badge">较大</span>
+          </div>
+          <div class="match-actions">
+            <button class="wishlist-btn" onclick="showWishlistModal(event)">加入志愿单</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="list-wrap tab-panel" data-panel="safe">
+        <div class="card match-card">
+          <div class="match-head">
+            <div class="match-title">085404-计算机技术</div>
+            <span class="badge easy">易</span>
+          </div>
+          <div class="school-line">
+            <span class="school-logo">沈</span>
+            <span>沈阳理工大学</span>
+            <span class="location">• 辽宁</span>
+          </div>
+          <div class="info-grid">
+            <span>年份：2025</span>
+            <span>学习方式：非全日制</span>
+            <span>信息与控制学院</span>
+            <span>调剂招生：6人</span>
+          </div>
+          <div class="score-row">
+            <div>
+              <div class="score-label">录取最低分</div>
+              <div class="score-value">248</div>
+            </div>
+            <div>
+              <div class="score-label">录取中位分</div>
+              <div class="score-value">255</div>
+            </div>
+            <div>
+              <div class="score-label">录取最高分</div>
+              <div class="score-value">264</div>
+            </div>
+          </div>
+          <div class="foot-row">
+            <span>该院校与您毕业院校排名差距</span>
+            <span class="foot-badge">适中</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="wishlistModal" onclick="closeWishlistModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">选择志愿</div>
+        <button class="modal-close" onclick="closeWishlistModal(event)">×</button>
+      </div>
+      <div class="wish-options">
+        <button class="wish-option" onclick="selectWish('一志愿', this)">一志愿（第一优先级）</button>
+        <button class="wish-option" onclick="selectWish('二志愿', this)">二志愿（第二优先级）</button>
+        <button class="wish-option" onclick="selectWish('三志愿', this)">三志愿（第三优先级）</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/app.js"></script>
+  <script>
+    function showWishlistModal(event) {
+      if (event) {
+        event.stopPropagation();
+      }
+      document.getElementById('wishlistModal').classList.add('active');
+    }
+
+    function closeWishlistModal(event) {
+      if (event) {
+        event.stopPropagation();
+      }
+      document.getElementById('wishlistModal').classList.remove('active');
+    }
+
+    function selectWish(wish, element) {
+      showToast('已添加到' + wish);
+      closeWishlistModal();
+    }
+  </script>
+</body>
+</html>

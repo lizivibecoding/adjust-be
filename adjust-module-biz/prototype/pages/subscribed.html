@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>我的订阅</title>
+  <link rel="stylesheet" href="../assets/base.css" />
+  <style>
+    .page-title { text-align: center; font-size: 18px; font-weight: 600; margin: 6px 0 12px; }
+    .filter-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; font-size: 12px; color: #6b7382; margin-bottom: 10px; }
+    .filter-item { background: #f4f6fb; border-radius: 12px; padding: 8px 8px; text-align: center; }
+    .filter-item select { width: 100%; border: none; background: transparent; font-size: 12px; color: #6b7382; outline: none; }
+    .notice { background: #fff2e3; color: #bf6a00; border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-size: 12px; }
+    .notice-btn { background: #ff9f43; color: #ffffff; border: none; border-radius: 999px; padding: 6px 12px; font-size: 12px; cursor: pointer; }
+    .school-card { padding: 12px 14px; margin-bottom: 12px; }
+    .school-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .school-left { display: flex; align-items: center; gap: 10px; }
+    .school-logo { width: 36px; height: 36px; border-radius: 50%; background: #eaf1ff; color: #2f6bff; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+    .school-name { font-size: 14px; font-weight: 600; }
+    .school-tag { font-size: 12px; color: #9aa3b2; margin-top: 4px; }
+    .toggle-btn { width: 28px; height: 28px; border-radius: 50%; background: #eaf1ff; color: #2f6bff; border: none; cursor: pointer; }
+    .major-list { margin-top: 10px; display: none; }
+    .major-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f3f8; font-size: 13px; }
+    .major-item:last-child { border-bottom: none; }
+    .major-link { color: #3a4352; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="container">
+      <div class="page-title">我的订阅</div>
+
+      <div class="filter-row">
+        <div class="filter-item">
+          <select>
+            <option>所属省份</option>
+            <option>湖南</option>
+            <option>山东</option>
+            <option>北京</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <select>
+            <option>一级学科</option>
+            <option>设计学</option>
+            <option>新闻传播学</option>
+            <option>计算机</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <select>
+            <option>学校属性</option>
+            <option>985</option>
+            <option>211</option>
+            <option>双一流</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <select>
+            <option>更新状态</option>
+            <option>最新</option>
+            <option>3天内</option>
+            <option>7天内</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="notice">
+        <span>仅调剂定制VIP可用意向筛选+定制跟踪</span>
+        <button class="notice-btn">开启</button>
+      </div>
+
+      <div class="card school-card">
+        <div class="school-head">
+          <a href="school-detail.html" style="flex: 1; display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit;">
+            <div class="school-logo">长</div>
+            <div>
+              <div class="school-name">长沙理工大学</div>
+              <div class="school-tag">推</div>
+            </div>
+          </a>
+          <button class="toggle-btn" data-toggle>></button>
+        </div>
+        <div class="major-list">
+          <a class="major-item major-link" href="info-detail.html">
+            <span>专业：设计学</span>
+            <span class="muted">查看</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="card school-card">
+        <div class="school-head">
+          <a href="school-detail.html" style="flex: 1; display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit;">
+            <div class="school-logo">曲</div>
+            <div>
+              <div class="school-name">曲阜师范大学</div>
+              <div class="school-tag">推</div>
+            </div>
+          </a>
+          <button class="toggle-btn" data-toggle>></button>
+        </div>
+        <div class="major-list">
+          <a class="major-item major-link" href="info-detail.html">
+            <span>专业：新闻传播学</span>
+            <span class="muted">查看</span>
+          </a>
+          <a class="major-item major-link" href="info-detail.html">
+            <span>专业：传播学</span>
+            <span class="muted">查看</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll('[data-toggle]').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var list = btn.parentElement.nextElementSibling;
+        var isOpen = list.style.display === 'block';
+        list.style.display = isOpen ? 'none' : 'block';
+        btn.textContent = isOpen ? '>' : '∨';
+      });
+    });
+  </script>
+</body>
+</html>
