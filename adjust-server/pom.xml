@@ -28,6 +28,11 @@
         </dependency>
         <dependency>
             <groupId>com.hongguoyan</groupId>
+            <artifactId>adjust-module-biz</artifactId>
+            <version>${revision}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.hongguoyan</groupId>
             <artifactId>adjust-module-system</artifactId>
             <version>${revision}</version>
         </dependency>

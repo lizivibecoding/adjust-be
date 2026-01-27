@@ -19,6 +19,7 @@
         <module>adjust-module-mp</module>
         <module>adjust-module-pay</module>
         <module>adjust-module-ai</module>
+        <module>adjust-module-biz</module>
     </modules>
 
     <name>${project.artifactId}</name>
