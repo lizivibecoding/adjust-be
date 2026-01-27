@@ -53,7 +53,7 @@ public interface RecruitMapper extends BaseMapperX<RecruitDO> {
                 .eqIfPresent(RecruitDO::getSubjectCombinations, reqVO.getSubjectCombinations())
                 .eqIfPresent(RecruitDO::getRemark, reqVO.getRemark())
                 .betweenIfPresent(RecruitDO::getCreateTime, reqVO.getCreateTime())
-                .eqIfPresent(RecruitDO::getClicks, reqVO.getClicks())
+                .eqIfPresent(RecruitDO::getViewCount, reqVO.getViewCount())
                 .orderByDesc(RecruitDO::getId));
     }
 

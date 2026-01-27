@@ -9,4 +9,12 @@
         文档可见：https://www.iocoder.cn/MyBatis/x-plugins/
      -->
 
+    <select id="selectSuggestSchoolNames" resultType="java.lang.String">
+        SELECT DISTINCT school_name
+        FROM biz_school
+        WHERE school_name LIKE CONCAT(#{keyword}, '%')
+        ORDER BY school_name
+        LIMIT #{limit}
+    </select>
+
 </mapper>

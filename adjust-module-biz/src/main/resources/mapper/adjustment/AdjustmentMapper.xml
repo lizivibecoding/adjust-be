@@ -9,4 +9,70 @@
         文档可见：https://www.iocoder.cn/MyBatis/x-plugins/
      -->
 
+    <sql id="SearchWhere">
+        <where>
+            <if test="reqVO.keyword != null and reqVO.keyword != ''">
+                AND MATCH(a.school_name, a.major_name, a.major_code,
+                    a.subject_name1, a.subject_name2, a.subject_name3, a.subject_name4)
+                AGAINST(#{reqVO.keyword} IN BOOLEAN MODE)
+            </if>
+            <if test="reqVO.majorCode != null and reqVO.majorCode != ''">
+                AND a.major_code LIKE CONCAT(#{reqVO.majorCode}, '%')
+            </if>
+            <!-- 筛选条件暂时关闭，先只保留全文检索结果 -->
+        </where>
+    </sql>
+
+    <select id="selectSearchMajorPage"
+            resultType="com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentSearchRespVO">
+        SELECT
+            MAX(a.school_name) AS schoolName,
+            MAX(a.major_code) AS majorCode,
+            MAX(a.major_name) AS majorName,
+            a.year,
+            MAX(a.study_mode) AS studyMode,
+            SUM(a.balance_count) AS balanceCount,
+            MAX(a.update_time) AS updateTime,
+            MAX(a.view_count) AS viewCount,
+            MAX(s.province_name) AS provinceName,
+            MAX(s.is_985) AS is985,
+            MAX(s.is_211) AS is211,
+            MAX(s.is_syl) AS isSyl,
+            SUM(r.recruit_number) AS recruitNumber
+        FROM biz_adjustment a
+        LEFT JOIN biz_school s ON s.id = a.school_id
+        LEFT JOIN biz_recruit r ON r.school_id = a.school_id
+            AND r.college_id = a.college_id
+            AND r.major_id = a.major_id
+            AND r.year = a.year
+        <include refid="SearchWhere" />
+        GROUP BY a.school_id, a.college_id, a.major_id, a.year
+        ORDER BY MAX(a.publish_time) DESC
+    </select>
+
+    <select id="selectSearchSchoolPage"
+            resultType="com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentSearchSchoolRespVO">
+        SELECT
+            a.school_id AS schoolId,
+            a.school_name AS schoolName,
+            s.school_type AS schoolType,
+            s.province_name AS provinceName,
+            a.year,
+            MAX(r.recruit_number) AS recruitNumber,
+            SUM(a.balance_count) AS balanceCount,
+            MAX(a.update_time) AS updateTime,
+            MAX(s.is_985) AS is985,
+            MAX(s.is_211) AS is211,
+            MAX(s.is_syl) AS isSyl
+        FROM biz_adjustment a
+        LEFT JOIN biz_school s ON s.id = a.school_id
+        LEFT JOIN biz_recruit r ON r.school_id = a.school_id
+            AND r.college_id = a.college_id
+            AND r.major_id = a.major_id
+            AND r.year = a.year
+        <include refid="SearchWhere" />
+        GROUP BY a.school_id, a.school_name, s.school_type, s.province_name, a.year
+        ORDER BY MAX(a.publish_time) DESC
+    </select>
+
 </mapper>

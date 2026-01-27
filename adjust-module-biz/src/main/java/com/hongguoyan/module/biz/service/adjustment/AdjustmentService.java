@@ -59,4 +59,20 @@ public interface AdjustmentService {
      */
     PageResult<AdjustmentDO> getAdjustmentPage(AppAdjustmentPageReqVO pageReqVO);
 
+    /**
+     * 调剂全局搜索（按 Tab 返回）
+     *
+     * @param reqVO 搜索条件
+     * @return 搜索结果
+     */
+    AppAdjustmentSearchTabRespVO getAdjustmentSearchPage(AppAdjustmentSearchReqVO reqVO);
+
+    /**
+     * 调剂联想词
+     *
+     * @param keyword 关键词
+     * @return 联想词
+     */
+    AppAdjustmentSuggestRespVO getAdjustmentSuggest(String keyword);
+
 }

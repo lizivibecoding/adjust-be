@@ -7,6 +7,7 @@ import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.hongguoyan.framework.mybatis.core.mapper.BaseMapperX;
 import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import com.hongguoyan.module.biz.controller.app.school.vo.*;
 
 /**
@@ -47,5 +48,8 @@ public interface SchoolMapper extends BaseMapperX<SchoolDO> {
                 .betweenIfPresent(SchoolDO::getCreateTime, reqVO.getCreateTime())
                 .orderByDesc(SchoolDO::getId));
     }
+
+    List<String> selectSuggestSchoolNames(@Param("keyword") String keyword,
+                                          @Param("limit") Integer limit);
 
 }

@@ -5,8 +5,12 @@ import java.util.*;
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.hongguoyan.framework.mybatis.core.mapper.BaseMapperX;
+import com.hongguoyan.framework.mybatis.core.util.MyBatisUtils;
 import com.hongguoyan.module.biz.dal.dataobject.adjustment.AdjustmentDO;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.*;
 
 /**
@@ -65,5 +69,25 @@ public interface AdjustmentMapper extends BaseMapperX<AdjustmentDO> {
                 .eqIfPresent(AdjustmentDO::getViewCount, reqVO.getViewCount())
                 .orderByDesc(AdjustmentDO::getId));
     }
+
+    default PageResult<AppAdjustmentSearchRespVO> selectSearchMajorPage(AppAdjustmentSearchReqVO reqVO) {
+        Page<AppAdjustmentSearchRespVO> page = MyBatisUtils.buildPage(reqVO);
+        List<AppAdjustmentSearchRespVO> records = selectSearchMajorPage(page, reqVO);
+        page.setRecords(records);
+        return new PageResult<>(page.getRecords(), page.getTotal());
+    }
+
+    List<AppAdjustmentSearchRespVO> selectSearchMajorPage(IPage<AppAdjustmentSearchRespVO> page,
+                                                          @Param("reqVO") AppAdjustmentSearchReqVO reqVO);
+
+    default PageResult<AppAdjustmentSearchSchoolRespVO> selectSearchSchoolPage(AppAdjustmentSearchReqVO reqVO) {
+        Page<AppAdjustmentSearchSchoolRespVO> page = MyBatisUtils.buildPage(reqVO);
+        List<AppAdjustmentSearchSchoolRespVO> records = selectSearchSchoolPage(page, reqVO);
+        page.setRecords(records);
+        return new PageResult<>(page.getRecords(), page.getTotal());
+    }
+
+    List<AppAdjustmentSearchSchoolRespVO> selectSearchSchoolPage(IPage<AppAdjustmentSearchSchoolRespVO> page,
+                                                                 @Param("reqVO") AppAdjustmentSearchReqVO reqVO);
 
 }

@@ -38,60 +38,19 @@ public class AppAdjustmentController {
     @Resource
     private AdjustmentService adjustmentService;
 
-    @PostMapping("/create")
-    @Operation(summary = "创建调剂")
-    public CommonResult<Long> createAdjustment(@Valid @RequestBody AppAdjustmentSaveReqVO createReqVO) {
-        return success(adjustmentService.createAdjustment(createReqVO));
+    @GetMapping("/search")
+    @Operation(summary = "调剂全局搜索")
+    public CommonResult<AppAdjustmentSearchTabRespVO> getAdjustmentSearchPage(
+            @Valid AppAdjustmentSearchReqVO reqVO) {
+        return success(adjustmentService.getAdjustmentSearchPage(reqVO));
     }
 
-    @PutMapping("/update")
-    @Operation(summary = "更新调剂")
-    public CommonResult<Boolean> updateAdjustment(@Valid @RequestBody AppAdjustmentSaveReqVO updateReqVO) {
-        adjustmentService.updateAdjustment(updateReqVO);
-        return success(true);
-    }
-
-    @DeleteMapping("/delete")
-    @Operation(summary = "删除调剂")
-    @Parameter(name = "id", description = "编号", required = true)
-    public CommonResult<Boolean> deleteAdjustment(@RequestParam("id") Long id) {
-        adjustmentService.deleteAdjustment(id);
-        return success(true);
-    }
-
-    @DeleteMapping("/delete-list")
-    @Parameter(name = "ids", description = "编号", required = true)
-    @Operation(summary = "批量删除调剂")
-    public CommonResult<Boolean> deleteAdjustmentList(@RequestParam("ids") List<Long> ids) {
-        adjustmentService.deleteAdjustmentListByIds(ids);
-        return success(true);
-    }
-
-    @GetMapping("/get")
-    @Operation(summary = "获得调剂")
-    @Parameter(name = "id", description = "编号", required = true, example = "1024")
-    public CommonResult<AppAdjustmentRespVO> getAdjustment(@RequestParam("id") Long id) {
-        AdjustmentDO adjustment = adjustmentService.getAdjustment(id);
-        return success(BeanUtils.toBean(adjustment, AppAdjustmentRespVO.class));
-    }
-
-    @GetMapping("/page")
-    @Operation(summary = "获得调剂分页")
-    public CommonResult<PageResult<AppAdjustmentRespVO>> getAdjustmentPage(@Valid AppAdjustmentPageReqVO pageReqVO) {
-        PageResult<AdjustmentDO> pageResult = adjustmentService.getAdjustmentPage(pageReqVO);
-        return success(BeanUtils.toBean(pageResult, AppAdjustmentRespVO.class));
-    }
-
-    @GetMapping("/export-excel")
-    @Operation(summary = "导出调剂 Excel")
-    @ApiAccessLog(operateType = EXPORT)
-    public void exportAdjustmentExcel(@Valid AppAdjustmentPageReqVO pageReqVO,
-              HttpServletResponse response) throws IOException {
-        pageReqVO.setPageSize(PageParam.PAGE_SIZE_NONE);
-        List<AdjustmentDO> list = adjustmentService.getAdjustmentPage(pageReqVO).getList();
-        // 导出 Excel
-        ExcelUtils.write(response, "调剂.xls", "数据", AppAdjustmentRespVO.class,
-                        BeanUtils.toBean(list, AppAdjustmentRespVO.class));
+    @GetMapping("/suggest")
+    @Operation(summary = "调剂联想词")
+    @Parameter(name = "keyword", description = "关键词", required = true)
+    public CommonResult<AppAdjustmentSuggestRespVO> getAdjustmentSuggest(
+            @RequestParam("keyword") String keyword) {
+        return success(adjustmentService.getAdjustmentSuggest(keyword));
     }
 
 }
