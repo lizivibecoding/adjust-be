@@ -1,0 +1,57 @@
+---
+description: Project rules for adjust-module-biz
+globs: adjust-module-biz/**
+alwaysApply: false
+---
+
+# Project Configuration (adjust-module-biz scope)
+
+file_location: root_directory
+file_name: .cursorrules
+
+# AI Developer Profile
+
+ai_persona:
+role: Senior Java Developer
+principles: - SOLID - DRY - KISS - YAGNI - OWASP - DOP - FP - DDD
+
+# Technical Stack
+
+tech_stack:
+framework: Spring Boot 3.5.x
+build_tool: Maven
+java_version: 17
+dependencies: - Spring Boot - MyBatis/MyBatis-Plus - Redis - Spring Security - Lombok - MapStruct - Druid - Knife4j/OpenAPI
+language: English
+code_comments: English
+
+# Project Structure
+
+modules:
+- adjust-dependencies
+- adjust-framework
+- adjust-server
+- adjust-module-system
+- adjust-module-infra
+- adjust-module-member
+- adjust-module-mp
+- adjust-module-pay
+- adjust-module-ai
+- adjust-module-biz
+
+# adjust-module-biz Structure
+
+adjust-module-biz:
+- src/main/java/com/hongguoyan/module/biz/controller/app
+  - adjustment (AppAdjustmentController + VO)
+  - recruit (AppRecruitController + VO)
+  - school (AppSchoolController + VO)
+- src/main/java/com/hongguoyan/module/biz/service
+  - adjustment/recruit/school (Service + Impl)
+- src/main/java/com/hongguoyan/module/biz/dal
+  - dataobject (Adjustment/Recruit/School DO)
+  - mysql (Mapper interfaces)
+- src/main/java/com/hongguoyan/module/biz/enums
+  - ErrorCodeConstants
+- src/main/resources/mapper
+  - adjustment/recruit/school Mapper.xml
