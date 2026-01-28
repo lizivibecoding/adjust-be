@@ -1,0 +1,40 @@
+package com.hongguoyan.module.biz.dal.mysql.viporder;
+
+import java.util.*;
+
+import com.hongguoyan.framework.common.pojo.PageResult;
+import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
+import com.hongguoyan.framework.mybatis.core.mapper.BaseMapperX;
+import com.hongguoyan.module.biz.dal.dataobject.viporder.VipOrderDO;
+import org.apache.ibatis.annotations.Mapper;
+import com.hongguoyan.module.biz.controller.admin.viporder.vo.*;
+
+/**
+ * 会员订单 Mapper
+ *
+ * @author hgy
+ */
+@Mapper
+public interface VipOrderMapper extends BaseMapperX<VipOrderDO> {
+
+    default PageResult<VipOrderDO> selectPage(VipOrderPageReqVO reqVO) {
+        return selectPage(reqVO, new LambdaQueryWrapperX<VipOrderDO>()
+                .eqIfPresent(VipOrderDO::getOrderNo, reqVO.getOrderNo())
+                .eqIfPresent(VipOrderDO::getUserId, reqVO.getUserId())
+                .eqIfPresent(VipOrderDO::getPlanCode, reqVO.getPlanCode())
+                .eqIfPresent(VipOrderDO::getAmount, reqVO.getAmount())
+                .eqIfPresent(VipOrderDO::getStatus, reqVO.getStatus())
+                .eqIfPresent(VipOrderDO::getPayOrderId, reqVO.getPayOrderId())
+                .eqIfPresent(VipOrderDO::getPayChannel, reqVO.getPayChannel())
+                .betweenIfPresent(VipOrderDO::getPayTime, reqVO.getPayTime())
+                .betweenIfPresent(VipOrderDO::getExpireTime, reqVO.getExpireTime())
+                .eqIfPresent(VipOrderDO::getRefundAmount, reqVO.getRefundAmount())
+                .betweenIfPresent(VipOrderDO::getRefundTime, reqVO.getRefundTime())
+                .eqIfPresent(VipOrderDO::getPayRefundId, reqVO.getPayRefundId())
+                .betweenIfPresent(VipOrderDO::getCancelTime, reqVO.getCancelTime())
+                .eqIfPresent(VipOrderDO::getExtra, reqVO.getExtra())
+                .betweenIfPresent(VipOrderDO::getCreateTime, reqVO.getCreateTime())
+                .orderByDesc(VipOrderDO::getId));
+    }
+
+}

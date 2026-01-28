@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>自划线管理 - 管理后台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <div class="flex h-screen overflow-hidden">
+    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col">
+      <div class="p-6 border-b border-gray-200">
+        <h1 class="text-xl font-bold text-gray-900">调剂系统管理</h1>
+        <p class="text-sm text-gray-500 mt-1">Admin Dashboard</p>
+      </div>
+      <nav class="flex-1 overflow-y-auto p-4">
+        <div class="space-y-1">
+          <a href="index.html" class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            <span>控制台</span>
+          </a>
+          <a href="data-collection.html" class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>数据采集</span>
+          </a>
+          <a href="major-info.html" class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span>调剂专业信息管理</span>
+          </a>
+          <a href="score-national.html" class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <span>考研分数线管理</span>
+          </a>
+          <div class="ml-8 space-y-1">
+            <a href="score-national.html" class="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg text-sm">
+              <span>国家线</span>
+            </a>
+            <a href="score-self.html" class="flex items-center gap-3 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg font-medium text-sm">
+              <span>自划线</span>
+            </a>
+          </div>
+          <a href="users-list.html" class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <span>用户管理</span>
+          </a>
+          <a href="users-auth.html" class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            <span>认证审核</span>
+          </a>
+          <a href="users-vip.html" class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+            </svg>
+            <span>会员管理</span>
+          </a>
+          <a href="content-posts.html" class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span>信息审核</span>
+          </a>
+          <a href="commerce-sku.html" class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>SKU管理</span>
+          </a>
+          <a href="vip-coupons.html" class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+            </svg>
+            <span>VIP券码管理</span>
+          </a>
+          <a href="commerce-orders.html" class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            <span>订单管理</span>
+          </a>
+          <a href="system-banners.html" class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span>系统配置</span>
+          </a>
+        </div>
+      </nav>
+      <div class="p-4 border-t border-gray-200">
+        <div class="flex items-center gap-3 px-4 py-3">
+          <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+            <span class="text-blue-600 font-semibold">管</span>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-medium text-gray-900">管理员</p>
+            <p class="text-xs text-gray-500">admin@example.com</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <header class="bg-white border-b border-gray-200 px-6 py-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-2xl font-bold text-gray-900">自划线管理</h2>
+            <p class="text-sm text-gray-500 mt-1">管理院校自划线数据</p>
+          </div>
+          <div class="flex gap-3">
+            <select id="filterYear" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">全部年份</option>
+              <option value="2025">2025</option>
+              <option value="2024">2024</option>
+              <option value="2023">2023</option>
+              <option value="2022">2022</option>
+              <option value="2021">2021</option>
+            </select>
+            <select id="filterDegreeType" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">全部学位类型</option>
+              <option value="academic">学术学位</option>
+              <option value="professional">专业学位</option>
+            </select>
+            <select id="filterType" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">全部类型</option>
+              <option value="discipline">学科</option>
+              <option value="major">专业</option>
+            </select>
+            <button onclick="openAddModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+              <svg class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              新增
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main class="flex-1 overflow-y-auto p-6">
+        <!-- 统一表格 -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">年份</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">学校</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">院校</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">学位类型</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">类型</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">学科/专业</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">政治/综合</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">外国语</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">专业课1</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">专业课2</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">总分</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">备注</th>
+                  <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">操作</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200" id="tableBody">
+                <tr class="hover:bg-gray-50" data-year="2024">
+                  <td class="px-4 py-3 text-sm text-gray-900">2024</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">清华大学</td>
+                  <td class="px-4 py-3 text-sm text-gray-500">-</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">学术学位</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">学科</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">01 哲学</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">50</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">50</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">90</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">90</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">345</td>
+                  <td class="px-4 py-3 text-sm text-gray-500">招生院系在学校</td>
+                  <td class="px-4 py-3 text-right text-sm font-medium">
+                    <div class="flex items-center justify-end gap-2">
+                      <button onclick="openEditModal(1)" class="text-blue-600 hover:text-blue-900">编辑</button>
+                      <span class="text-gray-400">|</span>
+                      <button onclick="deleteRow(1)" class="text-red-600 hover:text-red-900">删除</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="hover:bg-gray-50" data-year="2024">
+                  <td class="px-4 py-3 text-sm text-gray-900">2024</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">清华大学</td>
+                  <td class="px-4 py-3 text-sm text-gray-500">-</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">学术学位</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">学科</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">02 经济学</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">50</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">50</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">90</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">90</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">375</td>
+                  <td class="px-4 py-3 text-sm text-gray-500">复试基本分数线</td>
+                  <td class="px-4 py-3 text-right text-sm font-medium">
+                    <div class="flex items-center justify-end gap-2">
+                      <button onclick="openEditModal(2)" class="text-blue-600 hover:text-blue-900">编辑</button>
+                      <span class="text-gray-400">|</span>
+                      <button onclick="deleteRow(2)" class="text-red-600 hover:text-red-900">删除</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="hover:bg-gray-50" data-year="2024">
+                  <td class="px-4 py-3 text-sm text-gray-900">2024</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">清华大学</td>
+                  <td class="px-4 py-3 text-sm text-gray-500">-</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">专业学位</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">专业</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">0251 金融</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">50</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">55</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">90</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">90</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">360</td>
+                  <td class="px-4 py-3 text-sm text-gray-500">招生院系在学校</td>
+                  <td class="px-4 py-3 text-right text-sm font-medium">
+                    <div class="flex items-center justify-end gap-2">
+                      <button onclick="openEditModal(3)" class="text-blue-600 hover:text-blue-900">编辑</button>
+                      <span class="text-gray-400">|</span>
+                      <button onclick="deleteRow(3)" class="text-red-600 hover:text-red-900">删除</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="hover:bg-gray-50" data-year="2024">
+                  <td class="px-4 py-3 text-sm text-gray-900">2024</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">清华大学</td>
+                  <td class="px-4 py-3 text-sm text-gray-500">-</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">专业学位</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">专业</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">0253 税务</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">50</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">55</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">90</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">90</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">360</td>
+                  <td class="px-4 py-3 text-sm text-gray-500">招生院系在学校</td>
+                  <td class="px-4 py-3 text-right text-sm font-medium">
+                    <div class="flex items-center justify-end gap-2">
+                      <button onclick="openEditModal(4)" class="text-blue-600 hover:text-blue-900">编辑</button>
+                      <span class="text-gray-400">|</span>
+                      <button onclick="deleteRow(4)" class="text-red-600 hover:text-red-900">删除</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="hover:bg-gray-50" data-year="2024">
+                  <td class="px-4 py-3 text-sm text-gray-900">2024</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">清华大学</td>
+                  <td class="px-4 py-3 text-sm text-gray-500">-</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">专业学位</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">专业</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">0254 国际商务</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">50</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">55</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">90</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">90</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">360</td>
+                  <td class="px-4 py-3 text-sm text-gray-500">招生院系在学校</td>
+                  <td class="px-4 py-3 text-right text-sm font-medium">
+                    <div class="flex items-center justify-end gap-2">
+                      <button onclick="openEditModal(5)" class="text-blue-600 hover:text-blue-900">编辑</button>
+                      <span class="text-gray-400">|</span>
+                      <button onclick="deleteRow(5)" class="text-red-600 hover:text-red-900">删除</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="hover:bg-gray-50" data-year="2024">
+                  <td class="px-4 py-3 text-sm text-gray-900">2024</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">清华大学</td>
+                  <td class="px-4 py-3 text-sm text-gray-500">-</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">专业学位</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">专业</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">0255 保险</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">50</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">55</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">90</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">90</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">360</td>
+                  <td class="px-4 py-3 text-sm text-gray-500">招生院系在学校</td>
+                  <td class="px-4 py-3 text-right text-sm font-medium">
+                    <div class="flex items-center justify-end gap-2">
+                      <button onclick="openEditModal(6)" class="text-blue-600 hover:text-blue-900">编辑</button>
+                      <span class="text-gray-400">|</span>
+                      <button onclick="deleteRow(6)" class="text-red-600 hover:text-red-900">删除</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="hover:bg-gray-50" data-year="2023">
+                  <td class="px-4 py-3 text-sm text-gray-900">2023</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">清华大学</td>
+                  <td class="px-4 py-3 text-sm text-gray-500">-</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">专业学位</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">专业</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">0351 法律</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">50</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">50</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">90</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">90</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">350</td>
+                  <td class="px-4 py-3 text-sm text-gray-500">情况,自主确定</td>
+                  <td class="px-4 py-3 text-right text-sm font-medium">
+                    <div class="flex items-center justify-end gap-2">
+                      <button onclick="openEditModal(7)" class="text-blue-600 hover:text-blue-900">编辑</button>
+                      <span class="text-gray-400">|</span>
+                      <button onclick="deleteRow(7)" class="text-red-600 hover:text-red-900">删除</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="hover:bg-gray-50" data-year="2024">
+                  <td class="px-4 py-3 text-sm text-gray-900">2024</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">北京大学</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">信息科学技术学院</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">学术学位</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">学科</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">08 工学</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">50</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">50</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">80</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">80</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">310</td>
+                  <td class="px-4 py-3 text-sm text-gray-500">-</td>
+                  <td class="px-4 py-3 text-right text-sm font-medium">
+                    <div class="flex items-center justify-end gap-2">
+                      <button onclick="openEditModal(8)" class="text-blue-600 hover:text-blue-900">编辑</button>
+                      <span class="text-gray-400">|</span>
+                      <button onclick="deleteRow(8)" class="text-red-600 hover:text-red-900">删除</button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+            <div class="text-sm text-gray-700">显示 <span class="font-medium">1</span> 到 <span class="font-medium">10</span> 条，共 <span class="font-medium">156</span> 条</div>
+            <div class="flex gap-2">
+              <button class="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50">上一页</button>
+              <button class="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm">1</button>
+              <button class="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50">2</button>
+              <button class="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50">3</button>
+              <button class="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50">下一页</button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- 新增/编辑模态框 -->
+    <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+      <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto m-4">
+        <div class="p-6 border-b border-gray-200">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-900" id="modalTitle">新增自划线</h3>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <form id="scoreForm" class="p-6">
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">年份</label>
+              <select id="year" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                <option value="2025">2025</option>
+                <option value="2024" selected>2024</option>
+                <option value="2023">2023</option>
+                <option value="2022">2022</option>
+                <option value="2021">2021</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">学校</label>
+              <input type="text" id="school" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="如：清华大学" required />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">院校</label>
+              <input type="text" id="college" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="如：信息科学技术学院（学校级别留空）" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">学位类型</label>
+              <select id="formDegreeType" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                <option value="academic">学术学位</option>
+                <option value="professional">专业学位</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">类型</label>
+              <select id="formType" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                <option value="discipline">学科</option>
+                <option value="major">专业</option>
+              </select>
+            </div>
+            <div class="col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-2" id="disciplineLabel">学科/专业</label>
+              <input type="text" id="discipline" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="如：01 哲学 或 0251 金融" required />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2" id="subject1Label">政治</label>
+              <input type="number" id="subject1" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">外国语</label>
+              <input type="number" id="foreignLang" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">专业课1</label>
+              <input type="number" id="course1" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">专业课2</label>
+              <input type="number" id="course2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">总分</label>
+              <input type="number" id="total" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">备注</label>
+              <input type="text" id="remark" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+          </div>
+          <div class="flex justify-end gap-3 mt-6">
+            <button type="button" onclick="closeModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">取消</button>
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      let editingId = null;
+
+      // 筛选功能
+      document.getElementById('filterYear').addEventListener('change', filterTable);
+      document.getElementById('filterDegreeType').addEventListener('change', filterTable);
+      document.getElementById('filterType').addEventListener('change', filterTable);
+
+      function filterTable() {
+        const year = document.getElementById('filterYear').value;
+        const degreeType = document.getElementById('filterDegreeType').value;
+        const type = document.getElementById('filterType').value;
+        const rows = document.querySelectorAll('#tableBody tr');
+        
+        rows.forEach(row => {
+          const rowYear = row.getAttribute('data-year');
+          const rowDegreeType = row.cells[3].textContent.trim();
+          const rowType = row.cells[4].textContent.trim();
+          
+          let show = true;
+          if (year && rowYear !== year) {
+            show = false;
+          }
+          if (degreeType && rowDegreeType !== (degreeType === 'academic' ? '学术学位' : '专业学位')) {
+            show = false;
+          }
+          if (type && rowType !== (type === 'discipline' ? '学科' : '专业')) {
+            show = false;
+          }
+          
+          row.style.display = show ? '' : 'none';
+        });
+      }
+
+      function openAddModal() {
+        editingId = null;
+        document.getElementById('modalTitle').textContent = '新增自划线';
+        document.getElementById('scoreForm').reset();
+        updateFormLabels();
+        document.getElementById('modal').classList.remove('hidden');
+      }
+
+      function openEditModal(id) {
+        editingId = id;
+        document.getElementById('modalTitle').textContent = '编辑自划线';
+        // 这里应该从数据中加载对应id的数据
+        // 示例：根据id填充表单
+        updateFormLabels();
+        document.getElementById('modal').classList.remove('hidden');
+      }
+
+      function updateFormLabels() {
+        const degreeType = document.getElementById('formDegreeType').value;
+        const type = document.getElementById('formType').value;
+        
+        if (degreeType === 'professional') {
+          document.getElementById('subject1Label').textContent = '政治或综合';
+        } else {
+          document.getElementById('subject1Label').textContent = '政治';
+        }
+        
+        if (type === 'major') {
+          document.getElementById('disciplineLabel').textContent = '专业';
+        } else {
+          document.getElementById('disciplineLabel').textContent = '学科';
+        }
+      }
+
+      document.getElementById('formDegreeType').addEventListener('change', updateFormLabels);
+      document.getElementById('formType').addEventListener('change', updateFormLabels);
+
+      function closeModal() {
+        document.getElementById('modal').classList.add('hidden');
+        editingId = null;
+      }
+
+      function deleteRow(id) {
+        if (confirm('确定要删除这条记录吗？')) {
+          alert('删除成功');
+          // 重新加载表格
+        }
+      }
+
+      document.getElementById('scoreForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (editingId) {
+          alert('更新成功');
+        } else {
+          alert('新增成功');
+        }
+        closeModal();
+        // 重新加载表格数据
+      });
+    </script>
+  </div>
+</body>
+</html>
