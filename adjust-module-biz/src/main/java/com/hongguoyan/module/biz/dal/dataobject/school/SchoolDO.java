@@ -66,11 +66,13 @@ public class SchoolDO extends BaseDO {
     /**
      * 是否985
      */
-    private Boolean is_985;
+    @TableField("is_985")
+    private Boolean is985;
     /**
      * 是否211
      */
-    private Boolean is_211;
+    @TableField("is_211")
+    private Boolean is211;
     /**
      * 是否双一流
      */

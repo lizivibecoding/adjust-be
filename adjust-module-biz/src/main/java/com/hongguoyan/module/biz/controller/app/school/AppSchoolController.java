@@ -27,6 +27,7 @@ import static com.hongguoyan.framework.apilog.core.enums.OperateTypeEnum.*;
 
 import com.hongguoyan.module.biz.controller.app.school.vo.*;
 import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
+import com.hongguoyan.module.biz.service.adjustment.AdjustmentService;
 import com.hongguoyan.module.biz.service.school.SchoolService;
 
 @Tag(name = "用户 APP - 院校")
@@ -37,12 +38,20 @@ public class AppSchoolController {
 
     @Resource
     private SchoolService schoolService;
+    @Resource
+    private AdjustmentService adjustmentService;
 
     @GetMapping("/overview")
     @Operation(summary = "获得院校概况(概况 Tab)")
     @Parameter(name = "schoolId", description = "学校ID", required = true, example = "1024")
     public CommonResult<AppSchoolOverviewRespVO> getSchoolOverview(@RequestParam("schoolId") Long schoolId) {
         return success(schoolService.getSchoolOverview(schoolId));
+    }
+
+    @GetMapping("/adjustment")
+    @Operation(summary = "院校调剂列表(调剂 Tab)")
+    public CommonResult<PageResult<AppSchoolAdjustmentRespVO>> getSchoolAdjustmentPage(@Valid AppSchoolAdjustmentPageReqVO reqVO) {
+        return success(adjustmentService.getSchoolAdjustmentPage(reqVO));
     }
 
     @GetMapping("/get")

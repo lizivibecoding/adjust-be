@@ -45,11 +45,11 @@ public class AppSchoolSaveReqVO {
 
     @Schema(description = "是否985", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "是否985不能为空")
-    private Boolean is_985;
+    private Boolean is985;
 
     @Schema(description = "是否211", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "是否211不能为空")
-    private Boolean is_211;
+    private Boolean is211;
 
     @Schema(description = "是否双一流", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "是否双一流不能为空")

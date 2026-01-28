@@ -87,11 +87,11 @@ public class AdjustmentDO extends BaseDO {
     /**
      * 调剂缺额人数
      */
-    private Integer balanceCount;
+    private Integer adjustCount;
     /**
      * 原计划招生人数(参考)
      */
-    private Integer balanceLeft;
+    private Integer adjustLeft;
     /**
      * 学制(年)
      */

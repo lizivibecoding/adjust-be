@@ -12,6 +12,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.*;
+import com.hongguoyan.module.biz.controller.app.school.vo.AppSchoolAdjustmentPageReqVO;
+import com.hongguoyan.module.biz.controller.app.school.vo.AppSchoolAdjustmentRespVO;
 
 /**
  * 调剂 Mapper
@@ -37,8 +39,8 @@ public interface AdjustmentMapper extends BaseMapperX<AdjustmentDO> {
                 .eqIfPresent(AdjustmentDO::getDirectionCode, reqVO.getDirectionCode())
                 .likeIfPresent(AdjustmentDO::getDirectionName, reqVO.getDirectionName())
                 .eqIfPresent(AdjustmentDO::getStudyMode, reqVO.getStudyMode())
-                .eqIfPresent(AdjustmentDO::getBalanceCount, reqVO.getBalanceCount())
-                .eqIfPresent(AdjustmentDO::getBalanceLeft, reqVO.getBalanceLeft())
+                .eqIfPresent(AdjustmentDO::getAdjustCount, reqVO.getAdjustCount())
+                .eqIfPresent(AdjustmentDO::getAdjustLeft, reqVO.getAdjustLeft())
                 .eqIfPresent(AdjustmentDO::getStudyYears, reqVO.getStudyYears())
                 .eqIfPresent(AdjustmentDO::getTuitionFee, reqVO.getTuitionFee())
                 .eqIfPresent(AdjustmentDO::getRetestRatio, reqVO.getRetestRatio())
@@ -100,5 +102,15 @@ public interface AdjustmentMapper extends BaseMapperX<AdjustmentDO> {
                                                                 @Param("majorId") Long majorId);
 
     AppAdjustmentUpdateStatsRespVO selectUpdateStats(@Param("year") Integer year);
+
+    default PageResult<AppSchoolAdjustmentRespVO> selectSchoolAdjustmentPage(AppSchoolAdjustmentPageReqVO reqVO) {
+        Page<AppSchoolAdjustmentRespVO> page = MyBatisUtils.buildPage(reqVO);
+        List<AppSchoolAdjustmentRespVO> records = selectSchoolAdjustmentPage(page, reqVO);
+        page.setRecords(records);
+        return new PageResult<>(page.getRecords(), page.getTotal());
+    }
+
+    List<AppSchoolAdjustmentRespVO> selectSchoolAdjustmentPage(IPage<AppSchoolAdjustmentRespVO> page,
+                                                               @Param("reqVO") AppSchoolAdjustmentPageReqVO reqVO);
 
 }

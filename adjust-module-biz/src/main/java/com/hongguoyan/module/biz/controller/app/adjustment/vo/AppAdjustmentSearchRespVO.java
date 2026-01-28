@@ -37,7 +37,7 @@ public class AppAdjustmentSearchRespVO {
     private Integer recruitNumber;
 
     @Schema(description = "调剂招生人数")
-    private Integer balanceCount;
+    private Integer adjustCount;
 
     @Schema(description = "更新时间")
     private LocalDateTime updateTime;

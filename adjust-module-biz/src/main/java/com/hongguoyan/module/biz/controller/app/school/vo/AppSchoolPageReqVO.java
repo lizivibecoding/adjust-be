@@ -41,10 +41,10 @@ public class AppSchoolPageReqVO extends PageParam {
     private Boolean isAcademy;
 
     @Schema(description = "是否985")
-    private Boolean is_985;
+    private Boolean is985;
 
     @Schema(description = "是否211")
-    private Boolean is_211;
+    private Boolean is211;
 
     @Schema(description = "是否双一流")
     private Boolean isSyl;

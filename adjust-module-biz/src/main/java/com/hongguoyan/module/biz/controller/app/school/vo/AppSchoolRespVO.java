@@ -54,11 +54,11 @@ public class AppSchoolRespVO {
 
     @Schema(description = "是否985", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("是否985")
-    private Boolean is_985;
+    private Boolean is985;
 
     @Schema(description = "是否211", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("是否211")
-    private Boolean is_211;
+    private Boolean is211;
 
     @Schema(description = "是否双一流", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("是否双一流")

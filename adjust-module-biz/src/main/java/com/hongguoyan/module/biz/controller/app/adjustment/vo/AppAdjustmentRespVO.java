@@ -75,11 +75,11 @@ public class AppAdjustmentRespVO {
 
     @Schema(description = "调剂缺额人数", example = "20026")
     @ExcelProperty("调剂缺额人数")
-    private Integer balanceCount;
+    private Integer adjustCount;
 
     @Schema(description = "原计划招生人数(参考)")
     @ExcelProperty("原计划招生人数(参考)")
-    private Integer balanceLeft;
+    private Integer adjustLeft;
 
     @Schema(description = "学制(年)")
     @ExcelProperty("学制(年)")

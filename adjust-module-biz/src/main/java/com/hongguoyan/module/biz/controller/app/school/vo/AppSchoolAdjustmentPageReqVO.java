@@ -1,0 +1,17 @@
+package com.hongguoyan.module.biz.controller.app.school.vo;
+
+import com.hongguoyan.framework.common.pojo.PageParam;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+
+@Schema(description = "用户 APP - 院校调剂列表(调剂 Tab) Request VO")
+@Data
+public class AppSchoolAdjustmentPageReqVO extends PageParam {
+
+    @Schema(description = "学校ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "1024")
+    @NotNull(message = "学校ID不能为空")
+    private Long schoolId;
+
+}
+

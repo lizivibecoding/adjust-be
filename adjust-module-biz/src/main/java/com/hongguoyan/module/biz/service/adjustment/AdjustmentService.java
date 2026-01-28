@@ -3,6 +3,8 @@ package com.hongguoyan.module.biz.service.adjustment;
 import java.util.*;
 import jakarta.validation.*;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.*;
+import com.hongguoyan.module.biz.controller.app.school.vo.AppSchoolAdjustmentPageReqVO;
+import com.hongguoyan.module.biz.controller.app.school.vo.AppSchoolAdjustmentRespVO;
 import com.hongguoyan.module.biz.dal.dataobject.adjustment.AdjustmentDO;
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.framework.common.pojo.PageParam;
@@ -104,5 +106,13 @@ public interface AdjustmentService {
      * @return 更新统计
      */
     AppAdjustmentUpdateStatsRespVO getAdjustmentUpdateStats();
+
+    /**
+     * 院校调剂列表(调剂 Tab)
+     *
+     * @param reqVO 条件
+     * @return 分页
+     */
+    PageResult<AppSchoolAdjustmentRespVO> getSchoolAdjustmentPage(@Valid AppSchoolAdjustmentPageReqVO reqVO);
 
 }

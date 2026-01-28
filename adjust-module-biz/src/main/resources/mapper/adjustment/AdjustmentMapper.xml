@@ -113,7 +113,7 @@
             MAX(a.major_name) AS majorName,
             a.year,
             MAX(a.study_mode) AS studyMode,
-            SUM(a.balance_count) AS balanceCount,
+            SUM(a.adjust_count) AS adjustCount,
             MAX(a.update_time) AS updateTime,
             LEAST(MAX(sm.view_count), 100) AS viewCount,
             MAX(s.province_name) AS provinceName,
@@ -141,7 +141,7 @@
             s.province_name AS provinceName,
             a.year,
             SUM(r.recruit_number) AS recruitNumber,
-            SUM(a.balance_count) AS balanceCount,
+            SUM(a.adjust_count) AS adjustCount,
             MAX(a.update_time) AS updateTime,
             LEAST(SUM(sm.view_count), 100) AS viewCount,
             MAX(s.is_985) AS is985,
@@ -198,6 +198,25 @@
         FROM biz_adjustment a
         WHERE a.year = #{year}
           AND a.deleted = b'0'
+    </select>
+
+    <select id="selectSchoolAdjustmentPage"
+            resultType="com.hongguoyan.module.biz.controller.app.school.vo.AppSchoolAdjustmentRespVO">
+        SELECT
+            a.school_id AS schoolId,
+            a.college_id AS collegeId,
+            a.major_id AS majorId,
+            MAX(a.major_code) AS majorCode,
+            MAX(a.major_name) AS majorName,
+            MAX(a.college_name) AS collegeName,
+            a.year AS year,
+            a.study_mode AS studyMode,
+            SUM(a.adjust_count) AS adjustCount
+        FROM biz_adjustment a
+        WHERE a.school_id = #{reqVO.schoolId}
+          AND a.deleted = b'0'
+        GROUP BY a.school_id, a.college_id, a.major_id, a.year, a.study_mode
+        ORDER BY a.year DESC, MAX(a.update_time) DESC
     </select>
 
 </mapper>

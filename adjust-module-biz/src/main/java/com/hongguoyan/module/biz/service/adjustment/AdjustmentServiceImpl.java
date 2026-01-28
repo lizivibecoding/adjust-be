@@ -1,6 +1,7 @@
 package com.hongguoyan.module.biz.service.adjustment;
 
 import cn.hutool.core.util.StrUtil;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
 import jakarta.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
@@ -9,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.regex.Pattern;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.*;
+import com.hongguoyan.module.biz.controller.app.school.vo.AppSchoolAdjustmentPageReqVO;
+import com.hongguoyan.module.biz.controller.app.school.vo.AppSchoolAdjustmentRespVO;
 import com.hongguoyan.module.biz.dal.dataobject.area.AreaDO;
 import com.hongguoyan.module.biz.dal.dataobject.adjustment.AdjustmentDO;
 import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
@@ -306,9 +309,9 @@ public class AdjustmentServiceImpl implements AdjustmentService {
             respVO.setSchoolLogo(school.getSchoolLogo());
             respVO.setProvinceName(school.getProvinceName());
             respVO.setSchoolType(school.getSchoolType());
-            respVO.setIs985(school.getIs_985());
+            respVO.setIs985(school.getIs985());
             respVO.setIsSyl(school.getIsSyl());
-            respVO.setIs211(school.getIs_211());
+            respVO.setIs211(school.getIs211());
             respVO.setIsOrdinary(school.getIsOrdinary());
         } else {
             respVO.setSchoolName(first.getSchoolName());
@@ -324,8 +327,8 @@ public class AdjustmentServiceImpl implements AdjustmentService {
             direction.setAdjustmentId(adjustment.getId());
             direction.setDirectionCode(adjustment.getDirectionCode());
             direction.setDirectionName(adjustment.getDirectionName());
-            direction.setBalanceCount(adjustment.getBalanceCount());
-            direction.setBalanceLeft(adjustment.getBalanceLeft());
+            direction.setAdjustCount(adjustment.getAdjustCount());
+            direction.setAdjustLeft(adjustment.getAdjustLeft());
             direction.setStudyYears(adjustment.getStudyYears());
             direction.setTuitionFee(adjustment.getTuitionFee());
             direction.setRetestRatio(adjustment.getRetestRatio());
@@ -368,6 +371,11 @@ public class AdjustmentServiceImpl implements AdjustmentService {
             respVO.setTotalSchoolCount(0L);
         }
         return respVO;
+    }
+
+    @Override
+    public PageResult<AppSchoolAdjustmentRespVO> getSchoolAdjustmentPage(@Valid AppSchoolAdjustmentPageReqVO reqVO) {
+        return adjustmentMapper.selectSchoolAdjustmentPage(reqVO);
     }
 
     private List<String> splitToList(String text) {
