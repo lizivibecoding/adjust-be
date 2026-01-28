@@ -38,33 +38,11 @@ public class AppSchoolController {
     @Resource
     private SchoolService schoolService;
 
-    @PostMapping("/create")
-    @Operation(summary = "创建院校")
-    public CommonResult<Long> createSchool(@Valid @RequestBody AppSchoolSaveReqVO createReqVO) {
-        return success(schoolService.createSchool(createReqVO));
-    }
-
-    @PutMapping("/update")
-    @Operation(summary = "更新院校")
-    public CommonResult<Boolean> updateSchool(@Valid @RequestBody AppSchoolSaveReqVO updateReqVO) {
-        schoolService.updateSchool(updateReqVO);
-        return success(true);
-    }
-
-    @DeleteMapping("/delete")
-    @Operation(summary = "删除院校")
-    @Parameter(name = "id", description = "编号", required = true)
-    public CommonResult<Boolean> deleteSchool(@RequestParam("id") Long id) {
-        schoolService.deleteSchool(id);
-        return success(true);
-    }
-
-    @DeleteMapping("/delete-list")
-    @Parameter(name = "ids", description = "编号", required = true)
-    @Operation(summary = "批量删除院校")
-    public CommonResult<Boolean> deleteSchoolList(@RequestParam("ids") List<Long> ids) {
-        schoolService.deleteSchoolListByIds(ids);
-        return success(true);
+    @GetMapping("/overview")
+    @Operation(summary = "获得院校概况(概况 Tab)")
+    @Parameter(name = "schoolId", description = "学校ID", required = true, example = "1024")
+    public CommonResult<AppSchoolOverviewRespVO> getSchoolOverview(@RequestParam("schoolId") Long schoolId) {
+        return success(schoolService.getSchoolOverview(schoolId));
     }
 
     @GetMapping("/get")
@@ -80,18 +58,6 @@ public class AppSchoolController {
     public CommonResult<PageResult<AppSchoolRespVO>> getSchoolPage(@Valid AppSchoolPageReqVO pageReqVO) {
         PageResult<SchoolDO> pageResult = schoolService.getSchoolPage(pageReqVO);
         return success(BeanUtils.toBean(pageResult, AppSchoolRespVO.class));
-    }
-
-    @GetMapping("/export-excel")
-    @Operation(summary = "导出院校 Excel")
-    @ApiAccessLog(operateType = EXPORT)
-    public void exportSchoolExcel(@Valid AppSchoolPageReqVO pageReqVO,
-              HttpServletResponse response) throws IOException {
-        pageReqVO.setPageSize(PageParam.PAGE_SIZE_NONE);
-        List<SchoolDO> list = schoolService.getSchoolPage(pageReqVO).getList();
-        // 导出 Excel
-        ExcelUtils.write(response, "院校.xls", "数据", AppSchoolRespVO.class,
-                        BeanUtils.toBean(list, AppSchoolRespVO.class));
     }
 
 }

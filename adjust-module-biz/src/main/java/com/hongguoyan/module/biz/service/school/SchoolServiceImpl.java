@@ -78,6 +78,15 @@ public class SchoolServiceImpl implements SchoolService {
     }
 
     @Override
+    public AppSchoolOverviewRespVO getSchoolOverview(Long schoolId) {
+        SchoolDO school = schoolMapper.selectById(schoolId);
+        if (school == null) {
+            throw exception(SCHOOL_NOT_EXISTS);
+        }
+        return BeanUtils.toBean(school, AppSchoolOverviewRespVO.class);
+    }
+
+    @Override
     public PageResult<SchoolDO> getSchoolPage(AppSchoolPageReqVO pageReqVO) {
         return schoolMapper.selectPage(pageReqVO);
     }

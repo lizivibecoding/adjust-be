@@ -52,6 +52,14 @@ public interface SchoolService {
     SchoolDO getSchool(Long id);
 
     /**
+     * 获得院校概况(概况 Tab)
+     *
+     * @param schoolId 学校ID
+     * @return 概况
+     */
+    AppSchoolOverviewRespVO getSchoolOverview(Long schoolId);
+
+    /**
      * 获得院校分页
      *
      * @param pageReqVO 分页查询
