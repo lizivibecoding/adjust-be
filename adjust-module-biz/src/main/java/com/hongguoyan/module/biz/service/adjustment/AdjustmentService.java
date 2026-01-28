@@ -76,6 +76,13 @@ public interface AdjustmentService {
     AppAdjustmentSuggestRespVO getAdjustmentSuggest(String keyword);
 
     /**
+     * 调剂筛选配置
+     *
+     * @return 筛选配置
+     */
+    AppAdjustmentFilterConfigRespVO getAdjustmentFilterConfig();
+
+    /**
      * 调剂详情切换选项(年份/学院)
      *
      * @param reqVO 条件

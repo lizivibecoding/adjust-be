@@ -138,6 +138,15 @@ public class AppAdjustmentSaveReqVO {
     @Schema(description = "备注", example = "你猜")
     private String remark;
 
+    @Schema(description = "招生状态(1=正常招生,0=已经停招)", example = "1")
+    private Integer adjustStatus;
+
+    @Schema(description = "是否专项计划(1=专项计划,0=否)", example = "0")
+    private Integer specialPlan;
+
+    @Schema(description = "调剂类型(1=校内调剂,2=校外调剂)", example = "2")
+    private Integer adjustType;
+
     @Schema(description = "状态(1=开放, 0=关闭)", example = "1")
     private Integer status;
 

@@ -59,4 +59,13 @@ public class AppAdjustmentSearchReqVO extends PageParam {
 
     @Schema(description = "科目代码筛选(多选)")
     private List<String> subjectCodes;
+
+    @Schema(description = "招生状态(1=正常招生,0=已经停招)")
+    private Integer adjustStatus;
+
+    @Schema(description = "是否专项计划(1=只看专项计划)")
+    private Integer specialPlan;
+
+    @Schema(description = "调剂类型(1=校内调剂,2=校外调剂)")
+    private Integer adjustType;
 }

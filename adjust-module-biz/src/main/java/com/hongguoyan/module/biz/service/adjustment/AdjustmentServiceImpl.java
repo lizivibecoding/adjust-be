@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.regex.Pattern;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.*;
+import com.hongguoyan.module.biz.dal.dataobject.area.AreaDO;
 import com.hongguoyan.module.biz.dal.dataobject.adjustment.AdjustmentDO;
 import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
 import com.hongguoyan.framework.common.pojo.PageResult;
@@ -16,6 +17,7 @@ import com.hongguoyan.framework.common.pojo.PageParam;
 import com.hongguoyan.framework.common.util.object.BeanUtils;
 
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
+import com.hongguoyan.module.biz.dal.mysql.area.AreaMapper;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.AdjustmentMapper;
 import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
@@ -40,6 +42,8 @@ public class AdjustmentServiceImpl implements AdjustmentService {
     private SchoolMapper schoolMapper;
     @Resource
     private MajorMapper majorMapper;
+    @Resource
+    private AreaMapper areaMapper;
 
     private static final Pattern SPLIT_PATTERN = Pattern.compile("[\\n;,，；]+");
 
@@ -149,6 +153,124 @@ public class AdjustmentServiceImpl implements AdjustmentService {
         }
         respVO.setSuggestions(result);
         return respVO;
+    }
+
+    @Override
+    public AppAdjustmentFilterConfigRespVO getAdjustmentFilterConfig() {
+        AppAdjustmentFilterConfigRespVO respVO = new AppAdjustmentFilterConfigRespVO();
+        List<AppAdjustmentFilterConfigRespVO.Group> groups = new ArrayList<>();
+
+        // 1) publishTime (same as prototype)
+        groups.add(group("publishTime", "发布时间", Arrays.asList(
+                option("0", "今天"),
+                option("3", "近3天"),
+                option("7", "近7天"),
+                option("15", "近15天")
+        )));
+
+        // 2) province (A/B)
+        List<AreaDO> areas = areaMapper.selectAllOrderByAreaAndCode();
+        AppAdjustmentFilterConfigRespVO.Group provinceGroup = new AppAdjustmentFilterConfigRespVO.Group();
+        provinceGroup.setKey("province");
+        provinceGroup.setName("目标省份");
+        List<AppAdjustmentFilterConfigRespVO.Group> areaChildren = new ArrayList<>();
+        areaChildren.add(buildProvinceAreaGroup("A", "A区", areas));
+        areaChildren.add(buildProvinceAreaGroup("B", "B区", areas));
+        provinceGroup.setChildren(areaChildren);
+        groups.add(provinceGroup);
+
+        // 3) studyMode
+        groups.add(group("studyMode", "学习方式", Arrays.asList(
+                option("全日制", "全日制"),
+                option("非全日制", "非全日制")
+        )));
+
+        // 4) degreeType
+        groups.add(group("degreeType", "学术类型", Arrays.asList(
+                option("2", "学硕"),
+                option("1", "专硕")
+        )));
+
+        // 5) schoolFeature (985/211/双一流/其他)
+        groups.add(group("schoolFeature", "学校属性", Arrays.asList(
+                option("985", "985"),
+                option("211", "211"),
+                option("syl", "双一流"),
+                option("other", "其他")
+        )));
+
+        // 6) adjustType
+        groups.add(group("adjustType", "调剂类型", Arrays.asList(
+                option("1", "校内调剂"),
+                option("2", "校外调剂")
+        )));
+
+        // 7) specialPlan
+        groups.add(group("specialPlan", "专项计划", Collections.singletonList(
+                option("1", "只看专项计划")
+        )));
+
+        // 8) adjustStatus
+        groups.add(group("adjustStatus", "招生状态", Arrays.asList(
+                option("0", "已经停招"),
+                option("1", "正常招生")
+        )));
+
+        // 9) mathSubject
+        groups.add(group("mathSubject", "数学科目", Arrays.asList(
+                option("301", "数学（一）"),
+                option("302", "数学（二）"),
+                option("303", "数学（三）")
+        )));
+
+        // 10) foreignSubject
+        groups.add(group("foreignSubject", "外语科目", Arrays.asList(
+                option("201", "英语（一）"),
+                option("204", "英语（二）"),
+                option("202", "俄语"),
+                option("203", "日语"),
+                option("261", "二外英语"),
+                option("211", "翻译硕士（英语）")
+        )));
+
+        respVO.setGroups(groups);
+        return respVO;
+    }
+
+    private AppAdjustmentFilterConfigRespVO.Group buildProvinceAreaGroup(String area,
+                                                                        String areaName,
+                                                                        List<AreaDO> areas) {
+        AppAdjustmentFilterConfigRespVO.Group group = new AppAdjustmentFilterConfigRespVO.Group();
+        group.setKey(area);
+        group.setName(areaName);
+        List<AppAdjustmentFilterConfigRespVO.Option> options = new ArrayList<>();
+        // keep same as prototype: "A区全部"/"B区全部"
+        options.add(option("", areaName + "全部"));
+        for (AreaDO item : areas) {
+            if (item == null || !area.equalsIgnoreCase(item.getArea())) {
+                continue;
+            }
+            options.add(option(item.getCode(), item.getName()));
+        }
+        group.setOptions(options);
+        return group;
+    }
+
+    private AppAdjustmentFilterConfigRespVO.Group group(String key,
+                                                       String name,
+                                                       List<AppAdjustmentFilterConfigRespVO.Option> options) {
+        AppAdjustmentFilterConfigRespVO.Group group = new AppAdjustmentFilterConfigRespVO.Group();
+        group.setKey(key);
+        group.setName(name);
+        group.setOptions(options);
+        return group;
+    }
+
+    private AppAdjustmentFilterConfigRespVO.Option option(String code, String name) {
+        AppAdjustmentFilterConfigRespVO.Option option = new AppAdjustmentFilterConfigRespVO.Option();
+        option.setCode(code);
+        option.setName(name);
+        return option;
     }
 
     @Override

@@ -19,7 +19,86 @@
             <if test="reqVO.majorCode != null and reqVO.majorCode != ''">
                 AND a.major_code LIKE CONCAT(#{reqVO.majorCode}, '%')
             </if>
-            <!-- 筛选条件暂时关闭，先只保留全文检索结果 -->
+            <if test="reqVO.year != null">
+                AND a.year = #{reqVO.year}
+            </if>
+            <if test="reqVO.studyMode != null and reqVO.studyMode != ''">
+                AND a.study_mode = #{reqVO.studyMode}
+            </if>
+            <if test="reqVO.degreeType != null">
+                AND a.degree_type = #{reqVO.degreeType}
+            </if>
+
+            <if test="reqVO.provinceCode != null and reqVO.provinceCode != ''">
+                AND s.province_code = #{reqVO.provinceCode}
+            </if>
+            <if test="reqVO.provinceArea != null and reqVO.provinceArea != ''">
+                AND s.province_area = #{reqVO.provinceArea}
+            </if>
+
+            <if test="reqVO.is985 != null">
+                AND s.is_985 = #{reqVO.is985}
+            </if>
+            <if test="reqVO.is211 != null">
+                AND s.is_211 = #{reqVO.is211}
+            </if>
+            <if test="reqVO.isSyl != null">
+                AND s.is_syl = #{reqVO.isSyl}
+            </if>
+
+            <if test="reqVO.schoolFeature != null and reqVO.schoolFeature != ''">
+                <choose>
+                    <when test="reqVO.schoolFeature == '985'">
+                        AND s.is_985 = 1
+                    </when>
+                    <when test="reqVO.schoolFeature == '211'">
+                        AND s.is_211 = 1
+                    </when>
+                    <when test="reqVO.schoolFeature == 'syl'">
+                        AND s.is_syl = 1
+                    </when>
+                    <when test="reqVO.schoolFeature == 'other'">
+                        AND IFNULL(s.is_985, 0) = 0
+                        AND IFNULL(s.is_211, 0) = 0
+                        AND IFNULL(s.is_syl, 0) = 0
+                    </when>
+                </choose>
+            </if>
+
+            <if test="reqVO.adjustStatus != null">
+                AND a.adjust_status = #{reqVO.adjustStatus}
+            </if>
+            <if test="reqVO.specialPlan != null">
+                AND a.special_plan = #{reqVO.specialPlan}
+            </if>
+            <if test="reqVO.adjustType != null">
+                AND a.adjust_type = #{reqVO.adjustType}
+            </if>
+
+            <if test="reqVO.publishTime != null and reqVO.publishTime.length == 2 and reqVO.publishTime[0] != null and reqVO.publishTime[1] != null">
+                AND a.publish_time BETWEEN #{reqVO.publishTime[0]} AND #{reqVO.publishTime[1]}
+            </if>
+
+            <if test="reqVO.subjectCodes != null and reqVO.subjectCodes.size() &gt; 0">
+                AND (
+                    a.subject_code1 IN
+                    <foreach collection="reqVO.subjectCodes" item="code" open="(" separator="," close=")">
+                        #{code}
+                    </foreach>
+                    OR a.subject_code2 IN
+                    <foreach collection="reqVO.subjectCodes" item="code" open="(" separator="," close=")">
+                        #{code}
+                    </foreach>
+                    OR a.subject_code3 IN
+                    <foreach collection="reqVO.subjectCodes" item="code" open="(" separator="," close=")">
+                        #{code}
+                    </foreach>
+                    OR a.subject_code4 IN
+                    <foreach collection="reqVO.subjectCodes" item="code" open="(" separator="," close=")">
+                        #{code}
+                    </foreach>
+                )
+            </if>
         </where>
     </sql>
 

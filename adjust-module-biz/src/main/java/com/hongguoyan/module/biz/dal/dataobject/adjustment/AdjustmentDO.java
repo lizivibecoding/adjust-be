@@ -184,6 +184,21 @@ public class AdjustmentDO extends BaseDO {
      * 备注
      */
     private String remark;
+
+    /**
+     * 招生状态(1=正常招生,0=已经停招)
+     */
+    private Integer adjustStatus;
+
+    /**
+     * 是否专项计划(1=专项计划,0=否)
+     */
+    private Integer specialPlan;
+
+    /**
+     * 调剂类型(1=校内调剂,2=校外调剂)
+     */
+    private Integer adjustType;
     /**
      * 状态(1=开放, 0=关闭)
      */

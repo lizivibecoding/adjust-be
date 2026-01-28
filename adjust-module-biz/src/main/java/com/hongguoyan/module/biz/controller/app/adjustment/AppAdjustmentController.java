@@ -45,6 +45,12 @@ public class AppAdjustmentController {
         return success(adjustmentService.getAdjustmentSearchPage(reqVO));
     }
 
+    @GetMapping("/filter-config")
+    @Operation(summary = "调剂筛选配置(按筛选器分组返回)")
+    public CommonResult<AppAdjustmentFilterConfigRespVO> getAdjustmentFilterConfig() {
+        return success(adjustmentService.getAdjustmentFilterConfig());
+    }
+
     @GetMapping("/suggest")
     @Operation(summary = "调剂联想词")
     @Parameter(name = "keyword", description = "关键词", required = true)
