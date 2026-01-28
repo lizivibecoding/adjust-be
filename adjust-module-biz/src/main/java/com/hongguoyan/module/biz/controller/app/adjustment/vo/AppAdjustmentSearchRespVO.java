@@ -9,6 +9,15 @@ import java.time.LocalDateTime;
 @Data
 public class AppAdjustmentSearchRespVO {
 
+    @Schema(description = "学校ID", example = "9101")
+    private Long schoolId;
+
+    @Schema(description = "学院ID", example = "6746")
+    private Long collegeId;
+
+    @Schema(description = "专业ID", example = "15937")
+    private Long majorId;
+
     @Schema(description = "学校名称")
     private String schoolName;
 
@@ -33,10 +42,13 @@ public class AppAdjustmentSearchRespVO {
     @Schema(description = "更新时间")
     private LocalDateTime updateTime;
 
-    @Schema(description = "热度值")
-    private Integer viewCount;
+    @Schema(description = "热力值")
+    private Integer heat;
 
     @Schema(description = "省份名称")
     private String provinceName;
+
+    @Schema(description = "今年调剂概率大")
+    private Boolean highAdjustChance = true;
 
 }

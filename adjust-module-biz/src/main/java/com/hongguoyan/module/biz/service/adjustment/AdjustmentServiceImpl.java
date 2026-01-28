@@ -103,8 +103,21 @@ public class AdjustmentServiceImpl implements AdjustmentService {
             respVO.setMajorList(Collections.emptyList());
         } else {
             PageResult<AppAdjustmentSearchRespVO> pageResult = adjustmentMapper.selectSearchMajorPage(reqVO);
+            List<AppAdjustmentSearchRespVO> majorList = pageResult.getList();
+            int heatCap = 1000;
+            for (AppAdjustmentSearchRespVO item : majorList) {
+                Integer viewCount = item.getViewCount();
+                int heat = 0;
+                if (viewCount != null && viewCount > 0) {
+                    heat = (int) Math.round(viewCount * 100.0 / heatCap);
+                    if (heat > 100) {
+                        heat = 100;
+                    }
+                }
+                item.setHeat(heat);
+            }
             respVO.setTotal(pageResult.getTotal());
-            respVO.setMajorList(pageResult.getList());
+            respVO.setMajorList(majorList);
             respVO.setSchoolList(Collections.emptyList());
         }
         return respVO;
