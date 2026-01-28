@@ -160,15 +160,7 @@ public class AdjustmentServiceImpl implements AdjustmentService {
         AppAdjustmentFilterConfigRespVO respVO = new AppAdjustmentFilterConfigRespVO();
         List<AppAdjustmentFilterConfigRespVO.Group> groups = new ArrayList<>();
 
-        // 1) publishTime (same as prototype)
-        groups.add(group("publishTime", "发布时间", Arrays.asList(
-                option("0", "今天"),
-                option("3", "近3天"),
-                option("7", "近7天"),
-                option("15", "近15天")
-        )));
-
-        // 2) province (A/B)
+        // 1) province (A/B)
         List<AreaDO> areas = areaMapper.selectAllOrderByAreaAndCode();
         AppAdjustmentFilterConfigRespVO.Group provinceGroup = new AppAdjustmentFilterConfigRespVO.Group();
         provinceGroup.setKey("province");
@@ -179,19 +171,19 @@ public class AdjustmentServiceImpl implements AdjustmentService {
         provinceGroup.setChildren(areaChildren);
         groups.add(provinceGroup);
 
-        // 3) studyMode
+        // 2) studyMode
         groups.add(group("studyMode", "学习方式", Arrays.asList(
                 option("全日制", "全日制"),
                 option("非全日制", "非全日制")
         )));
 
-        // 4) degreeType
+        // 3) degreeType
         groups.add(group("degreeType", "学术类型", Arrays.asList(
                 option("2", "学硕"),
                 option("1", "专硕")
         )));
 
-        // 5) schoolFeature (985/211/双一流/其他)
+        // 4) schoolFeature (985/211/双一流/其他)
         groups.add(group("schoolFeature", "学校属性", Arrays.asList(
                 option("985", "985"),
                 option("211", "211"),
@@ -199,31 +191,31 @@ public class AdjustmentServiceImpl implements AdjustmentService {
                 option("other", "其他")
         )));
 
-        // 6) adjustType
+        // 5) adjustType
         groups.add(group("adjustType", "调剂类型", Arrays.asList(
                 option("1", "校内调剂"),
                 option("2", "校外调剂")
         )));
 
-        // 7) specialPlan
+        // 6) specialPlan
         groups.add(group("specialPlan", "专项计划", Collections.singletonList(
                 option("1", "只看专项计划")
         )));
 
-        // 8) adjustStatus
+        // 7) adjustStatus
         groups.add(group("adjustStatus", "招生状态", Arrays.asList(
                 option("0", "已经停招"),
                 option("1", "正常招生")
         )));
 
-        // 9) mathSubject
+        // 8) mathSubject
         groups.add(group("mathSubject", "数学科目", Arrays.asList(
                 option("301", "数学（一）"),
                 option("302", "数学（二）"),
                 option("303", "数学（三）")
         )));
 
-        // 10) foreignSubject
+        // 9) foreignSubject
         groups.add(group("foreignSubject", "外语科目", Arrays.asList(
                 option("201", "英语（一）"),
                 option("204", "英语（二）"),
