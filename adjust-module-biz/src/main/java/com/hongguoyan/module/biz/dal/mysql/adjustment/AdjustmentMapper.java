@@ -90,4 +90,10 @@ public interface AdjustmentMapper extends BaseMapperX<AdjustmentDO> {
     List<AppAdjustmentSearchSchoolRespVO> selectSearchSchoolPage(IPage<AppAdjustmentSearchSchoolRespVO> page,
                                                                  @Param("reqVO") AppAdjustmentSearchReqVO reqVO);
 
+    List<Integer> selectOptionYears(@Param("schoolId") Long schoolId,
+                                    @Param("majorId") Long majorId);
+
+    List<AppAdjustmentCollegeOptionRespVO> selectOptionColleges(@Param("schoolId") Long schoolId,
+                                                                @Param("majorId") Long majorId);
+
 }

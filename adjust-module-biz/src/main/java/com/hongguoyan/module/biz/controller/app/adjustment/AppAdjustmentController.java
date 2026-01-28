@@ -53,4 +53,16 @@ public class AppAdjustmentController {
         return success(adjustmentService.getAdjustmentSuggest(keyword));
     }
 
+    @GetMapping("/options")
+    @Operation(summary = "调剂详情切换选项(年份/学院)")
+    public CommonResult<AppAdjustmentOptionsRespVO> getAdjustmentOptions(@Valid AppAdjustmentOptionsReqVO reqVO) {
+        return success(adjustmentService.getAdjustmentOptions(reqVO));
+    }
+
+    @GetMapping("/detail")
+    @Operation(summary = "调剂详情(按方向聚合返回)")
+    public CommonResult<AppAdjustmentDetailRespVO> getAdjustmentDetail(@Valid AppAdjustmentDetailReqVO reqVO) {
+        return success(adjustmentService.getAdjustmentDetail(reqVO));
+    }
+
 }

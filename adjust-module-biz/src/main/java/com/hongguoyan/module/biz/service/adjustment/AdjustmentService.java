@@ -75,4 +75,20 @@ public interface AdjustmentService {
      */
     AppAdjustmentSuggestRespVO getAdjustmentSuggest(String keyword);
 
+    /**
+     * 调剂详情切换选项(年份/学院)
+     *
+     * @param reqVO 条件
+     * @return 选项
+     */
+    AppAdjustmentOptionsRespVO getAdjustmentOptions(@Valid AppAdjustmentOptionsReqVO reqVO);
+
+    /**
+     * 调剂详情(按方向聚合返回)
+     *
+     * @param reqVO 条件
+     * @return 详情
+     */
+    AppAdjustmentDetailRespVO getAdjustmentDetail(@Valid AppAdjustmentDetailReqVO reqVO);
+
 }

@@ -82,4 +82,23 @@
         ORDER BY viewCount DESC, MAX(a.update_time) DESC
     </select>
 
+    <select id="selectOptionYears" resultType="java.lang.Integer">
+        SELECT DISTINCT a.year
+        FROM biz_adjustment a
+        WHERE a.school_id = #{schoolId}
+          AND a.major_id = #{majorId}
+        ORDER BY a.year DESC
+    </select>
+
+    <select id="selectOptionColleges"
+            resultType="com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentCollegeOptionRespVO">
+        SELECT DISTINCT
+            a.college_id AS collegeId,
+            a.college_name AS collegeName
+        FROM biz_adjustment a
+        WHERE a.school_id = #{schoolId}
+          AND a.major_id = #{majorId}
+        ORDER BY a.college_name ASC
+    </select>
+
 </mapper>
