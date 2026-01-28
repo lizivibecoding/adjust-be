@@ -42,6 +42,9 @@ public class AppAdjustmentSearchRespVO {
     @Schema(description = "更新时间")
     private LocalDateTime updateTime;
 
+    @Schema(description = "热度值")
+    private Integer viewCount;
+
     @Schema(description = "热力值")
     private Integer heat;
 
