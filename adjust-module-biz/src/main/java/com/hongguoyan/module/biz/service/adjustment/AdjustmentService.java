@@ -98,4 +98,11 @@ public interface AdjustmentService {
      */
     AppAdjustmentDetailRespVO getAdjustmentDetail(@Valid AppAdjustmentDetailReqVO reqVO);
 
+    /**
+     * 调剂更新统计(默认2025年)
+     *
+     * @return 更新统计
+     */
+    AppAdjustmentUpdateStatsRespVO getAdjustmentUpdateStats();
+
 }

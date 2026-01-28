@@ -71,4 +71,10 @@ public class AppAdjustmentController {
         return success(adjustmentService.getAdjustmentDetail(reqVO));
     }
 
+    @GetMapping("/update-stats")
+    @Operation(summary = "调剂更新统计(默认2025年)")
+    public CommonResult<AppAdjustmentUpdateStatsRespVO> getAdjustmentUpdateStats() {
+        return success(adjustmentService.getAdjustmentUpdateStats());
+    }
+
 }

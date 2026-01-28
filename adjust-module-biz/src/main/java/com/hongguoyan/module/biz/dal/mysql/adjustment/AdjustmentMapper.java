@@ -99,4 +99,6 @@ public interface AdjustmentMapper extends BaseMapperX<AdjustmentDO> {
     List<AppAdjustmentCollegeOptionRespVO> selectOptionColleges(@Param("schoolId") Long schoolId,
                                                                 @Param("majorId") Long majorId);
 
+    AppAdjustmentUpdateStatsRespVO selectUpdateStats(@Param("year") Integer year);
+
 }

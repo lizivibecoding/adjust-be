@@ -180,4 +180,24 @@
         ORDER BY a.college_name ASC
     </select>
 
+    <select id="selectUpdateStats"
+            resultType="com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentUpdateStatsRespVO">
+        SELECT
+            #{year} AS year,
+            MAX(a.update_time) AS lastUpdateTime,
+            SUM(CASE
+                    WHEN a.update_time &gt;= CURDATE()
+                     AND a.update_time &lt; DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+                    THEN 1 ELSE 0 END) AS todayUpdateCount,
+            COUNT(DISTINCT CASE
+                    WHEN a.update_time &gt;= CURDATE()
+                     AND a.update_time &lt; DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+                    THEN a.school_id ELSE NULL END) AS todayUpdateSchoolCount,
+            COUNT(*) AS totalCount,
+            COUNT(DISTINCT a.school_id) AS totalSchoolCount
+        FROM biz_adjustment a
+        WHERE a.year = #{year}
+          AND a.deleted = b'0'
+    </select>
+
 </mapper>

@@ -46,6 +46,7 @@ public class AdjustmentServiceImpl implements AdjustmentService {
     private AreaMapper areaMapper;
 
     private static final Pattern SPLIT_PATTERN = Pattern.compile("[\\n;,，；]+");
+    private static final int DEFAULT_STATS_YEAR = 2025;
 
     @Override
     public Long createAdjustment(AppAdjustmentSaveReqVO createReqVO) {
@@ -352,6 +353,20 @@ public class AdjustmentServiceImpl implements AdjustmentService {
             directions.add(direction);
         }
         respVO.setDirections(directions);
+        return respVO;
+    }
+
+    @Override
+    public AppAdjustmentUpdateStatsRespVO getAdjustmentUpdateStats() {
+        AppAdjustmentUpdateStatsRespVO respVO = adjustmentMapper.selectUpdateStats(DEFAULT_STATS_YEAR);
+        if (respVO == null) {
+            respVO = new AppAdjustmentUpdateStatsRespVO();
+            respVO.setYear(DEFAULT_STATS_YEAR);
+            respVO.setTodayUpdateCount(0L);
+            respVO.setTodayUpdateSchoolCount(0L);
+            respVO.setTotalCount(0L);
+            respVO.setTotalSchoolCount(0L);
+        }
         return respVO;
     }
 
