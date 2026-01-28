@@ -1,6 +1,6 @@
 package com.hongguoyan.server;
 
-import com.github.fppt.jedismock.RedisServer;
+//import com.github.fppt.jedismock.RedisServer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -24,12 +24,12 @@ public class AdjustServerApplication {
         // 如果你碰到启动的问题，请认真阅读 https://doc.iocoder.cn/quick-start/ 文章
         // 如果你碰到启动的问题，请认真阅读 https://doc.iocoder.cn/quick-start/ 文章
 // 启动 Redis 服务
-        RedisServer redisServer = new RedisServer(6379);
-        try {
-            redisServer.start();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+//        RedisServer redisServer = new RedisServer(6379);
+//        try {
+//            redisServer.start();
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
         SpringApplication.run(AdjustServerApplication.class, args);
 //        new SpringApplicationBuilder(AdjustServerApplication.class)
 //                .applicationStartup(new BufferingApplicationStartup(20480))
