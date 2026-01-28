@@ -1,0 +1,77 @@
+---
+description: Database table creation rules (MySQL)
+alwaysApply: false
+---
+
+## DB Rules (MySQL) — 建表规范
+
+### Must（强制）
+- **必须包含主键 `id`**
+  - 推荐：`id bigint auto_increment comment 'xxxID' primary key`
+  - 除非明确需要 UUID/雪花 ID（否则不要用 `varchar` 当主键）
+
+- **必须包含以下 5 个基础字段（字段名/类型/默认值/约束保持一致）**
+
+```sql
+creator        varchar(64)  default ''                null comment '创建者',
+create_time    datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
+updater        varchar(64)  default ''                null comment '更新者',
+update_time    datetime     default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+deleted        bit          default b'0'              not null comment '是否删除'
+```
+
+- **每个字段必须有 `comment`**
+- **字符集/排序规则统一（推荐）**
+  - 表：`collate = utf8mb4_unicode_ci`
+  - 业务上有 emoji/多语言需求时必须使用 `utf8mb4`
+
+### Types（字段类型注意事项）
+- **ID/外键**
+  - `id`、`xxx_id`：优先 `bigint`（与主键类型保持一致）
+- **布尔/开关**
+  - 优先：`bit default b'0'` / `bit default b'1'`（与本项目示例一致）
+- **状态/枚举**
+  - 优先：`tinyint`（配合明确 comment：0/1/2 的含义）
+- **排序**
+  - 优先：`int default 0 not null`
+- **字符串**
+  - `varchar(n)`：按实际长度合理设置（避免无脑 255）
+  - 能 `not null` 就不要 `null`；需要默认空字符串时用 `default ''`
+- **金额/精度**
+  - 金额：`decimal(18,2)`（不要用 float/double）
+- **时间**
+  - 建议使用 `datetime`
+  - `create_time` 默认 `CURRENT_TIMESTAMP`
+  - `update_time` 默认 `CURRENT_TIMESTAMP` 且 `on update CURRENT_TIMESTAMP`
+
+### Recommended（建议）
+- **软删除统一使用 `deleted`**（bit，0 未删 / 1 已删），配合查询条件过滤
+- **索引**
+  - 频繁查询/关联字段（如 `parent_id`、`status`、`create_time`）建议建索引
+  - 需要唯一约束的字段加 `unique index`
+- **默认值**
+  - `varchar`：常用 `default ''`
+  - 数值：常用 `default 0`
+  - 布尔：常用 `default b'0'`/`b'1'`
+
+## Template（可复制模板）
+
+```sql
+create table xxx_table
+(
+    id          bigint auto_increment comment 'xxxID'
+        primary key,
+
+    -- business columns...
+
+    creator        varchar(64)  default ''                null comment '创建者',
+    create_time    datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
+    updater        varchar(64)  default ''                null comment '更新者',
+    update_time    datetime     default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    deleted        bit          default b'0'              not null comment '是否删除'
+)
+    comment 'xxx表' collate = utf8mb4_unicode_ci;
+```
+
+## Reference（示例风格参考）
+- 以 `system_menu` 表的字段类型、默认值、comment、collate 写法为准。
