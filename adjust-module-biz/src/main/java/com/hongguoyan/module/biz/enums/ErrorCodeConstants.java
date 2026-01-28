@@ -23,4 +23,6 @@ public interface ErrorCodeConstants {
     ErrorCode VIP_COUPON_CODE_INVALID = new ErrorCode(17, "券码不可用");
     ErrorCode VIP_COUPON_CODE_USED = new ErrorCode(18, "券码已使用");
     ErrorCode VIP_COUPON_CODE_EXPIRED = new ErrorCode(19, "券码已过期");
+    ErrorCode SCHOOL_SCORE_NOT_EXISTS = new ErrorCode(20, "自划线不存在");
+    ErrorCode NATIONAL_SCORE_NOT_EXISTS = new ErrorCode(21, "国家线不存在");
 }
