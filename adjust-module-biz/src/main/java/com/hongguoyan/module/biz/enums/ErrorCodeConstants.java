@@ -15,4 +15,12 @@ public interface ErrorCodeConstants {
     ErrorCode VIP_PLAN_NOT_EXISTS = new ErrorCode(11, "会员套餐不存在");
     ErrorCode VIP_ORDER_NOT_EXISTS = new ErrorCode(12, "会员订单不存在");
     ErrorCode VIP_PLAN_FEATURE_NOT_EXISTS = new ErrorCode(13, "会员套餐权益不存在");
+
+    // ========== VIP App ==========
+    ErrorCode VIP_LOGIN_REQUIRED = new ErrorCode(14, "请先登录");
+    ErrorCode VIP_PLAN_DISABLED = new ErrorCode(15, "会员套餐已禁用");
+    ErrorCode VIP_PLAN_DURATION_INVALID = new ErrorCode(16, "会员套餐时长配置错误");
+    ErrorCode VIP_COUPON_CODE_INVALID = new ErrorCode(17, "券码不可用");
+    ErrorCode VIP_COUPON_CODE_USED = new ErrorCode(18, "券码已使用");
+    ErrorCode VIP_COUPON_CODE_EXPIRED = new ErrorCode(19, "券码已过期");
 }
