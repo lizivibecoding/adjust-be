@@ -27,4 +27,6 @@ public interface ErrorCodeConstants {
     ErrorCode NATIONAL_SCORE_NOT_EXISTS = new ErrorCode(21, "国家线不存在");
     ErrorCode SCHOOL_DIRECTION_NOT_EXISTS = new ErrorCode(22, "院校研究方向不存在");
     ErrorCode SCHOOL_COLLEGE_NOT_EXISTS = new ErrorCode(23, "学院不存在");
+    ErrorCode CANDIDATE_PROFILES_NOT_EXISTS = new ErrorCode(24, "考生基础档案表(含成绩与软背景)不存在");
+    ErrorCode CANDIDATE_PREFERENCES_NOT_EXISTS = new ErrorCode(25, "考生调剂意向与偏好设置不存在");
 }
