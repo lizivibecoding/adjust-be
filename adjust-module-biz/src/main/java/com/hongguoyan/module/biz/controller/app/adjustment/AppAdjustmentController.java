@@ -28,6 +28,7 @@ import static com.hongguoyan.framework.apilog.core.enums.OperateTypeEnum.*;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.*;
 import com.hongguoyan.module.biz.dal.dataobject.adjustment.AdjustmentDO;
 import com.hongguoyan.module.biz.service.adjustment.AdjustmentService;
+import com.hongguoyan.module.biz.service.adjustment.SchoolSpecialOptionsService;
 
 @Tag(name = "用户 APP - 调剂")
 @RestController
@@ -37,6 +38,8 @@ public class AppAdjustmentController {
 
     @Resource
     private AdjustmentService adjustmentService;
+    @Resource
+    private SchoolSpecialOptionsService schoolSpecialOptionsService;
 
     @GetMapping("/search")
     @Operation(summary = "调剂全局搜索")
@@ -63,6 +66,12 @@ public class AppAdjustmentController {
     @Operation(summary = "调剂详情切换选项(年份/学院)")
     public CommonResult<AppAdjustmentOptionsRespVO> getAdjustmentOptions(@Valid AppAdjustmentOptionsReqVO reqVO) {
         return success(adjustmentService.getAdjustmentOptions(reqVO));
+    }
+
+    @GetMapping("/school-special-options")
+    @Operation(summary = "学校联动选项(学院/专业/学习方式/方向/分数线)")
+    public CommonResult<AppSchoolSpecialOptionsRespVO> getSchoolSpecialOptions(@Valid AppSchoolSpecialOptionsReqVO reqVO) {
+        return success(schoolSpecialOptionsService.getOptions(reqVO));
     }
 
     @GetMapping("/detail")
