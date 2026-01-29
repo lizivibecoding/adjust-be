@@ -25,4 +25,6 @@ public interface ErrorCodeConstants {
     ErrorCode VIP_COUPON_CODE_EXPIRED = new ErrorCode(19, "券码已过期");
     ErrorCode SCHOOL_SCORE_NOT_EXISTS = new ErrorCode(20, "自划线不存在");
     ErrorCode NATIONAL_SCORE_NOT_EXISTS = new ErrorCode(21, "国家线不存在");
+    ErrorCode SCHOOL_DIRECTION_NOT_EXISTS = new ErrorCode(22, "院校研究方向不存在");
+    ErrorCode SCHOOL_COLLEGE_NOT_EXISTS = new ErrorCode(23, "学院不存在");
 }
