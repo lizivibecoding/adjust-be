@@ -1,19 +1,28 @@
 package com.hongguoyan.module.biz.service.adjustmentadmit;
 
 import cn.hutool.core.collection.CollUtil;
+import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentAnalysisReqVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentAnalysisRespVO;
+import com.hongguoyan.module.biz.controller.app.adjustmentadmit.vo.AppAdjustmentAdmitListItemRespVO;
+import com.hongguoyan.module.biz.controller.app.adjustmentadmit.vo.AppAdjustmentAdmitListReqVO;
 import org.springframework.stereotype.Service;
 import jakarta.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import com.hongguoyan.module.biz.controller.app.adjustmentadmit.vo.*;
 import com.hongguoyan.module.biz.dal.dataobject.adjustmentadmit.AdjustmentAdmitDO;
+import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.framework.common.pojo.PageParam;
 import com.hongguoyan.framework.common.util.object.BeanUtils;
 
 import com.hongguoyan.module.biz.dal.mysql.adjustmentadmit.AdjustmentAdmitMapper;
+import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertList;
@@ -31,6 +40,8 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
 
     @Resource
     private AdjustmentAdmitMapper adjustmentAdmitMapper;
+    @Resource
+    private SchoolMapper schoolMapper;
 
     @Override
     public Long createAdjustmentAdmit(AppAdjustmentAdmitSaveReqVO createReqVO) {
@@ -80,6 +91,270 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
     @Override
     public PageResult<AdjustmentAdmitDO> getAdjustmentAdmitPage(AppAdjustmentAdmitPageReqVO pageReqVO) {
         return adjustmentAdmitMapper.selectPage(pageReqVO);
+    }
+
+    @Override
+    public List<AppAdjustmentAdmitListItemRespVO> getAdmitList(AppAdjustmentAdmitListReqVO reqVO) {
+        List<AdjustmentAdmitDO> list = adjustmentAdmitMapper.selectList(new LambdaQueryWrapperX<AdjustmentAdmitDO>()
+                .select(AdjustmentAdmitDO::getCandidateName,
+                        AdjustmentAdmitDO::getFirstSchoolName,
+                        AdjustmentAdmitDO::getFirstScore,
+                        AdjustmentAdmitDO::getRetestScore,
+                        AdjustmentAdmitDO::getTotalScore)
+                .eq(AdjustmentAdmitDO::getDeleted, false)
+                .eq(AdjustmentAdmitDO::getSchoolId, reqVO.getSchoolId())
+                .eq(AdjustmentAdmitDO::getCollegeId, reqVO.getCollegeId())
+                .eq(AdjustmentAdmitDO::getMajorId, reqVO.getMajorId())
+                .eq(AdjustmentAdmitDO::getYear, reqVO.getYear())
+                .eq(AdjustmentAdmitDO::getStudyMode, reqVO.getStudyMode())
+                .eqIfPresent(AdjustmentAdmitDO::getDirectionId, reqVO.getDirectionId())
+                .orderByDesc(AdjustmentAdmitDO::getTotalScore)
+                .orderByDesc(AdjustmentAdmitDO::getFirstScore)
+                .orderByDesc(AdjustmentAdmitDO::getId));
+        if (list == null || list.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<AppAdjustmentAdmitListItemRespVO> resp = new ArrayList<>(list.size());
+        for (AdjustmentAdmitDO item : list) {
+            AppAdjustmentAdmitListItemRespVO vo = new AppAdjustmentAdmitListItemRespVO();
+            vo.setCandidateName(item.getCandidateName());
+            vo.setFirstSchoolName(item.getFirstSchoolName());
+            vo.setFirstScore(item.getFirstScore());
+            vo.setRetestScore(item.getRetestScore());
+            vo.setTotalScore(item.getTotalScore());
+            resp.add(vo);
+        }
+        return resp;
+    }
+
+    @Override
+    public AppAdjustmentAnalysisRespVO getAnalysis(AppAdjustmentAnalysisReqVO reqVO) {
+        List<AdjustmentAdmitDO> list = adjustmentAdmitMapper.selectList(new LambdaQueryWrapperX<AdjustmentAdmitDO>()
+                .select(AdjustmentAdmitDO::getFirstSchoolId,
+                        AdjustmentAdmitDO::getFirstScore)
+                .eq(AdjustmentAdmitDO::getDeleted, false)
+                .eq(AdjustmentAdmitDO::getSchoolId, reqVO.getSchoolId())
+                .eq(AdjustmentAdmitDO::getCollegeId, reqVO.getCollegeId())
+                .eq(AdjustmentAdmitDO::getMajorId, reqVO.getMajorId())
+                .eq(AdjustmentAdmitDO::getYear, reqVO.getYear())
+                .eq(AdjustmentAdmitDO::getStudyMode, reqVO.getStudyMode())
+                .eqIfPresent(AdjustmentAdmitDO::getDirectionId, reqVO.getDirectionId()));
+
+        AppAdjustmentAnalysisRespVO respVO = new AppAdjustmentAnalysisRespVO();
+        if (list == null || list.isEmpty()) {
+            respVO.setSection(Collections.emptyList());
+            respVO.setLevel(Collections.emptyList());
+            respVO.setDetail(Collections.emptyMap());
+            return respVO;
+        }
+
+        Long schoolId = reqVO.getSchoolId();
+
+        // split first-choice vs adjust
+        List<BigDecimal> firstChoiceScores = new ArrayList<>();
+        List<BigDecimal> adjustScores = new ArrayList<>();
+        LinkedHashSet<Long> adjustFirstSchoolIds = new LinkedHashSet<>();
+        for (AdjustmentAdmitDO item : list) {
+            Long firstSchoolId = item.getFirstSchoolId();
+            BigDecimal firstScore = item.getFirstScore();
+            boolean isFirstChoice = firstSchoolId != null && firstSchoolId.equals(schoolId);
+            if (isFirstChoice) {
+                if (firstScore != null) {
+                    firstChoiceScores.add(firstScore);
+                } else {
+                    firstChoiceScores.add(null);
+                }
+            } else {
+                if (firstScore != null) {
+                    adjustScores.add(firstScore);
+                }
+                if (firstSchoolId != null) {
+                    adjustFirstSchoolIds.add(firstSchoolId);
+                }
+            }
+        }
+
+        // detail (k1~k7)
+        Map<String, AppAdjustmentAnalysisRespVO.DetailItem> detail = new LinkedHashMap<>();
+        putDetail(detail, "k1", "一志愿拟录取人数", BigDecimal.valueOf(countNotNullOrAll(firstChoiceScores)));
+        putDetail(detail, "k2", "一志愿最高分", maxScore(firstChoiceScores));
+        putDetail(detail, "k3", "一志愿最低分", minScore(firstChoiceScores));
+        putDetail(detail, "k4", "拟招收调剂人数", BigDecimal.valueOf(list.size() - countNotNullOrAll(firstChoiceScores)));
+        putDetail(detail, "k5", "调剂最低分", minScore(adjustScores));
+        putDetail(detail, "k6", "调剂中位分", medianScore(adjustScores));
+        putDetail(detail, "k7", "调剂最高分", maxScore(adjustScores));
+        respVO.setDetail(detail);
+
+        // section distribution (only adjust group)
+        respVO.setSection(buildScoreSection(adjustScores));
+
+        // level distribution (distinct first school count in adjust group)
+        respVO.setLevel(buildLevel(adjustFirstSchoolIds));
+
+        return respVO;
+    }
+
+    private void putDetail(Map<String, AppAdjustmentAnalysisRespVO.DetailItem> map,
+                           String key,
+                           String name,
+                           BigDecimal value) {
+        AppAdjustmentAnalysisRespVO.DetailItem item = new AppAdjustmentAnalysisRespVO.DetailItem();
+        item.setName(name);
+        item.setValue(value);
+        map.put(key, item);
+    }
+
+    private long countNotNullOrAll(List<BigDecimal> scores) {
+        // list elements are always added; treat size as count
+        return scores != null ? scores.size() : 0L;
+    }
+
+    private BigDecimal minScore(List<BigDecimal> scores) {
+        if (scores == null || scores.isEmpty()) {
+            return null;
+        }
+        BigDecimal min = null;
+        for (BigDecimal v : scores) {
+            if (v == null) {
+                continue;
+            }
+            if (min == null || v.compareTo(min) < 0) {
+                min = v;
+            }
+        }
+        return min;
+    }
+
+    private BigDecimal maxScore(List<BigDecimal> scores) {
+        if (scores == null || scores.isEmpty()) {
+            return null;
+        }
+        BigDecimal max = null;
+        for (BigDecimal v : scores) {
+            if (v == null) {
+                continue;
+            }
+            if (max == null || v.compareTo(max) > 0) {
+                max = v;
+            }
+        }
+        return max;
+    }
+
+    private BigDecimal medianScore(List<BigDecimal> scores) {
+        if (scores == null || scores.isEmpty()) {
+            return null;
+        }
+        List<BigDecimal> list = new ArrayList<>();
+        for (BigDecimal v : scores) {
+            if (v != null) {
+                list.add(v);
+            }
+        }
+        if (list.isEmpty()) {
+            return null;
+        }
+        list.sort(BigDecimal::compareTo);
+        int n = list.size();
+        if ((n & 1) == 1) {
+            return list.get(n / 2);
+        }
+        BigDecimal a = list.get(n / 2 - 1);
+        BigDecimal b = list.get(n / 2);
+        return a.add(b).divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
+    }
+
+    private List<AppAdjustmentAnalysisRespVO.NameValue> buildScoreSection(List<BigDecimal> scores) {
+        if (scores == null || scores.isEmpty()) {
+            return Collections.emptyList();
+        }
+        // convert to integer range by floor
+        List<Integer> ints = new ArrayList<>();
+        for (BigDecimal v : scores) {
+            if (v == null) {
+                continue;
+            }
+            ints.add(v.setScale(0, RoundingMode.FLOOR).intValue());
+        }
+        if (ints.isEmpty()) {
+            return Collections.emptyList();
+        }
+        int min = Collections.min(ints);
+        int max = Collections.max(ints);
+        int start = (min / 5) * 5;
+        int span = (max + 1) - start;
+        int step = (int) Math.ceil(span / 5.0);
+        if (step <= 0) {
+            step = 1;
+        }
+        List<AppAdjustmentAnalysisRespVO.NameValue> result = new ArrayList<>(5);
+        for (int i = 0; i < 5; i++) {
+            int left = start + i * step;
+            int right = start + (i + 1) * step;
+            if (i == 4) {
+                right = max + 1;
+            }
+            long count = 0L;
+            for (int v : ints) {
+                if (v >= left && v < right) {
+                    count++;
+                }
+            }
+            AppAdjustmentAnalysisRespVO.NameValue item = new AppAdjustmentAnalysisRespVO.NameValue();
+            item.setName(left + "-" + right);
+            item.setValue(count);
+            result.add(item);
+        }
+        return result;
+    }
+
+    private List<AppAdjustmentAnalysisRespVO.LevelItem> buildLevel(Set<Long> firstSchoolIds) {
+        if (firstSchoolIds == null || firstSchoolIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Long> ids = new ArrayList<>(firstSchoolIds);
+        List<SchoolDO> schools = schoolMapper.selectBatchIds(ids);
+        Map<Long, SchoolDO> map = new HashMap<>();
+        if (schools != null) {
+            for (SchoolDO s : schools) {
+                map.put(s.getId(), s);
+            }
+        }
+
+        long c985 = 0L;
+        long c211 = 0L;
+        long csyl = 0L;
+        long cOther = 0L;
+        for (Long id : ids) {
+            SchoolDO s = map.get(id);
+            boolean is985 = s != null && Boolean.TRUE.equals(s.getIs985());
+            boolean is211 = s != null && Boolean.TRUE.equals(s.getIs211());
+            boolean isSyl = s != null && Boolean.TRUE.equals(s.getIsSyl());
+            if (is985) {
+                c985++;
+            } else if (is211) {
+                c211++;
+            } else if (isSyl) {
+                csyl++;
+            } else {
+                cOther++;
+            }
+        }
+
+        List<AppAdjustmentAnalysisRespVO.LevelItem> result = new ArrayList<>(4);
+        result.add(levelItem("985工程", "", c985));
+        result.add(levelItem("211工程", "不含985", c211));
+        result.add(levelItem("双一流", "不含985、211", csyl));
+        result.add(levelItem("普通院校", "", cOther));
+        return result;
+    }
+
+    private AppAdjustmentAnalysisRespVO.LevelItem levelItem(String name, String subName, long value) {
+        AppAdjustmentAnalysisRespVO.LevelItem item = new AppAdjustmentAnalysisRespVO.LevelItem();
+        item.setName(name);
+        item.setSubName(subName);
+        item.setValue(value);
+        return item;
     }
 
 }

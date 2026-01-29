@@ -2,6 +2,8 @@ package com.hongguoyan.module.biz.service.adjustmentadmit;
 
 import java.util.*;
 import jakarta.validation.*;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentAnalysisReqVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentAnalysisRespVO;
 import com.hongguoyan.module.biz.controller.app.adjustmentadmit.vo.*;
 import com.hongguoyan.module.biz.dal.dataobject.adjustmentadmit.AdjustmentAdmitDO;
 import com.hongguoyan.framework.common.pojo.PageResult;
@@ -58,5 +60,21 @@ public interface AdjustmentAdmitService {
      * @return 调剂录取名单分页
      */
     PageResult<AdjustmentAdmitDO> getAdjustmentAdmitPage(AppAdjustmentAdmitPageReqVO pageReqVO);
+
+    /**
+     * 调剂录取名单列表(用于前端展示)
+     *
+     * @param reqVO 条件
+     * @return 列表
+     */
+    List<AppAdjustmentAdmitListItemRespVO> getAdmitList(@Valid AppAdjustmentAdmitListReqVO reqVO);
+
+    /**
+     * 调剂分析(基于录取名单聚合)
+     *
+     * @param reqVO 条件
+     * @return 分析数据
+     */
+    AppAdjustmentAnalysisRespVO getAnalysis(@Valid AppAdjustmentAnalysisReqVO reqVO);
 
 }

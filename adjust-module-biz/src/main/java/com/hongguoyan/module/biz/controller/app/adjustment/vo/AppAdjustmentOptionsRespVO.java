@@ -15,5 +15,8 @@ public class AppAdjustmentOptionsRespVO {
     @Schema(description = "学院列表")
     private List<AppAdjustmentCollegeOptionRespVO> collegeList;
 
+    @Schema(description = "学习方式列表(全日制/非全日制等)")
+    private List<String> studyModeList;
+
 }
 

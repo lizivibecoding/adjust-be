@@ -26,9 +26,12 @@ import com.hongguoyan.framework.apilog.core.annotation.ApiAccessLog;
 import static com.hongguoyan.framework.apilog.core.enums.OperateTypeEnum.*;
 
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.*;
+import com.hongguoyan.module.biz.controller.app.adjustmentadmit.vo.AppAdjustmentAdmitListItemRespVO;
+import com.hongguoyan.module.biz.controller.app.adjustmentadmit.vo.AppAdjustmentAdmitListReqVO;
 import com.hongguoyan.module.biz.dal.dataobject.adjustment.AdjustmentDO;
 import com.hongguoyan.module.biz.service.adjustment.AdjustmentService;
 import com.hongguoyan.module.biz.service.adjustment.SchoolSpecialOptionsService;
+import com.hongguoyan.module.biz.service.adjustmentadmit.AdjustmentAdmitService;
 
 @Tag(name = "用户 APP - 调剂")
 @RestController
@@ -40,6 +43,8 @@ public class AppAdjustmentController {
     private AdjustmentService adjustmentService;
     @Resource
     private SchoolSpecialOptionsService schoolSpecialOptionsService;
+    @Resource
+    private AdjustmentAdmitService adjustmentAdmitService;
 
     @GetMapping("/search")
     @Operation(summary = "调剂全局搜索")
@@ -78,6 +83,18 @@ public class AppAdjustmentController {
     @Operation(summary = "调剂详情(按方向聚合返回)")
     public CommonResult<AppAdjustmentDetailRespVO> getAdjustmentDetail(@Valid AppAdjustmentDetailReqVO reqVO) {
         return success(adjustmentService.getAdjustmentDetail(reqVO));
+    }
+
+    @GetMapping("/admit-list")
+    @Operation(summary = "录取名单列表")
+    public CommonResult<List<AppAdjustmentAdmitListItemRespVO>> getAdmitList(@Valid AppAdjustmentAdmitListReqVO reqVO) {
+        return success(adjustmentAdmitService.getAdmitList(reqVO));
+    }
+
+    @GetMapping("/analysis")
+    @Operation(summary = "调剂分析(基于录取名单聚合)")
+    public CommonResult<AppAdjustmentAnalysisRespVO> getAdjustmentAnalysis(@Valid AppAdjustmentAnalysisReqVO reqVO) {
+        return success(adjustmentAdmitService.getAnalysis(reqVO));
     }
 
     @GetMapping("/update-stats")

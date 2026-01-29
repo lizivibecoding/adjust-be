@@ -180,6 +180,21 @@
         ORDER BY a.college_name ASC
     </select>
 
+    <select id="selectOptionStudyModes" resultType="java.lang.String">
+        SELECT DISTINCT a.study_mode
+        FROM biz_adjustment a
+        WHERE a.school_id = #{schoolId}
+          AND a.college_id = #{collegeId}
+          AND a.major_id = #{majorId}
+        ORDER BY
+            CASE a.study_mode
+                WHEN '全日制' THEN 0
+                WHEN '非全日制' THEN 1
+                ELSE 9
+            END,
+            a.study_mode ASC
+    </select>
+
     <select id="selectUpdateStats"
             resultType="com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentUpdateStatsRespVO">
         SELECT

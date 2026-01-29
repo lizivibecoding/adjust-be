@@ -12,6 +12,9 @@ public class AppAdjustmentOptionsReqVO {
     @NotNull(message = "学校ID不能为空")
     private Long schoolId;
 
+    @Schema(description = "学院ID(用于学习方式联动)", example = "6746")
+    private Long collegeId;
+
     @Schema(description = "专业ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "15937")
     @NotNull(message = "专业ID不能为空")
     private Long majorId;
