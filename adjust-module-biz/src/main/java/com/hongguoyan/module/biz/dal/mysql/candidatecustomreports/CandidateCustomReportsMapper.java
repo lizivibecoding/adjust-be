@@ -17,6 +17,25 @@ import com.hongguoyan.module.biz.controller.app.candidatecustomreports.vo.*;
 @Mapper
 public interface CandidateCustomReportsMapper extends BaseMapperX<CandidateCustomReportsDO> {
 
+    default CandidateCustomReportsDO selectLatestByUserId(Long userId) {
+        return selectOne(new LambdaQueryWrapperX<CandidateCustomReportsDO>()
+                .eq(CandidateCustomReportsDO::getUserId, userId)
+                .orderByDesc(CandidateCustomReportsDO::getId)
+                .last("LIMIT 1"));
+    }
+
+    /**
+     * @return max(report_no) for the user; 0 if none
+     */
+    default int selectMaxReportNoByUserId(Long userId) {
+        CandidateCustomReportsDO row = selectOne(new LambdaQueryWrapperX<CandidateCustomReportsDO>()
+                .select(CandidateCustomReportsDO::getReportNo)
+                .eq(CandidateCustomReportsDO::getUserId, userId)
+                .orderByDesc(CandidateCustomReportsDO::getReportNo)
+                .last("LIMIT 1"));
+        return row == null || row.getReportNo() == null ? 0 : row.getReportNo();
+    }
+
     default PageResult<CandidateCustomReportsDO> selectPage(AppCandidateCustomReportsPageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<CandidateCustomReportsDO>()
                 .eqIfPresent(CandidateCustomReportsDO::getUserId, reqVO.getUserId())

@@ -9,17 +9,6 @@ import jakarta.validation.constraints.*;
 @Data
 public class AppCandidateCustomReportsSaveReqVO {
 
-    @Schema(description = "主键ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "11001")
-    private Long id;
-
-    @Schema(description = "用户ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "25247")
-    @NotNull(message = "用户ID不能为空")
-    private Long userId;
-
-    @Schema(description = "报告版本号(用户内递增，从1开始)", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotNull(message = "报告版本号(用户内递增，从1开始)不能为空")
-    private Integer reportNo;
-
     @Schema(description = "算法/报告版本(如v1.0.3)", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotEmpty(message = "算法/报告版本(如v1.0.3)不能为空")
     private String reportVersion;

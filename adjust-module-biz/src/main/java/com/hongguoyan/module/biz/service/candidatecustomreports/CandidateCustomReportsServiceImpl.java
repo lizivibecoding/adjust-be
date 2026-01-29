@@ -1,24 +1,16 @@
 package com.hongguoyan.module.biz.service.candidatecustomreports;
 
-import cn.hutool.core.collection.CollUtil;
 import org.springframework.stereotype.Service;
 import jakarta.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
 import com.hongguoyan.module.biz.controller.app.candidatecustomreports.vo.*;
 import com.hongguoyan.module.biz.dal.dataobject.candidatecustomreports.CandidateCustomReportsDO;
-import com.hongguoyan.framework.common.pojo.PageResult;
-import com.hongguoyan.framework.common.pojo.PageParam;
 import com.hongguoyan.framework.common.util.object.BeanUtils;
 
 import com.hongguoyan.module.biz.dal.mysql.candidatecustomreports.CandidateCustomReportsMapper;
-
-import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
-import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertList;
-import static com.hongguoyan.framework.common.util.collection.CollectionUtils.diffList;
-import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.*;
+import org.springframework.dao.DuplicateKeyException;
 
 /**
  * 考生AI调剂定制报告 Service 实现类
@@ -33,53 +25,37 @@ public class CandidateCustomReportsServiceImpl implements CandidateCustomReports
     private CandidateCustomReportsMapper candidateCustomReportsMapper;
 
     @Override
-    public Long createCandidateCustomReports(AppCandidateCustomReportsSaveReqVO createReqVO) {
-        // 插入
-        CandidateCustomReportsDO candidateCustomReports = BeanUtils.toBean(createReqVO, CandidateCustomReportsDO.class);
-        candidateCustomReportsMapper.insert(candidateCustomReports);
-
-        // 返回
-        return candidateCustomReports.getId();
+    public CandidateCustomReportsDO getLatestByUserId(Long userId) {
+        return candidateCustomReportsMapper.selectLatestByUserId(userId);
     }
 
     @Override
-    public void updateCandidateCustomReports(AppCandidateCustomReportsSaveReqVO updateReqVO) {
-        // 校验存在
-        validateCandidateCustomReportsExists(updateReqVO.getId());
-        // 更新
-        CandidateCustomReportsDO updateObj = BeanUtils.toBean(updateReqVO, CandidateCustomReportsDO.class);
-        candidateCustomReportsMapper.updateById(updateObj);
-    }
+    @Transactional(rollbackFor = Exception.class)
+    public Long createNewVersionByUserId(Long userId, AppCandidateCustomReportsSaveReqVO reqVO) {
+        // 尽量避免并发下 report_no 冲突：冲突则重试一次
+        for (int i = 0; i < 2; i++) {
+            int maxReportNo = candidateCustomReportsMapper.selectMaxReportNoByUserId(userId);
+            int nextReportNo = maxReportNo + 1;
 
-    @Override
-    public void deleteCandidateCustomReports(Long id) {
-        // 校验存在
-        validateCandidateCustomReportsExists(id);
-        // 删除
-        candidateCustomReportsMapper.deleteById(id);
-    }
+            CandidateCustomReportsDO report = BeanUtils.toBean(reqVO, CandidateCustomReportsDO.class);
+            report.setId(null);
+            report.setUserId(userId);
+            report.setReportNo(nextReportNo);
 
-    @Override
-        public void deleteCandidateCustomReportsListByIds(List<Long> ids) {
-        // 删除
-        candidateCustomReportsMapper.deleteByIds(ids);
+            try {
+                candidateCustomReportsMapper.insert(report);
+                return report.getId();
+            } catch (DuplicateKeyException ignore) {
+                // retry
+            }
         }
-
-
-    private void validateCandidateCustomReportsExists(Long id) {
-        if (candidateCustomReportsMapper.selectById(id) == null) {
-            throw exception(CANDIDATE_CUSTOM_REPORTS_NOT_EXISTS);
-        }
-    }
-
-    @Override
-    public CandidateCustomReportsDO getCandidateCustomReports(Long id) {
-        return candidateCustomReportsMapper.selectById(id);
-    }
-
-    @Override
-    public PageResult<CandidateCustomReportsDO> getCandidateCustomReportsPage(AppCandidateCustomReportsPageReqVO pageReqVO) {
-        return candidateCustomReportsMapper.selectPage(pageReqVO);
+        // 最终还是冲突，交由上层处理（会返回 500）
+        CandidateCustomReportsDO report = BeanUtils.toBean(reqVO, CandidateCustomReportsDO.class);
+        report.setId(null);
+        report.setUserId(userId);
+        report.setReportNo(candidateCustomReportsMapper.selectMaxReportNoByUserId(userId) + 1);
+        candidateCustomReportsMapper.insert(report);
+        return report.getId();
     }
 
 }
