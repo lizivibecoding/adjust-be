@@ -134,7 +134,7 @@ public class SchoolSpecialOptionsServiceImpl implements SchoolSpecialOptionsServ
         respVO.setOptions(options);
 
         if (majorIds.isEmpty()) {
-            respVO.setStudyModeMap(Collections.emptyMap());
+            respVO.setStudyModes(Collections.emptyMap());
             return;
         }
 
@@ -163,7 +163,7 @@ public class SchoolSpecialOptionsServiceImpl implements SchoolSpecialOptionsServ
             }
             list.sort((a, b) -> studyModeRank(a) - studyModeRank(b));
         }
-        respVO.setStudyModeMap(map);
+        respVO.setStudyModes(map);
     }
 
     private List<AppSchoolSpecialOptionsRespVO.Option> buildDirectionOptions(AppSchoolSpecialOptionsReqVO reqVO) {
