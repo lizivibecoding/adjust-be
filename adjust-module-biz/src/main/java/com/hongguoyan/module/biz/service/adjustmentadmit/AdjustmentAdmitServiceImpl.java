@@ -144,7 +144,7 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
         if (list == null || list.isEmpty()) {
             respVO.setSection(Collections.emptyList());
             respVO.setLevel(Collections.emptyList());
-            respVO.setDetail(Collections.emptyMap());
+            respVO.setDetail(null);
             return respVO;
         }
 
@@ -174,15 +174,17 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
             }
         }
 
-        // detail (k1~k7)
-        Map<String, AppAdjustmentAnalysisRespVO.DetailItem> detail = new LinkedHashMap<>();
-        putDetail(detail, "k1", "一志愿拟录取人数", BigDecimal.valueOf(countNotNullOrAll(firstChoiceScores)));
-        putDetail(detail, "k2", "一志愿最高分", maxScore(firstChoiceScores));
-        putDetail(detail, "k3", "一志愿最低分", minScore(firstChoiceScores));
-        putDetail(detail, "k4", "拟招收调剂人数", BigDecimal.valueOf(list.size() - countNotNullOrAll(firstChoiceScores)));
-        putDetail(detail, "k5", "调剂最低分", minScore(adjustScores));
-        putDetail(detail, "k6", "调剂中位分", medianScore(adjustScores));
-        putDetail(detail, "k7", "调剂最高分", maxScore(adjustScores));
+        // detail
+        AppAdjustmentAnalysisRespVO.Detail detail = new AppAdjustmentAnalysisRespVO.Detail();
+        long firstChoiceCount = countNotNullOrAll(firstChoiceScores);
+        long adjustCount = list.size() - firstChoiceCount;
+        detail.setFirstChoiceCount(firstChoiceCount);
+        detail.setFirstChoiceMaxScore(maxScore(firstChoiceScores));
+        detail.setFirstChoiceMinScore(minScore(firstChoiceScores));
+        detail.setAdjustCount(adjustCount);
+        detail.setAdjustMinScore(minScore(adjustScores));
+        detail.setAdjustMedianScore(medianScore(adjustScores));
+        detail.setAdjustMaxScore(maxScore(adjustScores));
         respVO.setDetail(detail);
 
         // section distribution (only adjust group)
@@ -192,16 +194,6 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
         respVO.setLevel(buildLevel(adjustFirstSchoolIds));
 
         return respVO;
-    }
-
-    private void putDetail(Map<String, AppAdjustmentAnalysisRespVO.DetailItem> map,
-                           String key,
-                           String name,
-                           BigDecimal value) {
-        AppAdjustmentAnalysisRespVO.DetailItem item = new AppAdjustmentAnalysisRespVO.DetailItem();
-        item.setName(name);
-        item.setValue(value);
-        map.put(key, item);
     }
 
     private long countNotNullOrAll(List<BigDecimal> scores) {

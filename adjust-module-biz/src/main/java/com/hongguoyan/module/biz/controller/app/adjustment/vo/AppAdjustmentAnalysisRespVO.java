@@ -5,7 +5,6 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 
 @Schema(description = "用户 APP - 调剂分析 Response VO")
 @Data
@@ -17,8 +16,8 @@ public class AppAdjustmentAnalysisRespVO {
     @Schema(description = "一志愿院校层次占比(按学校去重计数)")
     private List<LevelItem> level;
 
-    @Schema(description = "录取名单数据概览(k1~k7)")
-    private Map<String, DetailItem> detail;
+    @Schema(description = "录取名单数据概览")
+    private Detail detail;
 
     @Data
     public static class NameValue {
@@ -39,11 +38,28 @@ public class AppAdjustmentAnalysisRespVO {
     }
 
     @Data
-    public static class DetailItem {
-        @Schema(description = "名称", example = "调剂最低分")
-        private String name;
-        @Schema(description = "值")
-        private BigDecimal value;
+    public static class Detail {
+
+        @Schema(description = "一志愿拟录取人数", example = "28")
+        private Long firstChoiceCount;
+
+        @Schema(description = "一志愿最高分", example = "356")
+        private BigDecimal firstChoiceMaxScore;
+
+        @Schema(description = "一志愿最低分", example = "267")
+        private BigDecimal firstChoiceMinScore;
+
+        @Schema(description = "拟招收调剂人数", example = "4")
+        private Long adjustCount;
+
+        @Schema(description = "调剂最低分", example = "316")
+        private BigDecimal adjustMinScore;
+
+        @Schema(description = "调剂中位分", example = "324.5")
+        private BigDecimal adjustMedianScore;
+
+        @Schema(description = "调剂最高分", example = "335")
+        private BigDecimal adjustMaxScore;
     }
 }
 
