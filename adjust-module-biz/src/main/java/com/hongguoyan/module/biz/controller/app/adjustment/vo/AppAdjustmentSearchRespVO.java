@@ -1,5 +1,6 @@
 package com.hongguoyan.module.biz.controller.app.adjustment.vo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -42,7 +43,8 @@ public class AppAdjustmentSearchRespVO {
     @Schema(description = "更新时间")
     private LocalDateTime updateTime;
 
-    @Schema(description = "热度值")
+    @Schema(description = "热度值(内部字段，不对外返回)", hidden = true)
+    @JsonIgnore
     private Integer viewCount;
 
     @Schema(description = "热力值")

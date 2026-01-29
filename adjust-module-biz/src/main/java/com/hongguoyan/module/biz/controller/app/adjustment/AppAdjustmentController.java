@@ -53,6 +53,12 @@ public class AppAdjustmentController {
         return success(adjustmentService.getAdjustmentSearchPage(reqVO));
     }
 
+    @GetMapping("/hot-ranking")
+    @Operation(summary = "热门调剂专业排名")
+    public CommonResult<PageResult<AppAdjustmentSearchRespVO>> getHotRankingPage(@Valid AppAdjustmentHotRankingReqVO reqVO) {
+        return success(adjustmentService.getHotRankingPage(reqVO));
+    }
+
     @GetMapping("/filter-config")
     @Operation(summary = "调剂筛选配置(按筛选器分组返回)")
     public CommonResult<AppAdjustmentFilterConfigRespVO> getAdjustmentFilterConfig() {

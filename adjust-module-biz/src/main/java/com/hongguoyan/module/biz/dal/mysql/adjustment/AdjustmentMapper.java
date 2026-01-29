@@ -95,6 +95,16 @@ public interface AdjustmentMapper extends BaseMapperX<AdjustmentDO> {
     List<AppAdjustmentSearchSchoolRespVO> selectSearchSchoolPage(IPage<AppAdjustmentSearchSchoolRespVO> page,
                                                                  @Param("reqVO") AppAdjustmentSearchReqVO reqVO);
 
+    default PageResult<AppAdjustmentSearchRespVO> selectHotRankingPage(AppAdjustmentHotRankingReqVO reqVO) {
+        Page<AppAdjustmentSearchRespVO> page = MyBatisUtils.buildPage(reqVO);
+        List<AppAdjustmentSearchRespVO> records = selectHotRankingPage(page, reqVO);
+        page.setRecords(records);
+        return new PageResult<>(page.getRecords(), page.getTotal());
+    }
+
+    List<AppAdjustmentSearchRespVO> selectHotRankingPage(IPage<AppAdjustmentSearchRespVO> page,
+                                                         @Param("reqVO") AppAdjustmentHotRankingReqVO reqVO);
+
     List<Integer> selectOptionYears(@Param("schoolId") Long schoolId,
                                     @Param("majorId") Long majorId);
 

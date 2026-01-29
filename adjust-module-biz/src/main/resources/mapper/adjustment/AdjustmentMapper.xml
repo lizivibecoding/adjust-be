@@ -102,6 +102,39 @@
         </where>
     </sql>
 
+    <sql id="HotRankingWhere">
+        <where>
+            AND a.deleted = b'0'
+            <if test="reqVO.year != null">
+                AND a.year = #{reqVO.year}
+            </if>
+            <if test="reqVO.studyMode != null and reqVO.studyMode != ''">
+                AND a.study_mode = #{reqVO.studyMode}
+            </if>
+            <if test="reqVO.provinceCode != null and reqVO.provinceCode != ''">
+                AND s.province_code = #{reqVO.provinceCode}
+            </if>
+            <if test="reqVO.schoolFeature != null and reqVO.schoolFeature != ''">
+                <choose>
+                    <when test="reqVO.schoolFeature == '985'">
+                        AND s.is_985 = 1
+                    </when>
+                    <when test="reqVO.schoolFeature == '211'">
+                        AND s.is_211 = 1
+                    </when>
+                    <when test="reqVO.schoolFeature == 'syl'">
+                        AND s.is_syl = 1
+                    </when>
+                    <when test="reqVO.schoolFeature == 'other'">
+                        AND IFNULL(s.is_985, 0) = 0
+                        AND IFNULL(s.is_211, 0) = 0
+                        AND IFNULL(s.is_syl, 0) = 0
+                    </when>
+                </choose>
+            </if>
+        </where>
+    </sql>
+
     <select id="selectSearchMajorPage"
             resultType="com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentSearchRespVO">
         SELECT
@@ -128,6 +161,36 @@
             AND r.major_id = a.major_id
             AND r.year = a.year
         <include refid="SearchWhere" />
+        GROUP BY a.school_id, a.college_id, a.major_id, a.year
+        ORDER BY viewCount DESC, MAX(a.update_time) DESC
+    </select>
+
+    <select id="selectHotRankingPage"
+            resultType="com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentSearchRespVO">
+        SELECT
+            MAX(a.school_id) AS schoolId,
+            MAX(a.college_id) AS collegeId,
+            MAX(a.major_id) AS majorId,
+            MAX(a.school_name) AS schoolName,
+            MAX(a.major_code) AS majorCode,
+            MAX(a.major_name) AS majorName,
+            a.year,
+            MAX(a.study_mode) AS studyMode,
+            SUM(a.adjust_count) AS adjustCount,
+            MAX(a.update_time) AS updateTime,
+            LEAST(MAX(sm.view_count), 100) AS viewCount,
+            MAX(s.province_name) AS provinceName,
+            SUM(r.recruit_number) AS recruitNumber
+        FROM biz_adjustment a
+        LEFT JOIN biz_school s ON s.id = a.school_id
+        LEFT JOIN biz_school_major sm ON sm.school_id = a.school_id
+            AND sm.college_id = a.college_id
+            AND sm.major_id = a.major_id
+        LEFT JOIN biz_recruit r ON r.school_id = a.school_id
+            AND r.college_id = a.college_id
+            AND r.major_id = a.major_id
+            AND r.year = a.year
+        <include refid="HotRankingWhere" />
         GROUP BY a.school_id, a.college_id, a.major_id, a.year
         ORDER BY viewCount DESC, MAX(a.update_time) DESC
     </select>

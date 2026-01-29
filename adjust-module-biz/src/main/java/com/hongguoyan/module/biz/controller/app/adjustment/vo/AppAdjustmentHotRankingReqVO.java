@@ -1,0 +1,23 @@
+package com.hongguoyan.module.biz.controller.app.adjustment.vo;
+
+import com.hongguoyan.framework.common.pojo.PageParam;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+
+@Schema(description = "用户 APP - 热门调剂专业排名 Request VO")
+@Data
+public class AppAdjustmentHotRankingReqVO extends PageParam {
+
+    @Schema(description = "调剂年份", example = "2025")
+    private Integer year;
+
+    @Schema(description = "省份代码", example = "110000")
+    private String provinceCode;
+
+    @Schema(description = "院校标签(特性)：985/211/syl/other", example = "211")
+    private String schoolFeature;
+
+    @Schema(description = "学习方式(全日制/非全日制)", example = "全日制")
+    private String studyMode;
+}
+

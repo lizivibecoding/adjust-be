@@ -108,6 +108,14 @@ public interface AdjustmentService {
     AppAdjustmentUpdateStatsRespVO getAdjustmentUpdateStats();
 
     /**
+     * 热门调剂专业排名
+     *
+     * @param reqVO 条件
+     * @return 分页
+     */
+    PageResult<AppAdjustmentSearchRespVO> getHotRankingPage(@Valid AppAdjustmentHotRankingReqVO reqVO);
+
+    /**
      * 院校调剂列表(调剂 Tab)
      *
      * @param reqVO 条件

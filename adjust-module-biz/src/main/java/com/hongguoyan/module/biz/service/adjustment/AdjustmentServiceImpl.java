@@ -117,17 +117,10 @@ public class AdjustmentServiceImpl implements AdjustmentService {
         } else {
             PageResult<AppAdjustmentSearchRespVO> pageResult = adjustmentMapper.selectSearchMajorPage(reqVO);
             List<AppAdjustmentSearchRespVO> majorList = pageResult.getList();
-            int heatCap = 1000;
             for (AppAdjustmentSearchRespVO item : majorList) {
                 Integer viewCount = item.getViewCount();
-                int heat = 0;
-                if (viewCount != null && viewCount > 0) {
-                    heat = (int) Math.round(viewCount * 100.0 / heatCap);
-                    if (heat > 100) {
-                        heat = 100;
-                    }
-                }
-                item.setHeat(heat);
+                // Keep consistent with UI: heat in [0, 100], same as viewCount capped by SQL
+                item.setHeat(viewCount != null ? viewCount : 0);
             }
             respVO.setTotal(pageResult.getTotal());
             respVO.setMajorList(majorList);
@@ -377,6 +370,20 @@ public class AdjustmentServiceImpl implements AdjustmentService {
             respVO.setTotalSchoolCount(0L);
         }
         return respVO;
+    }
+
+    @Override
+    public PageResult<AppAdjustmentSearchRespVO> getHotRankingPage(@Valid AppAdjustmentHotRankingReqVO reqVO) {
+        PageResult<AppAdjustmentSearchRespVO> pageResult = adjustmentMapper.selectHotRankingPage(reqVO);
+        List<AppAdjustmentSearchRespVO> list = pageResult.getList();
+        if (list == null || list.isEmpty()) {
+            return pageResult;
+        }
+        for (AppAdjustmentSearchRespVO item : list) {
+            Integer viewCount = item.getViewCount();
+            item.setHeat(viewCount != null ? viewCount : 0);
+        }
+        return pageResult;
     }
 
     @Override
