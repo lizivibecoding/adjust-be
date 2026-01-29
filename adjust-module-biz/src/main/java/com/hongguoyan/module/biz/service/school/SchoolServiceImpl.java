@@ -14,6 +14,8 @@ import com.hongguoyan.framework.common.pojo.PageParam;
 import com.hongguoyan.framework.common.util.object.BeanUtils;
 
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import cn.hutool.core.util.StrUtil;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertList;
@@ -89,6 +91,28 @@ public class SchoolServiceImpl implements SchoolService {
     @Override
     public PageResult<SchoolDO> getSchoolPage(AppSchoolPageReqVO pageReqVO) {
         return schoolMapper.selectPage(pageReqVO);
+    }
+
+    @Override
+    public List<AppSchoolSimpleOptionRespVO> getSchoolSimpleAll() {
+        List<SchoolDO> list = schoolMapper.selectList(new LambdaQueryWrapper<SchoolDO>()
+                .select(SchoolDO::getId, SchoolDO::getSchoolName)
+                .eq(SchoolDO::getDeleted, false)
+                .orderByAsc(SchoolDO::getSchoolName));
+        if (list == null || list.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<AppSchoolSimpleOptionRespVO> result = new ArrayList<>(list.size());
+        for (SchoolDO item : list) {
+            if (item == null) {
+                continue;
+            }
+            AppSchoolSimpleOptionRespVO opt = new AppSchoolSimpleOptionRespVO();
+            opt.setId(item.getId());
+            opt.setName(StrUtil.blankToDefault(item.getSchoolName(), ""));
+            result.add(opt);
+        }
+        return result;
     }
 
 }

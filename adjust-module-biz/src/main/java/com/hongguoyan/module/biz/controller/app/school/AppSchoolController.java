@@ -69,4 +69,10 @@ public class AppSchoolController {
         return success(BeanUtils.toBean(pageResult, AppSchoolRespVO.class));
     }
 
+    @GetMapping("/simple-all")
+    @Operation(summary = "获得学校简单列表(id+name)")
+    public CommonResult<List<AppSchoolSimpleOptionRespVO>> getSchoolSimpleAll() {
+        return success(schoolService.getSchoolSimpleAll());
+    }
+
 }

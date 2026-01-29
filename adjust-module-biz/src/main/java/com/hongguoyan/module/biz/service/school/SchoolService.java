@@ -67,4 +67,11 @@ public interface SchoolService {
      */
     PageResult<SchoolDO> getSchoolPage(AppSchoolPageReqVO pageReqVO);
 
+    /**
+     * 获得学校简单列表(id+name)
+     *
+     * @return 简单列表
+     */
+    List<AppSchoolSimpleOptionRespVO> getSchoolSimpleAll();
+
 }
