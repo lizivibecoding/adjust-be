@@ -95,22 +95,24 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
 
     @Override
     public List<AppAdjustmentAdmitListItemRespVO> getAdmitList(AppAdjustmentAdmitListReqVO reqVO) {
-        List<AdjustmentAdmitDO> list = adjustmentAdmitMapper.selectList(new LambdaQueryWrapperX<AdjustmentAdmitDO>()
-                .select(AdjustmentAdmitDO::getCandidateName,
-                        AdjustmentAdmitDO::getFirstSchoolName,
-                        AdjustmentAdmitDO::getFirstScore,
-                        AdjustmentAdmitDO::getRetestScore,
-                        AdjustmentAdmitDO::getTotalScore)
-                .eq(AdjustmentAdmitDO::getDeleted, false)
+        LambdaQueryWrapperX<AdjustmentAdmitDO> wrapper = new LambdaQueryWrapperX<>();
+        // 注意：LambdaQueryWrapperX 未重写 select 的返回类型，因此这里不要链式赋值
+        wrapper.select(AdjustmentAdmitDO::getCandidateName,
+                AdjustmentAdmitDO::getFirstSchoolName,
+                AdjustmentAdmitDO::getFirstScore,
+                AdjustmentAdmitDO::getRetestScore,
+                AdjustmentAdmitDO::getTotalScore);
+        wrapper.eq(AdjustmentAdmitDO::getDeleted, false)
                 .eq(AdjustmentAdmitDO::getSchoolId, reqVO.getSchoolId())
                 .eq(AdjustmentAdmitDO::getCollegeId, reqVO.getCollegeId())
                 .eq(AdjustmentAdmitDO::getMajorId, reqVO.getMajorId())
                 .eq(AdjustmentAdmitDO::getYear, reqVO.getYear())
                 .eq(AdjustmentAdmitDO::getStudyMode, reqVO.getStudyMode())
-                .eqIfPresent(AdjustmentAdmitDO::getDirectionId, reqVO.getDirectionId())
-                .orderByDesc(AdjustmentAdmitDO::getTotalScore)
+                .eqIfPresent(AdjustmentAdmitDO::getDirectionId, reqVO.getDirectionId());
+        wrapper.orderByDesc(AdjustmentAdmitDO::getTotalScore)
                 .orderByDesc(AdjustmentAdmitDO::getFirstScore)
-                .orderByDesc(AdjustmentAdmitDO::getId));
+                .orderByDesc(AdjustmentAdmitDO::getId);
+        List<AdjustmentAdmitDO> list = adjustmentAdmitMapper.selectList(wrapper);
         if (list == null || list.isEmpty()) {
             return Collections.emptyList();
         }
@@ -129,16 +131,17 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
 
     @Override
     public AppAdjustmentAnalysisRespVO getAnalysis(AppAdjustmentAnalysisReqVO reqVO) {
-        List<AdjustmentAdmitDO> list = adjustmentAdmitMapper.selectList(new LambdaQueryWrapperX<AdjustmentAdmitDO>()
-                .select(AdjustmentAdmitDO::getFirstSchoolId,
-                        AdjustmentAdmitDO::getFirstScore)
-                .eq(AdjustmentAdmitDO::getDeleted, false)
+        LambdaQueryWrapperX<AdjustmentAdmitDO> wrapper = new LambdaQueryWrapperX<>();
+        wrapper.select(AdjustmentAdmitDO::getFirstSchoolId,
+                AdjustmentAdmitDO::getFirstScore);
+        wrapper.eq(AdjustmentAdmitDO::getDeleted, false)
                 .eq(AdjustmentAdmitDO::getSchoolId, reqVO.getSchoolId())
                 .eq(AdjustmentAdmitDO::getCollegeId, reqVO.getCollegeId())
                 .eq(AdjustmentAdmitDO::getMajorId, reqVO.getMajorId())
                 .eq(AdjustmentAdmitDO::getYear, reqVO.getYear())
                 .eq(AdjustmentAdmitDO::getStudyMode, reqVO.getStudyMode())
-                .eqIfPresent(AdjustmentAdmitDO::getDirectionId, reqVO.getDirectionId()));
+                .eqIfPresent(AdjustmentAdmitDO::getDirectionId, reqVO.getDirectionId());
+        List<AdjustmentAdmitDO> list = adjustmentAdmitMapper.selectList(wrapper);
 
         AppAdjustmentAnalysisRespVO respVO = new AppAdjustmentAnalysisRespVO();
         if (list == null || list.isEmpty()) {
