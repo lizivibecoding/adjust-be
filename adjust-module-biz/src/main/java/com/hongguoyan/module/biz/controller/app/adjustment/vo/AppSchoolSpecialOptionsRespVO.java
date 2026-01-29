@@ -17,7 +17,7 @@ public class AppSchoolSpecialOptionsRespVO {
     private List<Option> options;
 
     @Schema(description = "学习方式映射(type=2 返回，key=majorId)")
-    private Map<Long, List<String>> studyModeMap;
+    private Map<Long, List<String>> studyModes;
 
     @Schema(description = "分数线(type=4 返回)")
     private ScoreLimit scoreLimit;
