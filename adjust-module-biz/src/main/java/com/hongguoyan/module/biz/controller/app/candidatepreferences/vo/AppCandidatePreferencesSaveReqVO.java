@@ -12,10 +12,6 @@ public class AppCandidatePreferencesSaveReqVO {
     @Schema(description = "主键ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "19979")
     private Long id;
 
-    @Schema(description = "用户ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "4058")
-    @NotNull(message = "用户ID不能为空")
-    private Long userId;
-
     @Schema(description = "意向省份ID列表")
     private String provinceIds;
 

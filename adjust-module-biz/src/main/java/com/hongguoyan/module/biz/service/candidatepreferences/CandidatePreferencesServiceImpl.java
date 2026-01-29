@@ -1,24 +1,15 @@
 package com.hongguoyan.module.biz.service.candidatepreferences;
 
-import cn.hutool.core.collection.CollUtil;
 import org.springframework.stereotype.Service;
 import jakarta.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
 import com.hongguoyan.module.biz.controller.app.candidatepreferences.vo.*;
 import com.hongguoyan.module.biz.dal.dataobject.candidatepreferences.CandidatePreferencesDO;
-import com.hongguoyan.framework.common.pojo.PageResult;
-import com.hongguoyan.framework.common.pojo.PageParam;
 import com.hongguoyan.framework.common.util.object.BeanUtils;
 
 import com.hongguoyan.module.biz.dal.mysql.candidatepreferences.CandidatePreferencesMapper;
-
-import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
-import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertList;
-import static com.hongguoyan.framework.common.util.collection.CollectionUtils.diffList;
-import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.*;
+import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 
 /**
  * 考生调剂意向与偏好设置 Service 实现类
@@ -33,53 +24,26 @@ public class CandidatePreferencesServiceImpl implements CandidatePreferencesServ
     private CandidatePreferencesMapper candidatePreferencesMapper;
 
     @Override
-    public Long createCandidatePreferences(AppCandidatePreferencesSaveReqVO createReqVO) {
-        // 插入
-        CandidatePreferencesDO candidatePreferences = BeanUtils.toBean(createReqVO, CandidatePreferencesDO.class);
-        candidatePreferencesMapper.insert(candidatePreferences);
-
-        // 返回
-        return candidatePreferences.getId();
+    public CandidatePreferencesDO getCandidatePreferencesByUserId(Long userId) {
+        return candidatePreferencesMapper.selectOne(new LambdaQueryWrapperX<CandidatePreferencesDO>()
+                .eq(CandidatePreferencesDO::getUserId, userId));
     }
 
     @Override
-    public void updateCandidatePreferences(AppCandidatePreferencesSaveReqVO updateReqVO) {
-        // 校验存在
-        validateCandidatePreferencesExists(updateReqVO.getId());
-        // 更新
-        CandidatePreferencesDO updateObj = BeanUtils.toBean(updateReqVO, CandidatePreferencesDO.class);
-        candidatePreferencesMapper.updateById(updateObj);
-    }
+    public Long saveCandidatePreferencesByUserId(Long userId, AppCandidatePreferencesSaveReqVO reqVO) {
+        CandidatePreferencesDO existing = getCandidatePreferencesByUserId(userId);
+        CandidatePreferencesDO toSave = BeanUtils.toBean(reqVO, CandidatePreferencesDO.class);
+        toSave.setUserId(userId);
 
-    @Override
-    public void deleteCandidatePreferences(Long id) {
-        // 校验存在
-        validateCandidatePreferencesExists(id);
-        // 删除
-        candidatePreferencesMapper.deleteById(id);
-    }
-
-    @Override
-        public void deleteCandidatePreferencesListByIds(List<Long> ids) {
-        // 删除
-        candidatePreferencesMapper.deleteByIds(ids);
+        if (existing == null) {
+            toSave.setId(null);
+            candidatePreferencesMapper.insert(toSave);
+            return toSave.getId();
         }
 
-
-    private void validateCandidatePreferencesExists(Long id) {
-        if (candidatePreferencesMapper.selectById(id) == null) {
-            throw exception(CANDIDATE_PREFERENCES_NOT_EXISTS);
-        }
-    }
-
-    @Override
-    public CandidatePreferencesDO getCandidatePreferences(Long id) {
-        return candidatePreferencesMapper.selectById(id);
-    }
-
-    @Override
-    public PageResult<CandidatePreferencesDO> getCandidatePreferencesPage(AppCandidatePreferencesPageReqVO pageReqVO) {
-        return candidatePreferencesMapper.selectPage(pageReqVO);
+        toSave.setId(existing.getId());
+        candidatePreferencesMapper.updateById(toSave);
+        return existing.getId();
     }
 
 }

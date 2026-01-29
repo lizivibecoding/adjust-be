@@ -1,24 +1,15 @@
 package com.hongguoyan.module.biz.service.candidateprofiles;
 
-import cn.hutool.core.collection.CollUtil;
 import org.springframework.stereotype.Service;
 import jakarta.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
 import com.hongguoyan.module.biz.controller.app.candidateprofiles.vo.*;
 import com.hongguoyan.module.biz.dal.dataobject.candidateprofiles.CandidateProfilesDO;
-import com.hongguoyan.framework.common.pojo.PageResult;
-import com.hongguoyan.framework.common.pojo.PageParam;
 import com.hongguoyan.framework.common.util.object.BeanUtils;
 
 import com.hongguoyan.module.biz.dal.mysql.candidateprofiles.CandidateProfilesMapper;
-
-import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
-import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertList;
-import static com.hongguoyan.framework.common.util.collection.CollectionUtils.diffList;
-import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.*;
+import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 
 /**
  * 考生基础档案表(含成绩与软背景) Service 实现类
@@ -33,53 +24,30 @@ public class CandidateProfilesServiceImpl implements CandidateProfilesService {
     private CandidateProfilesMapper candidateProfilesMapper;
 
     @Override
-    public Long createCandidateProfiles(AppCandidateProfilesSaveReqVO createReqVO) {
-        // 插入
-        CandidateProfilesDO candidateProfiles = BeanUtils.toBean(createReqVO, CandidateProfilesDO.class);
-        candidateProfilesMapper.insert(candidateProfiles);
-
-        // 返回
-        return candidateProfiles.getId();
+    public CandidateProfilesDO getCandidateProfilesByUserId(Long userId) {
+        return candidateProfilesMapper.selectOne(new LambdaQueryWrapperX<CandidateProfilesDO>()
+                .eq(CandidateProfilesDO::getUserId, userId));
     }
 
     @Override
-    public void updateCandidateProfiles(AppCandidateProfilesSaveReqVO updateReqVO) {
-        // 校验存在
-        validateCandidateProfilesExists(updateReqVO.getId());
-        // 更新
-        CandidateProfilesDO updateObj = BeanUtils.toBean(updateReqVO, CandidateProfilesDO.class);
-        candidateProfilesMapper.updateById(updateObj);
-    }
+    public Long saveCandidateProfilesByUserId(Long userId, AppCandidateProfilesSaveReqVO reqVO) {
+        CandidateProfilesDO existing = getCandidateProfilesByUserId(userId);
+        CandidateProfilesDO toSave = BeanUtils.toBean(reqVO, CandidateProfilesDO.class);
+        toSave.setUserId(userId);
 
-    @Override
-    public void deleteCandidateProfiles(Long id) {
-        // 校验存在
-        validateCandidateProfilesExists(id);
-        // 删除
-        candidateProfilesMapper.deleteById(id);
-    }
-
-    @Override
-        public void deleteCandidateProfilesListByIds(List<Long> ids) {
-        // 删除
-        candidateProfilesMapper.deleteByIds(ids);
+        if (existing == null) {
+            toSave.setId(null);
+            candidateProfilesMapper.insert(toSave);
+            return toSave.getId();
         }
 
-
-    private void validateCandidateProfilesExists(Long id) {
-        if (candidateProfilesMapper.selectById(id) == null) {
-            throw exception(CANDIDATE_PROFILES_NOT_EXISTS);
-        }
-    }
-
-    @Override
-    public CandidateProfilesDO getCandidateProfiles(Long id) {
-        return candidateProfilesMapper.selectById(id);
-    }
-
-    @Override
-    public PageResult<CandidateProfilesDO> getCandidateProfilesPage(AppCandidateProfilesPageReqVO pageReqVO) {
-        return candidateProfilesMapper.selectPage(pageReqVO);
+        // 覆盖更新：按 userId 唯一行覆盖
+        toSave.setId(existing.getId());
+        // 目前不处理锁定/提交逻辑，这两个字段保持原值，避免被覆盖为 null
+        toSave.setBasicLocked(existing.getBasicLocked());
+        toSave.setSubmitTime(existing.getSubmitTime());
+        candidateProfilesMapper.updateById(toSave);
+        return existing.getId();
     }
 
 }

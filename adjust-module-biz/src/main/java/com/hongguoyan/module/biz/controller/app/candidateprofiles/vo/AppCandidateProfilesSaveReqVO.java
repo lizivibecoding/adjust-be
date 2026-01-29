@@ -15,10 +15,6 @@ public class AppCandidateProfilesSaveReqVO {
     @Schema(description = "主键ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "10464")
     private Long id;
 
-    @Schema(description = "用户ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "25443")
-    @NotNull(message = "用户ID不能为空")
-    private Long userId;
-
     @Schema(description = "本科毕业院校ID(biz_school.id)", requiredMode = Schema.RequiredMode.REQUIRED, example = "3320")
     @NotNull(message = "本科毕业院校ID(biz_school.id)不能为空")
     private Long graduateSchoolId;
@@ -158,12 +154,5 @@ public class AppCandidateProfilesSaveReqVO {
     @Schema(description = "软实力自评(0-10)", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "软实力自评(0-10)不能为空")
     private Integer selfAssessedScore;
-
-    @Schema(description = "基础信息是否锁定: 0-否 1-是", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotNull(message = "基础信息是否锁定: 0-否 1-是不能为空")
-    private Boolean basicLocked;
-
-    @Schema(description = "提交时间(锁定时写入)")
-    private LocalDateTime submitTime;
 
 }
