@@ -4,6 +4,10 @@ import java.util.*;
 import jakarta.validation.*;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentAnalysisReqVO;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentAnalysisRespVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScorePageReqVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreStatReqVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreItemRespVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreStatItemRespVO;
 import com.hongguoyan.module.biz.controller.app.adjustmentadmit.vo.*;
 import com.hongguoyan.module.biz.dal.dataobject.adjustmentadmit.AdjustmentAdmitDO;
 import com.hongguoyan.framework.common.pojo.PageResult;
@@ -76,5 +80,21 @@ public interface AdjustmentAdmitService {
      * @return 分析数据
      */
     AppAdjustmentAnalysisRespVO getAnalysis(@Valid AppAdjustmentAnalysisReqVO reqVO);
+
+    /**
+     * 同分调剂去向列表(按初试分数区间聚合)
+     *
+     * @param reqVO 条件
+     * @return 分页列表
+     */
+    PageResult<AppSameScoreItemRespVO> getSameScorePage(@Valid AppSameScorePageReqVO reqVO);
+
+    /**
+     * 同分调剂去向院校层次统计(按学校去重计数)
+     *
+     * @param reqVO 条件
+     * @return 统计列表
+     */
+    List<AppSameScoreStatItemRespVO> getSameScoreStat(@Valid AppSameScoreStatReqVO reqVO);
 
 }

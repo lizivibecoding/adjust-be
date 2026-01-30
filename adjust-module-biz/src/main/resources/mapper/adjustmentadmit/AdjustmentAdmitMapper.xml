@@ -9,4 +9,142 @@
         文档可见：https://www.iocoder.cn/MyBatis/x-plugins/
      -->
 
+    <sql id="SameScoreBaseFrom">
+        FROM biz_adjustment_admit a
+        LEFT JOIN biz_school s ON s.id = a.school_id
+    </sql>
+
+    <sql id="SameScoreStatWhere">
+        <where>
+            AND a.deleted = b'0'
+            <if test="reqVO.year != null">
+                AND a.year = #{reqVO.year}
+            </if>
+            <if test="reqVO.beginScore != null">
+                AND a.first_score &gt;= #{reqVO.beginScore}
+            </if>
+            <if test="reqVO.endScore != null">
+                AND a.first_score &lt;= #{reqVO.endScore}
+            </if>
+            <if test="reqVO.provinceCode != null and reqVO.provinceCode != ''">
+                AND s.province_code = #{reqVO.provinceCode}
+            </if>
+            <if test="reqVO.studyMode != null and reqVO.studyMode != ''">
+                AND a.study_mode = #{reqVO.studyMode}
+            </if>
+        </where>
+    </sql>
+
+    <sql id="SameScoreListWhere">
+        <where>
+            AND a.deleted = b'0'
+            <if test="reqVO.year != null">
+                AND a.year = #{reqVO.year}
+            </if>
+            <if test="reqVO.beginScore != null">
+                AND a.first_score &gt;= #{reqVO.beginScore}
+            </if>
+            <if test="reqVO.endScore != null">
+                AND a.first_score &lt;= #{reqVO.endScore}
+            </if>
+            <if test="reqVO.provinceCode != null and reqVO.provinceCode != ''">
+                AND s.province_code = #{reqVO.provinceCode}
+            </if>
+            <if test="reqVO.studyMode != null and reqVO.studyMode != ''">
+                AND a.study_mode = #{reqVO.studyMode}
+            </if>
+            <if test="reqVO.schoolLevel != null">
+                <choose>
+                    <when test="reqVO.schoolLevel == 1">
+                        AND IFNULL(s.is_985, 0) = 1
+                    </when>
+                    <when test="reqVO.schoolLevel == 2">
+                        AND IFNULL(s.is_985, 0) = 0
+                        AND IFNULL(s.is_211, 0) = 1
+                    </when>
+                    <when test="reqVO.schoolLevel == 3">
+                        AND IFNULL(s.is_985, 0) = 0
+                        AND IFNULL(s.is_211, 0) = 0
+                        AND IFNULL(s.is_syl, 0) = 1
+                    </when>
+                    <when test="reqVO.schoolLevel == 4">
+                        AND IFNULL(s.is_985, 0) = 0
+                        AND IFNULL(s.is_211, 0) = 0
+                        AND IFNULL(s.is_syl, 0) = 0
+                    </when>
+                </choose>
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectSameScorePage"
+            resultType="com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreItemRespVO">
+        SELECT
+            a.school_id AS schoolId,
+            MAX(a.school_name) AS schoolName,
+            a.college_id AS collegeId,
+            MAX(a.college_name) AS collegeName,
+            a.major_id AS majorId,
+            MAX(a.major_code) AS majorCode,
+            MAX(a.major_name) AS majorName,
+            a.year AS year,
+            a.study_mode AS studyMode,
+            MAX(s.province_name) AS provinceName,
+            MAX(s.province_area) AS provinceArea,
+            CASE
+                WHEN IFNULL(MAX(s.is_985), 0) = 1 THEN 1
+                WHEN IFNULL(MAX(s.is_211), 0) = 1 THEN 2
+                WHEN IFNULL(MAX(s.is_syl), 0) = 1 THEN 3
+                ELSE 4
+            END AS schoolLevel,
+            CASE
+                WHEN IFNULL(MAX(s.is_985), 0) = 1 THEN '985工程'
+                WHEN IFNULL(MAX(s.is_211), 0) = 1 THEN '211工程'
+                WHEN IFNULL(MAX(s.is_syl), 0) = 1 THEN '双一流'
+                ELSE '普通院校'
+            END AS schoolLevelName,
+            CAST(MAX(a.first_score) AS SIGNED) AS firstScore
+        <include refid="SameScoreBaseFrom" />
+        <include refid="SameScoreListWhere" />
+        GROUP BY a.school_id, a.college_id, a.major_id, a.year, a.study_mode
+        ORDER BY firstScore DESC, schoolLevel ASC, a.school_id DESC
+    </select>
+
+    <select id="selectSameScoreStat"
+            resultType="com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreStatItemRespVO">
+        SELECT
+            '985工程' AS name,
+            '' AS subName,
+            COUNT(DISTINCT CASE WHEN IFNULL(s.is_985, 0) = 1 THEN a.school_id ELSE NULL END) AS value
+        <include refid="SameScoreBaseFrom" />
+        <include refid="SameScoreStatWhere" />
+        UNION ALL
+        SELECT
+            '211工程' AS name,
+            '不含985' AS subName,
+            COUNT(DISTINCT CASE
+                WHEN IFNULL(s.is_985, 0) = 0 AND IFNULL(s.is_211, 0) = 1 THEN a.school_id
+                ELSE NULL END) AS value
+        <include refid="SameScoreBaseFrom" />
+        <include refid="SameScoreStatWhere" />
+        UNION ALL
+        SELECT
+            '双一流' AS name,
+            '不含985、211' AS subName,
+            COUNT(DISTINCT CASE
+                WHEN IFNULL(s.is_985, 0) = 0 AND IFNULL(s.is_211, 0) = 0 AND IFNULL(s.is_syl, 0) = 1 THEN a.school_id
+                ELSE NULL END) AS value
+        <include refid="SameScoreBaseFrom" />
+        <include refid="SameScoreStatWhere" />
+        UNION ALL
+        SELECT
+            '普通院校' AS name,
+            '' AS subName,
+            COUNT(DISTINCT CASE
+                WHEN IFNULL(s.is_985, 0) = 0 AND IFNULL(s.is_211, 0) = 0 AND IFNULL(s.is_syl, 0) = 0 THEN a.school_id
+                ELSE NULL END) AS value
+        <include refid="SameScoreBaseFrom" />
+        <include refid="SameScoreStatWhere" />
+    </select>
+
 </mapper>

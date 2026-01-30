@@ -103,6 +103,18 @@ public class AppAdjustmentController {
         return success(adjustmentAdmitService.getAnalysis(reqVO));
     }
 
+    @GetMapping("/same-score")
+    @Operation(summary = "同分调剂去向列表(按初试分数区间聚合)")
+    public CommonResult<PageResult<AppSameScoreItemRespVO>> getSameScorePage(@Valid AppSameScorePageReqVO reqVO) {
+        return success(adjustmentAdmitService.getSameScorePage(reqVO));
+    }
+
+    @GetMapping("/same-score-stat")
+    @Operation(summary = "同分调剂去向院校层次统计(按学校去重计数)")
+    public CommonResult<List<AppSameScoreStatItemRespVO>> getSameScoreStat(@Valid AppSameScoreStatReqVO reqVO) {
+        return success(adjustmentAdmitService.getSameScoreStat(reqVO));
+    }
+
     @GetMapping("/update-stats")
     @Operation(summary = "调剂更新统计(默认2025年)")
     public CommonResult<AppAdjustmentUpdateStatsRespVO> getAdjustmentUpdateStats() {

@@ -5,9 +5,17 @@ import java.util.*;
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.hongguoyan.framework.mybatis.core.mapper.BaseMapperX;
+import com.hongguoyan.framework.mybatis.core.util.MyBatisUtils;
 import com.hongguoyan.module.biz.dal.dataobject.adjustmentadmit.AdjustmentAdmitDO;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import com.hongguoyan.module.biz.controller.app.adjustmentadmit.vo.*;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreItemRespVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScorePageReqVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreStatItemRespVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreStatReqVO;
 
 /**
  * 调剂录取名单 Mapper
@@ -39,5 +47,17 @@ public interface AdjustmentAdmitMapper extends BaseMapperX<AdjustmentAdmitDO> {
                 .betweenIfPresent(AdjustmentAdmitDO::getCreateTime, reqVO.getCreateTime())
                 .orderByDesc(AdjustmentAdmitDO::getId));
     }
+
+    default PageResult<AppSameScoreItemRespVO> selectSameScorePage(AppSameScorePageReqVO reqVO) {
+        Page<AppSameScoreItemRespVO> page = MyBatisUtils.buildPage(reqVO);
+        List<AppSameScoreItemRespVO> records = selectSameScorePage(page, reqVO);
+        page.setRecords(records);
+        return new PageResult<>(page.getRecords(), page.getTotal());
+    }
+
+    List<AppSameScoreItemRespVO> selectSameScorePage(IPage<AppSameScoreItemRespVO> page,
+                                                     @Param("reqVO") AppSameScorePageReqVO reqVO);
+
+    List<AppSameScoreStatItemRespVO> selectSameScoreStat(@Param("reqVO") AppSameScoreStatReqVO reqVO);
 
 }

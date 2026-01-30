@@ -4,6 +4,10 @@ import cn.hutool.core.collection.CollUtil;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentAnalysisReqVO;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentAnalysisRespVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreItemRespVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScorePageReqVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreStatItemRespVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreStatReqVO;
 import com.hongguoyan.module.biz.controller.app.adjustmentadmit.vo.AppAdjustmentAdmitListItemRespVO;
 import com.hongguoyan.module.biz.controller.app.adjustmentadmit.vo.AppAdjustmentAdmitListReqVO;
 import org.springframework.stereotype.Service;
@@ -197,6 +201,17 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
         respVO.setLevel(buildLevel(adjustFirstSchoolIds));
 
         return respVO;
+    }
+
+    @Override
+    public PageResult<AppSameScoreItemRespVO> getSameScorePage(AppSameScorePageReqVO reqVO) {
+        return adjustmentAdmitMapper.selectSameScorePage(reqVO);
+    }
+
+    @Override
+    public List<AppSameScoreStatItemRespVO> getSameScoreStat(AppSameScoreStatReqVO reqVO) {
+        List<AppSameScoreStatItemRespVO> list = adjustmentAdmitMapper.selectSameScoreStat(reqVO);
+        return list != null ? list : Collections.emptyList();
     }
 
     private long countNotNullOrAll(List<BigDecimal> scores) {
