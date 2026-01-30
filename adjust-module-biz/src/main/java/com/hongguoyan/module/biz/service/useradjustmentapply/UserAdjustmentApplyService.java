@@ -1,10 +1,10 @@
 package com.hongguoyan.module.biz.service.useradjustmentapply;
 
-import java.util.*;
 import jakarta.validation.*;
 import com.hongguoyan.module.biz.controller.app.useradjustmentapply.vo.*;
-import com.hongguoyan.module.biz.dal.dataobject.useradjustmentapply.UserAdjustmentApplyDO;
 import com.hongguoyan.framework.common.pojo.PageResult;
+
+import java.util.List;
 
 /**
  * 用户发布调剂申请记录 Service 接口
@@ -12,21 +12,6 @@ import com.hongguoyan.framework.common.pojo.PageResult;
  * @author hgy
  */
 public interface UserAdjustmentApplyService {
-
-    // ====== Generated CRUD (for admin reuse) ======
-
-    Long createUserAdjustmentApply(@Valid AppUserAdjustmentApplySaveReqVO createReqVO);
-
-    void updateUserAdjustmentApply(@Valid AppUserAdjustmentApplySaveReqVO updateReqVO);
-
-    void deleteUserAdjustmentApply(Long id);
-
-    void deleteUserAdjustmentApplyListByIds(List<Long> ids);
-
-    UserAdjustmentApplyDO getUserAdjustmentApply(Long id);
-
-    PageResult<UserAdjustmentApplyDO> getUserAdjustmentApplyPage(AppUserAdjustmentApplyPageReqVO pageReqVO);
-
     // ====== App business methods ======
 
     /**

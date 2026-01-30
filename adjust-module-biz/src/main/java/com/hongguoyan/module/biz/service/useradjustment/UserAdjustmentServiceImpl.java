@@ -41,43 +41,6 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
     @Resource
     private UserAdjustmentApplyMapper userAdjustmentApplyMapper;
 
-    // ====== Generated CRUD (for admin reuse) ======
-
-    @Override
-    public Long createUserAdjustment(AppUserAdjustmentSaveReqVO createReqVO) {
-        UserAdjustmentDO userAdjustment = BeanUtils.toBean(createReqVO, UserAdjustmentDO.class);
-        userAdjustmentMapper.insert(userAdjustment);
-        return userAdjustment.getId();
-    }
-
-    @Override
-    public void updateUserAdjustment(AppUserAdjustmentSaveReqVO updateReqVO) {
-        validateUserAdjustmentExists(updateReqVO.getId());
-        UserAdjustmentDO updateObj = BeanUtils.toBean(updateReqVO, UserAdjustmentDO.class);
-        userAdjustmentMapper.updateById(updateObj);
-    }
-
-    @Override
-    public void deleteUserAdjustment(Long id) {
-        validateUserAdjustmentExists(id);
-        userAdjustmentMapper.deleteById(id);
-    }
-
-    @Override
-    public void deleteUserAdjustmentListByIds(List<Long> ids) {
-        userAdjustmentMapper.deleteByIds(ids);
-    }
-
-    @Override
-    public UserAdjustmentDO getUserAdjustment(Long id) {
-        return userAdjustmentMapper.selectById(id);
-    }
-
-    @Override
-    public PageResult<UserAdjustmentDO> getUserAdjustmentPage(AppUserAdjustmentPageReqVO pageReqVO) {
-        return userAdjustmentMapper.selectPage(pageReqVO);
-    }
-
     @Override
     public Long createUserAdjustment(Long userId, AppUserAdjustmentSaveReqVO createReqVO) {
         validatePublisherApproved(userId);

@@ -10,7 +10,6 @@ import java.util.List;
 
 import com.hongguoyan.module.biz.controller.app.publisher.vo.*;
 import com.hongguoyan.module.biz.dal.dataobject.publisher.PublisherDO;
-import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.framework.common.util.object.BeanUtils;
 
 import com.hongguoyan.module.biz.dal.mysql.publisher.PublisherMapper;
@@ -18,7 +17,6 @@ import com.hongguoyan.module.biz.dal.dataobject.publisherauditlog.PublisherAudit
 import com.hongguoyan.module.biz.dal.mysql.publisherauditlog.PublisherAuditLogMapper;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 
-import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.*;
 
 /**
@@ -34,41 +32,6 @@ public class PublisherServiceImpl implements PublisherService {
     private PublisherMapper publisherMapper;
     @Resource
     private PublisherAuditLogMapper publisherAuditLogMapper;
-
-    @Override
-    public Long createPublisher(AppPublisherSaveReqVO createReqVO) {
-        PublisherDO publisher = BeanUtils.toBean(createReqVO, PublisherDO.class);
-        publisherMapper.insert(publisher);
-        return publisher.getId();
-    }
-
-    @Override
-    public void updatePublisher(AppPublisherSaveReqVO updateReqVO) {
-        validatePublisherExists(updateReqVO.getId());
-        PublisherDO updateObj = BeanUtils.toBean(updateReqVO, PublisherDO.class);
-        publisherMapper.updateById(updateObj);
-    }
-
-    @Override
-    public void deletePublisher(Long id) {
-        validatePublisherExists(id);
-        publisherMapper.deleteById(id);
-    }
-
-    @Override
-    public void deletePublisherListByIds(List<Long> ids) {
-        publisherMapper.deleteByIds(ids);
-    }
-
-    @Override
-    public PublisherDO getPublisher(Long id) {
-        return publisherMapper.selectById(id);
-    }
-
-    @Override
-    public PageResult<PublisherDO> getPublisherPage(AppPublisherPageReqVO pageReqVO) {
-        return publisherMapper.selectPage(pageReqVO);
-    }
 
     @Override
     public PublisherDO getPublisherByUserId(Long userId) {
@@ -110,12 +73,6 @@ public class PublisherServiceImpl implements PublisherService {
         publisherAuditLogMapper.insert(log);
 
         return existing != null ? existing.getId() : toSave.getId();
-    }
-
-    private void validatePublisherExists(Long id) {
-        if (publisherMapper.selectById(id) == null) {
-            throw exception(PUBLISHER_NOT_EXISTS);
-        }
     }
 
 }

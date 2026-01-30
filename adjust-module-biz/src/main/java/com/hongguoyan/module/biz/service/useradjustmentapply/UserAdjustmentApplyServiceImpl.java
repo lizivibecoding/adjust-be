@@ -37,43 +37,6 @@ public class UserAdjustmentApplyServiceImpl implements UserAdjustmentApplyServic
     @Resource
     private UserAdjustmentMapper userAdjustmentMapper;
 
-    // ====== Generated CRUD (for admin reuse) ======
-
-    @Override
-    public Long createUserAdjustmentApply(AppUserAdjustmentApplySaveReqVO createReqVO) {
-        UserAdjustmentApplyDO userAdjustmentApply = BeanUtils.toBean(createReqVO, UserAdjustmentApplyDO.class);
-        userAdjustmentApplyMapper.insert(userAdjustmentApply);
-        return userAdjustmentApply.getId();
-    }
-
-    @Override
-    public void updateUserAdjustmentApply(AppUserAdjustmentApplySaveReqVO updateReqVO) {
-        validateUserAdjustmentApplyExists(updateReqVO.getId());
-        UserAdjustmentApplyDO updateObj = BeanUtils.toBean(updateReqVO, UserAdjustmentApplyDO.class);
-        userAdjustmentApplyMapper.updateById(updateObj);
-    }
-
-    @Override
-    public void deleteUserAdjustmentApply(Long id) {
-        validateUserAdjustmentApplyExists(id);
-        userAdjustmentApplyMapper.deleteById(id);
-    }
-
-    @Override
-    public void deleteUserAdjustmentApplyListByIds(List<Long> ids) {
-        userAdjustmentApplyMapper.deleteByIds(ids);
-    }
-
-    @Override
-    public UserAdjustmentApplyDO getUserAdjustmentApply(Long id) {
-        return userAdjustmentApplyMapper.selectById(id);
-    }
-
-    @Override
-    public PageResult<UserAdjustmentApplyDO> getUserAdjustmentApplyPage(AppUserAdjustmentApplyPageReqVO pageReqVO) {
-        return userAdjustmentApplyMapper.selectPage(pageReqVO);
-    }
-
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long createUserAdjustmentApply(Long userId, AppUserAdjustmentApplySaveReqVO createReqVO) {
@@ -201,12 +164,6 @@ public class UserAdjustmentApplyServiceImpl implements UserAdjustmentApplyServic
             return "*";
         }
         return s.substring(0, 2) + "****" + s.substring(Math.max(s.length() - 2, 0));
-    }
-
-    private void validateUserAdjustmentApplyExists(Long id) {
-        if (userAdjustmentApplyMapper.selectById(id) == null) {
-            throw exception(USER_ADJUSTMENT_APPLY_NOT_EXISTS);
-        }
     }
 
 }
