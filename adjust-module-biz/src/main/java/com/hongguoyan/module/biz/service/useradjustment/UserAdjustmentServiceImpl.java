@@ -90,12 +90,8 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
     }
 
     @Override
-    public PageResult<AppUserAdjustmentListRespVO> getUserAdjustmentPublicPage(AppUserAdjustmentPageReqVO pageReqVO) {
-        // only show open records by default
-        if (pageReqVO.getStatus() == null) {
-            pageReqVO.setStatus(1);
-        }
-        PageResult<UserAdjustmentDO> pageResult = userAdjustmentMapper.selectPage(pageReqVO);
+    public PageResult<AppUserAdjustmentListRespVO> getUserAdjustmentPublicPage(AppUserAdjustmentPublicPageReqVO pageReqVO) {
+        PageResult<UserAdjustmentDO> pageResult = userAdjustmentMapper.selectPublicPage(pageReqVO);
         List<UserAdjustmentDO> records = pageResult.getList();
         Map<Long, String> schoolLogoMap = buildSchoolLogoMap(records);
         Map<Long, String> majorLevel1NameMap = buildMajorLevel1NameMap(records);
@@ -107,9 +103,8 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
     }
 
     @Override
-    public PageResult<AppUserAdjustmentListRespVO> getMyUserAdjustmentPage(Long userId, AppUserAdjustmentPageReqVO pageReqVO) {
-        pageReqVO.setUserId(userId);
-        PageResult<UserAdjustmentDO> pageResult = userAdjustmentMapper.selectPage(pageReqVO);
+    public PageResult<AppUserAdjustmentListRespVO> getMyUserAdjustmentPage(Long userId, AppUserAdjustmentMyPageReqVO pageReqVO) {
+        PageResult<UserAdjustmentDO> pageResult = userAdjustmentMapper.selectMyPage(userId, pageReqVO);
         List<UserAdjustmentDO> records = pageResult.getList();
         Map<Long, String> schoolLogoMap = buildSchoolLogoMap(records);
         Map<Long, String> majorLevel1NameMap = buildMajorLevel1NameMap(records);

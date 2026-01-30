@@ -10,6 +10,9 @@ import java.time.LocalDateTime;
 @Data
 public class AppUserAdjustmentApplyMyItemRespVO extends AppUserAdjustmentListRespVO {
 
+    @Schema(description = "用户发布调剂ID(biz_user_adjustment.id)")
+    private Long userAdjustmentId;
+
     @Schema(description = "申请时间")
     private LocalDateTime applyTime;
 }

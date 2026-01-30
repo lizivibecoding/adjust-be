@@ -53,14 +53,14 @@ public class AppUserAdjustmentController {
 
     @GetMapping("/page")
     @Operation(summary = "发布调剂列表(公开)")
-    public CommonResult<PageResult<AppUserAdjustmentListRespVO>> getUserAdjustmentPage(@Valid AppUserAdjustmentPageReqVO pageReqVO) {
+    public CommonResult<PageResult<AppUserAdjustmentListRespVO>> getUserAdjustmentPage(@Valid AppUserAdjustmentPublicPageReqVO pageReqVO) {
         PageResult<AppUserAdjustmentListRespVO> pageResult = userAdjustmentService.getUserAdjustmentPublicPage(pageReqVO);
         return success(pageResult);
     }
 
     @GetMapping("/my-page")
     @Operation(summary = "我发布的调剂分页")
-    public CommonResult<PageResult<AppUserAdjustmentListRespVO>> getMyUserAdjustmentPage(@Valid AppUserAdjustmentPageReqVO pageReqVO) {
+    public CommonResult<PageResult<AppUserAdjustmentListRespVO>> getMyUserAdjustmentPage(@Valid AppUserAdjustmentMyPageReqVO pageReqVO) {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
         PageResult<AppUserAdjustmentListRespVO> pageResult = userAdjustmentService.getMyUserAdjustmentPage(userId, pageReqVO);
         return success(pageResult);

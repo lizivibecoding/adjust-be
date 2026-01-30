@@ -110,9 +110,8 @@ public class UserAdjustmentApplyServiceImpl implements UserAdjustmentApplyServic
     }
 
     @Override
-    public PageResult<AppUserAdjustmentApplyMyItemRespVO> getMyAppliedPage(Long userId, AppUserAdjustmentApplyPageReqVO pageReqVO) {
-        pageReqVO.setUserId(userId);
-        PageResult<UserAdjustmentApplyDO> pageResult = userAdjustmentApplyMapper.selectPage(pageReqVO);
+    public PageResult<AppUserAdjustmentApplyMyItemRespVO> getMyAppliedPage(Long userId, AppUserAdjustmentApplyMyPageReqVO pageReqVO) {
+        PageResult<UserAdjustmentApplyDO> pageResult = userAdjustmentApplyMapper.selectMyAppliedPage(userId, pageReqVO);
         List<UserAdjustmentApplyDO> applies = pageResult.getList();
         if (applies == null || applies.isEmpty()) {
             return new PageResult<>(Collections.emptyList(), pageResult.getTotal());
@@ -141,9 +140,15 @@ public class UserAdjustmentApplyServiceImpl implements UserAdjustmentApplyServic
             UserAdjustmentDO post = postMap.get(apply.getUserAdjustmentId());
             AppUserAdjustmentApplyMyItemRespVO vo = new AppUserAdjustmentApplyMyItemRespVO();
             vo.setApplyTime(apply.getCreateTime());
+            // Keep apply record id as response id; keep post id separately
+            vo.setId(apply.getId());
+            vo.setUserAdjustmentId(apply.getUserAdjustmentId());
             if (post != null) {
                 AppUserAdjustmentListRespVO base = toListResp(post, schoolLogoMap, majorLevel1NameMap);
                 BeanUtils.copyProperties(base, vo);
+                // overwrite the fields that must be apply-scoped
+                vo.setId(apply.getId());
+                vo.setUserAdjustmentId(post.getId());
             }
             list.add(vo);
         }

@@ -25,12 +25,12 @@ public interface UserAdjustmentService {
     /**
      * 发布调剂列表(公开)
      */
-    PageResult<AppUserAdjustmentListRespVO> getUserAdjustmentPublicPage(AppUserAdjustmentPageReqVO pageReqVO);
+    PageResult<AppUserAdjustmentListRespVO> getUserAdjustmentPublicPage(AppUserAdjustmentPublicPageReqVO pageReqVO);
 
     /**
      * 我发布的调剂分页
      */
-    PageResult<AppUserAdjustmentListRespVO> getMyUserAdjustmentPage(Long userId, AppUserAdjustmentPageReqVO pageReqVO);
+    PageResult<AppUserAdjustmentListRespVO> getMyUserAdjustmentPage(Long userId, AppUserAdjustmentMyPageReqVO pageReqVO);
 
     /**
      * 调剂详情（含联系方式脱敏逻辑）

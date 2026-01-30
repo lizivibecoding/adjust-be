@@ -46,7 +46,7 @@ public class AppUserAdjustmentApplyController {
 
     @GetMapping("/my-page")
     @Operation(summary = "我申请的调剂分页")
-    public CommonResult<PageResult<AppUserAdjustmentApplyMyItemRespVO>> getMyAppliedPage(@Valid AppUserAdjustmentApplyPageReqVO pageReqVO) {
+    public CommonResult<PageResult<AppUserAdjustmentApplyMyItemRespVO>> getMyAppliedPage(@Valid AppUserAdjustmentApplyMyPageReqVO pageReqVO) {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
         return success(userAdjustmentApplyService.getMyAppliedPage(userId, pageReqVO));
     }

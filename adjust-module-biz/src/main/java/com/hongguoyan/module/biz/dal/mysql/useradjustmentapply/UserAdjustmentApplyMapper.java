@@ -38,4 +38,13 @@ public interface UserAdjustmentApplyMapper extends BaseMapperX<UserAdjustmentApp
                 .orderByDesc(UserAdjustmentApplyDO::getId));
     }
 
+    /**
+     * 我申请的调剂分页：仅分页，不提供筛选
+     */
+    default PageResult<UserAdjustmentApplyDO> selectMyAppliedPage(Long userId, AppUserAdjustmentApplyMyPageReqVO reqVO) {
+        return selectPage(reqVO, new LambdaQueryWrapperX<UserAdjustmentApplyDO>()
+                .eq(UserAdjustmentApplyDO::getUserId, userId)
+                .orderByDesc(UserAdjustmentApplyDO::getId));
+    }
+
 }

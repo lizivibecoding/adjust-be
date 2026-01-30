@@ -22,7 +22,7 @@ public interface UserAdjustmentApplyService {
     /**
      * 我申请的调剂分页
      */
-    PageResult<AppUserAdjustmentApplyMyItemRespVO> getMyAppliedPage(Long userId, AppUserAdjustmentApplyPageReqVO pageReqVO);
+    PageResult<AppUserAdjustmentApplyMyItemRespVO> getMyAppliedPage(Long userId, AppUserAdjustmentApplyMyPageReqVO pageReqVO);
 
     /**
      * 申请人列表(发布者查看)
