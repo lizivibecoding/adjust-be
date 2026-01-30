@@ -69,6 +69,10 @@ public class PublisherDO extends BaseDO {
      */
     private String files;
     /**
+     * 认证说明(选填)
+     */
+    private String note;
+    /**
      * 审核管理员ID
      */
     private Long reviewerId;

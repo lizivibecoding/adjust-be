@@ -35,4 +35,9 @@ public interface ErrorCodeConstants {
     ErrorCode USER_ADJUSTMENT_NOT_EXISTS = new ErrorCode(29, "用户发布调剂不存在");
     ErrorCode PUBLISHER_NOT_EXISTS = new ErrorCode(30, "发布者资质不存在");
     ErrorCode USER_ADJUSTMENT_APPLY_NOT_EXISTS = new ErrorCode(31, "用户发布调剂申请记录不存在");
+
+    ErrorCode PUBLISHER_NOT_APPROVED = new ErrorCode(32, "发布者未通过认证");
+    ErrorCode USER_ADJUSTMENT_CLOSED = new ErrorCode(33, "调剂已关闭");
+    ErrorCode USER_ADJUSTMENT_SELF_APPLY_NOT_ALLOWED = new ErrorCode(34, "不能申请自己发布的调剂");
+    ErrorCode USER_ADJUSTMENT_ALREADY_APPLIED = new ErrorCode(35, "已申请过该调剂");
 }

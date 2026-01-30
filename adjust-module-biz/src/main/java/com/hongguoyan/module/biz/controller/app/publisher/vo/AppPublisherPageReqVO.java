@@ -43,6 +43,9 @@ public class AppPublisherPageReqVO extends PageParam {
     @Schema(description = "证明材料(多个，JSON数组或逗号分隔URL)")
     private String files;
 
+    @Schema(description = "认证说明(选填)")
+    private String note;
+
     @Schema(description = "审核管理员ID", example = "24002")
     private Long reviewerId;
 

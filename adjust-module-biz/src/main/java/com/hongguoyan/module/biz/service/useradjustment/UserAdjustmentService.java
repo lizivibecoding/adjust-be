@@ -5,7 +5,6 @@ import jakarta.validation.*;
 import com.hongguoyan.module.biz.controller.app.useradjustment.vo.*;
 import com.hongguoyan.module.biz.dal.dataobject.useradjustment.UserAdjustmentDO;
 import com.hongguoyan.framework.common.pojo.PageResult;
-import com.hongguoyan.framework.common.pojo.PageParam;
 
 /**
  * 用户发布调剂 Service 接口
@@ -14,49 +13,45 @@ import com.hongguoyan.framework.common.pojo.PageParam;
  */
 public interface UserAdjustmentService {
 
+    // ====== Generated CRUD (for admin reuse) ======
+
+    Long createUserAdjustment(@Valid AppUserAdjustmentSaveReqVO createReqVO);
+
+    void updateUserAdjustment(@Valid AppUserAdjustmentSaveReqVO updateReqVO);
+
+    void deleteUserAdjustment(Long id);
+
+    void deleteUserAdjustmentListByIds(List<Long> ids);
+
+    UserAdjustmentDO getUserAdjustment(Long id);
+
+    PageResult<UserAdjustmentDO> getUserAdjustmentPage(AppUserAdjustmentPageReqVO pageReqVO);
+
+    // ====== App business methods ======
+
     /**
      * 创建用户发布调剂
-     *
-     * @param createReqVO 创建信息
-     * @return 编号
      */
-    Long createUserAdjustment(@Valid AppUserAdjustmentSaveReqVO createReqVO);
+    Long createUserAdjustment(Long userId, @Valid AppUserAdjustmentSaveReqVO createReqVO);
 
     /**
      * 更新用户发布调剂
-     *
-     * @param updateReqVO 更新信息
      */
-    void updateUserAdjustment(@Valid AppUserAdjustmentSaveReqVO updateReqVO);
+    void updateUserAdjustment(Long userId, @Valid AppUserAdjustmentSaveReqVO updateReqVO);
 
     /**
-     * 删除用户发布调剂
-     *
-     * @param id 编号
+     * 发布调剂列表(公开)
      */
-    void deleteUserAdjustment(Long id);
+    PageResult<AppUserAdjustmentListRespVO> getUserAdjustmentPublicPage(AppUserAdjustmentPageReqVO pageReqVO);
 
     /**
-    * 批量删除用户发布调剂
-    *
-    * @param ids 编号
-    */
-    void deleteUserAdjustmentListByIds(List<Long> ids);
+     * 我发布的调剂分页
+     */
+    PageResult<AppUserAdjustmentListRespVO> getMyUserAdjustmentPage(Long userId, AppUserAdjustmentPageReqVO pageReqVO);
 
     /**
-     * 获得用户发布调剂
-     *
-     * @param id 编号
-     * @return 用户发布调剂
+     * 调剂详情（含联系方式脱敏逻辑）
      */
-    UserAdjustmentDO getUserAdjustment(Long id);
-
-    /**
-     * 获得用户发布调剂分页
-     *
-     * @param pageReqVO 分页查询
-     * @return 用户发布调剂分页
-     */
-    PageResult<UserAdjustmentDO> getUserAdjustmentPage(AppUserAdjustmentPageReqVO pageReqVO);
+    AppUserAdjustmentDetailRespVO getUserAdjustmentDetail(Long id, Long viewerUserId);
 
 }

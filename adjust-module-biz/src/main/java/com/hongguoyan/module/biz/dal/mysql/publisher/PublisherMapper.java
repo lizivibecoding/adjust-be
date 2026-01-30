@@ -1,13 +1,11 @@
 package com.hongguoyan.module.biz.dal.mysql.publisher;
 
-import java.util.*;
-
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.hongguoyan.framework.mybatis.core.mapper.BaseMapperX;
+import com.hongguoyan.module.biz.controller.app.publisher.vo.AppPublisherPageReqVO;
 import com.hongguoyan.module.biz.dal.dataobject.publisher.PublisherDO;
 import org.apache.ibatis.annotations.Mapper;
-import com.hongguoyan.module.biz.controller.app.publisher.vo.*;
 
 /**
  * 发布者资质 Mapper
@@ -29,6 +27,7 @@ public interface PublisherMapper extends BaseMapperX<PublisherDO> {
                 .likeIfPresent(PublisherDO::getOrgName, reqVO.getOrgName())
                 .eqIfPresent(PublisherDO::getMobile, reqVO.getMobile())
                 .eqIfPresent(PublisherDO::getFiles, reqVO.getFiles())
+                .eqIfPresent(PublisherDO::getNote, reqVO.getNote())
                 .eqIfPresent(PublisherDO::getReviewerId, reqVO.getReviewerId())
                 .betweenIfPresent(PublisherDO::getReviewTime, reqVO.getReviewTime())
                 .eqIfPresent(PublisherDO::getRejectReason, reqVO.getRejectReason())

@@ -14,10 +14,6 @@ public class AppUserAdjustmentSaveReqVO {
     @Schema(description = "用户发布调剂ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "1558")
     private Long id;
 
-    @Schema(description = "发布人用户ID(member.user.id)", requiredMode = Schema.RequiredMode.REQUIRED, example = "16745")
-    @NotNull(message = "发布人用户ID(member.user.id)不能为空")
-    private Long userId;
-
     @Schema(description = "调剂信息标题", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotEmpty(message = "调剂信息标题不能为空")
     private String title;
@@ -89,17 +85,5 @@ public class AppUserAdjustmentSaveReqVO {
     @Schema(description = "备注", requiredMode = Schema.RequiredMode.REQUIRED, example = "你说的对")
     @NotEmpty(message = "备注不能为空")
     private String remark;
-
-    @Schema(description = "状态(1开放 0关闭)", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
-    @NotNull(message = "状态(1开放 0关闭)不能为空")
-    private Integer status;
-
-    @Schema(description = "发布时间", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotNull(message = "发布时间不能为空")
-    private LocalDateTime publishTime;
-
-    @Schema(description = "浏览次数", requiredMode = Schema.RequiredMode.REQUIRED, example = "19989")
-    @NotNull(message = "浏览次数不能为空")
-    private Integer viewCount;
 
 }

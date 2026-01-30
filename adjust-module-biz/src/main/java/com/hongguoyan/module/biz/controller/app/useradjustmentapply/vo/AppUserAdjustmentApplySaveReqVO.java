@@ -17,10 +17,6 @@ public class AppUserAdjustmentApplySaveReqVO {
     @NotNull(message = "用户发布调剂ID(biz_user_adjustment.id)不能为空")
     private Long userAdjustmentId;
 
-    @Schema(description = "申请人用户ID(member.user.id)", requiredMode = Schema.RequiredMode.REQUIRED, example = "1968")
-    @NotNull(message = "申请人用户ID(member.user.id)不能为空")
-    private Long userId;
-
     @Schema(description = "姓名", requiredMode = Schema.RequiredMode.REQUIRED, example = "王五")
     @NotEmpty(message = "姓名不能为空")
     private String candidateName;
