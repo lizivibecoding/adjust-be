@@ -54,21 +54,6 @@ public class AppSchoolController {
         return success(adjustmentService.getSchoolAdjustmentPage(reqVO));
     }
 
-    @GetMapping("/get")
-    @Operation(summary = "获得院校")
-    @Parameter(name = "id", description = "编号", required = true, example = "1024")
-    public CommonResult<AppSchoolRespVO> getSchool(@RequestParam("id") Long id) {
-        SchoolDO school = schoolService.getSchool(id);
-        return success(BeanUtils.toBean(school, AppSchoolRespVO.class));
-    }
-
-    @GetMapping("/page")
-    @Operation(summary = "获得院校分页")
-    public CommonResult<PageResult<AppSchoolRespVO>> getSchoolPage(@Valid AppSchoolPageReqVO pageReqVO) {
-        PageResult<SchoolDO> pageResult = schoolService.getSchoolPage(pageReqVO);
-        return success(BeanUtils.toBean(pageResult, AppSchoolRespVO.class));
-    }
-
     @GetMapping("/simple-all")
     @Operation(summary = "获得学校简单列表(id+name)")
     public CommonResult<List<AppSchoolSimpleOptionRespVO>> getSchoolSimpleAll() {
