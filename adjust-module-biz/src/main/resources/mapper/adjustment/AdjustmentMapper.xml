@@ -114,24 +114,6 @@
             <if test="reqVO.provinceCode != null and reqVO.provinceCode != ''">
                 AND s.province_code = #{reqVO.provinceCode}
             </if>
-            <if test="reqVO.schoolFeature != null and reqVO.schoolFeature != ''">
-                <choose>
-                    <when test="reqVO.schoolFeature == '985'">
-                        AND s.is_985 = 1
-                    </when>
-                    <when test="reqVO.schoolFeature == '211'">
-                        AND s.is_211 = 1
-                    </when>
-                    <when test="reqVO.schoolFeature == 'syl'">
-                        AND s.is_syl = 1
-                    </when>
-                    <when test="reqVO.schoolFeature == 'other'">
-                        AND IFNULL(s.is_985, 0) = 0
-                        AND IFNULL(s.is_211, 0) = 0
-                        AND IFNULL(s.is_syl, 0) = 0
-                    </when>
-                </choose>
-            </if>
         </where>
     </sql>
 

@@ -14,8 +14,8 @@ public class AppAdjustmentHotRankingReqVO extends PageParam {
     @Schema(description = "省份代码", example = "110000")
     private String provinceCode;
 
-    @Schema(description = "院校标签(特性)：985/211/syl/other", example = "211")
-    private String schoolFeature;
+    @Schema(description = "院校层次(数值：1/2/3...)", example = "2")
+    private Integer schoolLevel;
 
     @Schema(description = "学习方式(全日制/非全日制)", example = "全日制")
     private String studyMode;
