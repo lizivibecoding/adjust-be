@@ -75,4 +75,11 @@ public interface MajorService {
      */
     List<AppMajorChildRespVO> getMajorList(String parentCode, Integer level);
 
+    /**
+     * 获得专业树（仅包含有 code 的节点）
+     *
+     * @return 专业树
+     */
+    List<AppMajorTreeNodeRespVO> getMajorTree();
+
 }

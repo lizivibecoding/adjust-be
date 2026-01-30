@@ -32,17 +32,17 @@ public class CandidatePreferencesDO extends BaseDO {
      */
     private Long userId;
     /**
-     * 意向省份ID列表
+     * 意向省份 code 列表(biz_area.code)，JSON 存储
      */
-    private String provinceIds;
+    private String provinceCodes;
     /**
-     * 屏蔽/一定不去的省份ID列表
+     * 屏蔽/一定不去的省份 code 列表(biz_area.code)，JSON 存储
      */
-    private String excludeProvinceIds;
+    private String excludeProvinceCodes;
     /**
      * 意向院校层次
      */
-    private String schoolLevel;
+    private Integer schoolLevel;
     /**
      * 意向调剂专业/一级学科ID列表
      */

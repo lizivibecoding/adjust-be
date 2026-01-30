@@ -11,3 +11,4 @@ alwaysApply: true
 - Prefer MyBatis-Plus wrapper/code queries; only write SQL in XML mappers when necessary
 - Do not run `mvn` (Maven) commands; the user will run and verify locally
 - When using `LambdaQueryWrapperX`, do NOT chain `.select(...)` and then `.eqIfPresent(...)` in one fluent chain; call `select(...)` on a separate line (or set up the wrapper first) to avoid the type degrading to MyBatis-Plus `LambdaQueryWrapper` and losing `eqIfPresent(...)`.
+- For request parameters representing ID lists, prefer JSON arrays (e.g. `List<Long>` / `List<String>`) over comma-separated strings; if backward compatibility is needed, support both formats temporarily via custom deserialization.

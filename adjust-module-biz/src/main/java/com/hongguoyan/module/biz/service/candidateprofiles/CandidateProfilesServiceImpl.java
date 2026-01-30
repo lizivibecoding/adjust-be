@@ -92,16 +92,13 @@ public class CandidateProfilesServiceImpl implements CandidateProfilesService {
         toSave.setGraduateSchoolId(graduateSchoolId);
         toSave.setGraduateSchoolName(StrUtil.blankToDefault(graduateSchool.getSchoolName(), ""));
 
-        // graduate major (code -> id/name snapshot)
-        String graduateMajorCode = StrUtil.blankToDefault(reqVO.getGraduateMajorCode(), "");
-        MajorDO graduateMajor = majorMapper.selectOne(new LambdaQueryWrapperX<MajorDO>()
-                .eq(MajorDO::getCode, graduateMajorCode)
-                .eq(MajorDO::getDeleted, false)
-                .last("LIMIT 1"));
-        if (graduateMajor == null) {
-            throw exception(new ErrorCode(400, "graduateMajorCode not exists: " + graduateMajorCode));
+        // graduate major (id -> name snapshot)
+        Long graduateMajorId = reqVO.getGraduateMajorId();
+        MajorDO graduateMajor = majorMapper.selectById(graduateMajorId);
+        if (graduateMajor == null || Boolean.TRUE.equals(graduateMajor.getDeleted())) {
+            throw exception(new ErrorCode(400, "graduateMajorId not exists: " + graduateMajorId));
         }
-        toSave.setGraduateMajorId(graduateMajor.getId());
+        toSave.setGraduateMajorId(graduateMajorId);
         toSave.setGraduateMajorName(StrUtil.blankToDefault(graduateMajor.getName(), ""));
         // best-effort: fill major class by parent major name (if exists), otherwise empty
         String majorClass = "";

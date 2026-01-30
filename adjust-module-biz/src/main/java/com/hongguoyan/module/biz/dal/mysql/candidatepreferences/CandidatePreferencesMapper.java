@@ -20,8 +20,8 @@ public interface CandidatePreferencesMapper extends BaseMapperX<CandidatePrefere
     default PageResult<CandidatePreferencesDO> selectPage(AppCandidatePreferencesPageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<CandidatePreferencesDO>()
                 .eqIfPresent(CandidatePreferencesDO::getUserId, reqVO.getUserId())
-                .eqIfPresent(CandidatePreferencesDO::getProvinceIds, reqVO.getProvinceIds())
-                .eqIfPresent(CandidatePreferencesDO::getExcludeProvinceIds, reqVO.getExcludeProvinceIds())
+                .eqIfPresent(CandidatePreferencesDO::getProvinceCodes, reqVO.getProvinceCodes())
+                .eqIfPresent(CandidatePreferencesDO::getExcludeProvinceCodes, reqVO.getExcludeProvinceCodes())
                 .eqIfPresent(CandidatePreferencesDO::getSchoolLevel, reqVO.getSchoolLevel())
                 .eqIfPresent(CandidatePreferencesDO::getMajorIds, reqVO.getMajorIds())
                 .eqIfPresent(CandidatePreferencesDO::getStudyMode, reqVO.getStudyMode())

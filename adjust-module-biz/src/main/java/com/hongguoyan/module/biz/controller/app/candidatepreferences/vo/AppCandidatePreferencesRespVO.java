@@ -20,21 +20,21 @@ public class AppCandidatePreferencesRespVO {
     @ExcelProperty("用户ID")
     private Long userId;
 
-    @Schema(description = "意向省份ID列表")
-    @ExcelProperty("意向省份ID列表")
-    private String provinceIds;
+    @Schema(description = "意向省份 code 列表(biz_area.code)")
+    @ExcelProperty("意向省份 code 列表")
+    private List<String> provinceCodes;
 
-    @Schema(description = "屏蔽/一定不去的省份ID列表")
-    @ExcelProperty("屏蔽/一定不去的省份ID列表")
-    private String excludeProvinceIds;
+    @Schema(description = "屏蔽/一定不去的省份 code 列表(biz_area.code)")
+    @ExcelProperty("屏蔽省份 code 列表")
+    private List<String> excludeProvinceCodes;
 
     @Schema(description = "意向院校层次")
     @ExcelProperty("意向院校层次")
-    private String schoolLevel;
+    private Integer schoolLevel;
 
     @Schema(description = "意向调剂专业/一级学科ID列表")
     @ExcelProperty("意向调剂专业/一级学科ID列表")
-    private String majorIds;
+    private List<Long> majorIds;
 
     @Schema(description = "意向学习方式: 0-不限 1-全日制 2-非全日制", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("意向学习方式: 0-不限 1-全日制 2-非全日制")

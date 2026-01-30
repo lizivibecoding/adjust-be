@@ -18,6 +18,11 @@ public interface CandidatePreferencesService {
     CandidatePreferencesDO getCandidatePreferencesByUserId(Long userId);
 
     /**
+     * 获取我的调剂偏好（APP 返回结构）
+     */
+    AppCandidatePreferencesRespVO getMyCandidatePreferences(Long userId);
+
+    /**
      * 按 userId 保存调剂偏好（不存在则新增，存在则覆盖更新）
      */
     Long saveCandidatePreferencesByUserId(Long userId, @Valid AppCandidatePreferencesSaveReqVO reqVO);

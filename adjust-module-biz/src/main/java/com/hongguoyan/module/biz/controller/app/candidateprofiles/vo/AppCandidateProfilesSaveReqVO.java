@@ -19,9 +19,9 @@ public class AppCandidateProfilesSaveReqVO {
     @NotNull(message = "本科毕业院校ID(biz_school.id)不能为空")
     private Long graduateSchoolId;
 
-    @Schema(description = "本科专业代码(来源 biz_major.code)", requiredMode = Schema.RequiredMode.REQUIRED, example = "010100")
-    @NotEmpty(message = "本科专业代码不能为空")
-    private String graduateMajorCode;
+    @Schema(description = "本科专业ID(biz_major.id)", requiredMode = Schema.RequiredMode.REQUIRED, example = "7856")
+    @NotNull(message = "本科专业ID不能为空")
+    private Long graduateMajorId;
 
     @Schema(description = "本科绩点 (GPA)")
     private BigDecimal undergraduateGpa;

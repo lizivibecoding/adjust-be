@@ -7,6 +7,9 @@ import lombok.Data;
 @Data
 public class AppMajorChildRespVO {
 
+    @Schema(description = "专业ID", example = "7856")
+    private Long id;
+
     @Schema(description = "专业代码", example = "0101")
     private String code;
 

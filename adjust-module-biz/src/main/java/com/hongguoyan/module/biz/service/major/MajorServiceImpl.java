@@ -139,6 +139,7 @@ public class MajorServiceImpl implements MajorService {
                 continue;
             }
             AppMajorChildRespVO vo = new AppMajorChildRespVO();
+            vo.setId(item.getId());
             vo.setCode(item.getCode());
             vo.setName(item.getName());
             vo.setLevel(level);
@@ -147,6 +148,84 @@ public class MajorServiceImpl implements MajorService {
             result.add(vo);
         }
         return result;
+    }
+
+    @Override
+    public List<AppMajorTreeNodeRespVO> getMajorTree() {
+        // Only majors with code; sorted by code asc to keep stable tree order
+        LambdaQueryWrapperX<MajorDO> qw = new LambdaQueryWrapperX<>();
+        qw.select(MajorDO::getId, MajorDO::getCode, MajorDO::getName, MajorDO::getLevel,
+                MajorDO::getDegreeType, MajorDO::getParentCode);
+        qw.isNotNull(MajorDO::getCode);
+        qw.ne(MajorDO::getCode, "");
+        qw.eq(MajorDO::getDeleted, false);
+        qw.orderByAsc(MajorDO::getCode);
+        List<MajorDO> list = majorMapper.selectList(qw);
+        if (list == null || list.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // build nodes by code
+        Map<String, AppMajorTreeNodeRespVO> nodeByCode = new HashMap<>(list.size() * 2);
+        Map<String, List<AppMajorTreeNodeRespVO>> childrenByParentCode = new HashMap<>();
+
+        for (MajorDO item : list) {
+            if (item == null || StrUtil.isBlank(item.getCode())) {
+                continue;
+            }
+            AppMajorTreeNodeRespVO node = new AppMajorTreeNodeRespVO();
+            node.setId(item.getId());
+            node.setCode(item.getCode());
+            node.setName(item.getName());
+            node.setLevel(item.getLevel());
+            node.setDegreeType(item.getDegreeType());
+            node.setChildren(Collections.emptyList());
+            nodeByCode.put(item.getCode(), node);
+
+            String parentCode = item.getParentCode();
+            if (StrUtil.isNotBlank(parentCode)) {
+                childrenByParentCode.computeIfAbsent(parentCode, k -> new ArrayList<>()).add(node);
+            }
+        }
+
+        // attach children
+        for (Map.Entry<String, List<AppMajorTreeNodeRespVO>> entry : childrenByParentCode.entrySet()) {
+            AppMajorTreeNodeRespVO parent = nodeByCode.get(entry.getKey());
+            if (parent == null) {
+                continue;
+            }
+            parent.setChildren(entry.getValue());
+        }
+
+        // roots: level=1, plus fallback nodes whose parent not found
+        List<AppMajorTreeNodeRespVO> roots = new ArrayList<>();
+        Set<String> nonRootCodes = new HashSet<>();
+        for (List<AppMajorTreeNodeRespVO> children : childrenByParentCode.values()) {
+            for (AppMajorTreeNodeRespVO child : children) {
+                if (child != null && child.getCode() != null) {
+                    nonRootCodes.add(child.getCode());
+                }
+            }
+        }
+        for (MajorDO item : list) {
+            if (item == null || StrUtil.isBlank(item.getCode())) {
+                continue;
+            }
+            AppMajorTreeNodeRespVO node = nodeByCode.get(item.getCode());
+            if (node == null) {
+                continue;
+            }
+            if (Integer.valueOf(1).equals(item.getLevel())) {
+                roots.add(node);
+                continue;
+            }
+            // if parent missing, treat as root to avoid losing nodes
+            if (!nonRootCodes.contains(item.getCode()) && StrUtil.isNotBlank(item.getParentCode())
+                    && !nodeByCode.containsKey(item.getParentCode())) {
+                roots.add(node);
+            }
+        }
+        return roots;
     }
 
 }

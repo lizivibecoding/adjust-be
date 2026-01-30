@@ -54,4 +54,10 @@ public class AppMajorController {
         return success(majorService.getMajorList(parentCode, level));
     }
 
+    @GetMapping("/tree")
+    @Operation(summary = "获得专业树(仅包含有 code 的节点)")
+    public CommonResult<List<AppMajorTreeNodeRespVO>> getMajorTree() {
+        return success(majorService.getMajorTree());
+    }
+
 }

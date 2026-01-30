@@ -16,14 +16,14 @@ public class AppCandidatePreferencesPageReqVO extends PageParam {
     @Schema(description = "用户ID", example = "4058")
     private Long userId;
 
-    @Schema(description = "意向省份ID列表")
-    private String provinceIds;
+    @Schema(description = "意向省份 code 列表(JSON 字符串)")
+    private String provinceCodes;
 
-    @Schema(description = "屏蔽/一定不去的省份ID列表")
-    private String excludeProvinceIds;
+    @Schema(description = "屏蔽省份 code 列表(JSON 字符串)")
+    private String excludeProvinceCodes;
 
     @Schema(description = "意向院校层次")
-    private String schoolLevel;
+    private Integer schoolLevel;
 
     @Schema(description = "意向调剂专业/一级学科ID列表")
     private String majorIds;

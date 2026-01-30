@@ -43,7 +43,7 @@ public interface MajorMapper extends BaseMapperX<MajorDO> {
                                                          @Param("level") Integer level) {
         // NOTE: do not chain eqIfPresent after select(), because select() returns MP wrapper type
         LambdaQueryWrapperX<MajorDO> qw = new LambdaQueryWrapperX<>();
-        qw.select(MajorDO::getCode, MajorDO::getName, MajorDO::getLevel, MajorDO::getDegreeType);
+        qw.select(MajorDO::getId, MajorDO::getCode, MajorDO::getName, MajorDO::getLevel, MajorDO::getDegreeType);
         qw.eqIfPresent(MajorDO::getParentCode, parentCode);
         qw.eq(MajorDO::getLevel, level);
         qw.isNotNull(MajorDO::getCode);

@@ -11,11 +11,9 @@ import jakarta.validation.*;
 import java.util.*;
 
 import com.hongguoyan.framework.common.pojo.CommonResult;
-import com.hongguoyan.framework.common.util.object.BeanUtils;
 import static com.hongguoyan.framework.common.pojo.CommonResult.success;
 
 import com.hongguoyan.module.biz.controller.app.candidatepreferences.vo.*;
-import com.hongguoyan.module.biz.dal.dataobject.candidatepreferences.CandidatePreferencesDO;
 import com.hongguoyan.module.biz.service.candidatepreferences.CandidatePreferencesService;
 import com.hongguoyan.framework.security.core.util.SecurityFrameworkUtils;
 
@@ -32,8 +30,7 @@ public class AppCandidatePreferencesController {
     @Operation(summary = "获取我的调剂意向与偏好设置")
     public CommonResult<AppCandidatePreferencesRespVO> getMyCandidatePreferences() {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
-        CandidatePreferencesDO candidatePreferences = candidatePreferencesService.getCandidatePreferencesByUserId(userId);
-        return success(BeanUtils.toBean(candidatePreferences, AppCandidatePreferencesRespVO.class));
+        return success(candidatePreferencesService.getMyCandidatePreferences(userId));
     }
 
     @PostMapping("/save")
