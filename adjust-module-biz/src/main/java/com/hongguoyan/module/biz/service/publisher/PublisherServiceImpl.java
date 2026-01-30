@@ -6,6 +6,7 @@ import jakarta.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.hongguoyan.module.biz.controller.app.publisher.vo.*;
@@ -37,6 +38,25 @@ public class PublisherServiceImpl implements PublisherService {
     public PublisherDO getPublisherByUserId(Long userId) {
         return publisherMapper.selectOne(new LambdaQueryWrapperX<PublisherDO>()
                 .eq(PublisherDO::getUserId, userId));
+    }
+
+    @Override
+    public AppPublisherMeRespVO getMe(Long userId) {
+        PublisherDO publisher = getPublisherByUserId(userId);
+        if (publisher == null) {
+            return null;
+        }
+        AppPublisherMeRespVO respVO = new AppPublisherMeRespVO();
+        respVO.setReviewed(publisher.getStatus() != null && publisher.getStatus() == 1);
+        respVO.setStatus(publisher.getStatus());
+        respVO.setIdentityType(publisher.getIdentityType());
+        respVO.setRealName(publisher.getRealName());
+        respVO.setMobile(publisher.getMobile());
+        respVO.setNote(publisher.getNote());
+        respVO.setReviewTime(publisher.getReviewTime());
+        respVO.setRejectReason(publisher.getRejectReason());
+        respVO.setFiles(parseFiles(publisher.getFiles()));
+        return respVO;
     }
 
     @Override
@@ -83,6 +103,17 @@ public class PublisherServiceImpl implements PublisherService {
         publisherAuditLogMapper.insert(log);
 
         return existing != null ? existing.getId() : toSave.getId();
+    }
+
+    private List<String> parseFiles(String files) {
+        if (files == null || files.isBlank()) {
+            return Collections.emptyList();
+        }
+        try {
+            return JSONUtil.parseArray(files).toList(String.class);
+        } catch (Exception ignore) {
+            return Collections.singletonList(files);
+        }
     }
 
 }

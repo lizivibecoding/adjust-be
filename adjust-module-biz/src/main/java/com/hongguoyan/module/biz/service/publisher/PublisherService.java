@@ -19,6 +19,11 @@ public interface PublisherService {
     PublisherDO getPublisherByUserId(Long userId);
 
     /**
+     * 获取我的发布者认证信息（精简返回给前端）
+     */
+    AppPublisherMeRespVO getMe(Long userId);
+
+    /**
      * 提交/重新提交发布者认证（不存在则新增，存在则覆盖并重置为待审）
      */
     Long submitPublisher(Long userId, @Valid AppPublisherSubmitReqVO reqVO);
