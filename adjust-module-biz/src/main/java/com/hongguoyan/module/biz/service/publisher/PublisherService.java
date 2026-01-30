@@ -21,6 +21,6 @@ public interface PublisherService {
     /**
      * 提交/重新提交发布者认证（不存在则新增，存在则覆盖并重置为待审）
      */
-    Long submitPublisher(Long userId, @Valid AppPublisherSaveReqVO reqVO);
+    Long submitPublisher(Long userId, @Valid AppPublisherSubmitReqVO reqVO);
 
 }

@@ -41,12 +41,22 @@ public class PublisherServiceImpl implements PublisherService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long submitPublisher(Long userId, AppPublisherSaveReqVO reqVO) {
+    public Long submitPublisher(Long userId, AppPublisherSubmitReqVO reqVO) {
         PublisherDO existing = getPublisherByUserId(userId);
         int fromStatus = existing != null && existing.getStatus() != null ? existing.getStatus() : 0;
 
-        PublisherDO toSave = BeanUtils.toBean(reqVO, PublisherDO.class);
+        PublisherDO toSave = new PublisherDO();
         toSave.setUserId(userId);
+        toSave.setIdentityType(reqVO.getIdentityType());
+        toSave.setRealName(reqVO.getRealName());
+        toSave.setMobile(reqVO.getMobile());
+        toSave.setFiles(JSONUtil.toJsonStr(reqVO.getFiles()));
+        toSave.setNote(reqVO.getNote());
+        // optional fields kept as empty/default to satisfy NOT NULL columns
+        toSave.setSchoolId(null);
+        toSave.setSchoolName("");
+        toSave.setIdNo("");
+        toSave.setOrgName("");
         // resubmit: reset review fields
         toSave.setStatus(0); // pending
         toSave.setReviewerId(null);
