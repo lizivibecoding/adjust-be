@@ -31,4 +31,8 @@ public interface ErrorCodeConstants {
     ErrorCode CANDIDATE_PREFERENCES_NOT_EXISTS = new ErrorCode(25, "考生调剂意向与偏好设置不存在");
     ErrorCode CANDIDATE_CUSTOM_REPORTS_NOT_EXISTS = new ErrorCode(26, "考生AI调剂定制报告不存在");
     ErrorCode ADJUSTMENT_ADMIT_NOT_EXISTS = new ErrorCode(27, "调剂录取名单不存在");
+    ErrorCode PUBLISHER_AUDIT_LOG_NOT_EXISTS = new ErrorCode(28, "发布者资质审核日志不存在");
+    ErrorCode USER_ADJUSTMENT_NOT_EXISTS = new ErrorCode(29, "用户发布调剂不存在");
+    ErrorCode PUBLISHER_NOT_EXISTS = new ErrorCode(30, "发布者资质不存在");
+    ErrorCode USER_ADJUSTMENT_APPLY_NOT_EXISTS = new ErrorCode(31, "用户发布调剂申请记录不存在");
 }
