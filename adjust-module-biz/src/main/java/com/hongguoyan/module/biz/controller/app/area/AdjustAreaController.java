@@ -19,7 +19,7 @@ import static com.hongguoyan.framework.common.pojo.CommonResult.success;
 @RestController
 @RequestMapping("/biz/area")
 @Validated
-public class AppAreaController {
+public class AdjustAreaController {
 
     @Resource
     private AreaService areaService;
