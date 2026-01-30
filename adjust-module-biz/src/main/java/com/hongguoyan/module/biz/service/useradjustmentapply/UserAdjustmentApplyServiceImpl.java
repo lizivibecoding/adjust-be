@@ -1,6 +1,5 @@
 package com.hongguoyan.module.biz.service.useradjustmentapply;
 
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import org.springframework.stereotype.Service;
 import jakarta.annotation.Resource;
@@ -10,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.*;
 import com.hongguoyan.module.biz.controller.app.useradjustmentapply.vo.*;
+import com.hongguoyan.module.biz.controller.app.useradjustment.vo.AppUserAdjustmentListRespVO;
 import com.hongguoyan.module.biz.dal.dataobject.major.MajorDO;
 import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
 import com.hongguoyan.module.biz.dal.dataobject.useradjustmentapply.UserAdjustmentApplyDO;
@@ -24,8 +24,6 @@ import com.hongguoyan.module.biz.dal.mysql.useradjustment.UserAdjustmentMapper;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
-import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertList;
-import static com.hongguoyan.framework.common.util.collection.CollectionUtils.diffList;
 import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.*;
 
 /**
@@ -122,24 +120,30 @@ public class UserAdjustmentApplyServiceImpl implements UserAdjustmentApplyServic
         // fetch related posts
         Set<Long> postIds = new HashSet<>();
         for (UserAdjustmentApplyDO apply : applies) {
-            postIds.add(apply.getUserAdjustmentId());
-        }
-        Map<Long, UserAdjustmentDO> postMap = new HashMap<>();
-        List<UserAdjustmentDO> posts = userAdjustmentMapper.selectBatchIds(postIds);
-        if (posts != null) {
-            for (UserAdjustmentDO post : posts) {
-                postMap.put(post.getId(), post);
+            if (apply != null && apply.getUserAdjustmentId() != null) {
+                postIds.add(apply.getUserAdjustmentId());
             }
         }
+        List<UserAdjustmentDO> posts = postIds.isEmpty() ? Collections.emptyList() : userAdjustmentMapper.selectBatchIds(postIds);
+        Map<Long, UserAdjustmentDO> postMap = new HashMap<>();
+        if (posts != null) {
+            for (UserAdjustmentDO post : posts) {
+                if (post != null && post.getId() != null) {
+                    postMap.put(post.getId(), post);
+                }
+            }
+        }
+
+        Map<Long, String> schoolLogoMap = buildSchoolLogoMap(posts);
+        Map<Long, String> majorLevel1NameMap = buildMajorLevel1NameMap(posts);
         List<AppUserAdjustmentApplyMyItemRespVO> list = new ArrayList<>(applies.size());
         for (UserAdjustmentApplyDO apply : applies) {
             UserAdjustmentDO post = postMap.get(apply.getUserAdjustmentId());
             AppUserAdjustmentApplyMyItemRespVO vo = new AppUserAdjustmentApplyMyItemRespVO();
-            vo.setUserAdjustmentId(apply.getUserAdjustmentId());
             vo.setApplyTime(apply.getCreateTime());
             if (post != null) {
-                vo.setTitle(post.getTitle());
-                vo.setMajorText(buildMajorText(post));
+                AppUserAdjustmentListRespVO base = toListResp(post, schoolLogoMap, majorLevel1NameMap);
+                BeanUtils.copyProperties(base, vo);
             }
             list.add(vo);
         }
@@ -184,19 +188,95 @@ public class UserAdjustmentApplyServiceImpl implements UserAdjustmentApplyServic
         return vo;
     }
 
-    private String buildMajorText(UserAdjustmentDO post) {
-        StringBuilder sb = new StringBuilder();
-        if (StrUtil.isNotBlank(post.getMajorCode())) {
-            sb.append("（").append(post.getMajorCode()).append("）");
+    private AppUserAdjustmentListRespVO toListResp(UserAdjustmentDO item,
+                                                   Map<Long, String> schoolLogoMap,
+                                                   Map<Long, String> majorLevel1NameMap) {
+        AppUserAdjustmentListRespVO vo = new AppUserAdjustmentListRespVO();
+        vo.setId(item.getId());
+        vo.setTitle(item.getTitle());
+        vo.setSchoolName(item.getSchoolName());
+        vo.setSchoolLogo(schoolLogoMap.get(item.getSchoolId()));
+        vo.setMajorLevel1Name(majorLevel1NameMap.get(item.getMajorId()));
+        vo.setMajorCode(item.getMajorCode());
+        vo.setMajorName(item.getMajorName());
+        vo.setDegreeType(item.getDegreeType());
+        vo.setAdjustCount(item.getAdjustCount());
+        vo.setPublishTime(item.getPublishTime());
+        return vo;
+    }
+
+    private Map<Long, String> buildSchoolLogoMap(List<UserAdjustmentDO> records) {
+        if (records == null || records.isEmpty()) {
+            return Collections.emptyMap();
         }
-        sb.append(StrUtil.blankToDefault(post.getMajorName(), ""));
-        if (StrUtil.isNotBlank(post.getDirectionName())) {
-            sb.append("-").append(post.getDirectionName());
+        Set<Long> schoolIds = new HashSet<>();
+        for (UserAdjustmentDO item : records) {
+            if (item != null && item.getSchoolId() != null) {
+                schoolIds.add(item.getSchoolId());
+            }
         }
-        if (post.getStudyMode() != null) {
-            sb.append("-").append(post.getStudyMode() == 1 ? "全日制" : "非全日制");
+        if (schoolIds.isEmpty()) {
+            return Collections.emptyMap();
         }
-        return sb.toString();
+        List<SchoolDO> schools = schoolMapper.selectBatchIds(schoolIds);
+        if (schools == null || schools.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Map<Long, String> map = new HashMap<>();
+        for (SchoolDO school : schools) {
+            if (school != null && school.getId() != null) {
+                map.put(school.getId(), school.getSchoolLogo());
+            }
+        }
+        return map;
+    }
+
+    private Map<Long, String> buildMajorLevel1NameMap(List<UserAdjustmentDO> records) {
+        if (records == null || records.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Set<Long> majorIds = new HashSet<>();
+        for (UserAdjustmentDO item : records) {
+            if (item != null && item.getMajorId() != null) {
+                majorIds.add(item.getMajorId());
+            }
+        }
+        if (majorIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Map<Long, MajorDO> majorMap = new HashMap<>();
+        Set<Long> toLoad = new HashSet<>(majorIds);
+        // best-effort: load ancestor chain by parentId
+        for (int i = 0; i < 10 && !toLoad.isEmpty(); i++) {
+            List<MajorDO> majors = majorMapper.selectBatchIds(toLoad);
+            toLoad.clear();
+            if (majors == null || majors.isEmpty()) {
+                break;
+            }
+            for (MajorDO major : majors) {
+                if (major == null || major.getId() == null) {
+                    continue;
+                }
+                majorMap.put(major.getId(), major);
+                Long parentId = major.getParentId();
+                if (parentId != null && !majorMap.containsKey(parentId)) {
+                    toLoad.add(parentId);
+                }
+            }
+        }
+        Map<Long, String> result = new HashMap<>();
+        for (Long majorId : majorIds) {
+            MajorDO cur = majorMap.get(majorId);
+            while (cur != null && cur.getLevel() != null && cur.getLevel() != 1) {
+                Long parentId = cur.getParentId();
+                if (parentId == null) {
+                    break;
+                }
+                cur = majorMap.get(parentId);
+            }
+            result.put(majorId, cur != null && cur.getLevel() != null && cur.getLevel() == 1 ? cur.getName() : "");
+        }
+        return result;
     }
 
     private String maskContact(String contact) {
