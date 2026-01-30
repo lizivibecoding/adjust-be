@@ -30,14 +30,14 @@ public class AppUserAdjustmentController {
 
     @PostMapping("/create")
     @Operation(summary = "创建用户发布调剂")
-    public CommonResult<Long> createUserAdjustment(@Valid @RequestBody AppUserAdjustmentSaveReqVO createReqVO) {
+    public CommonResult<Long> createUserAdjustment(@Valid @RequestBody AppUserAdjustmentCreateReqVO createReqVO) {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
         return success(userAdjustmentService.createUserAdjustment(userId, createReqVO));
     }
 
     @PutMapping("/update")
     @Operation(summary = "更新用户发布调剂")
-    public CommonResult<Boolean> updateUserAdjustment(@Valid @RequestBody AppUserAdjustmentSaveReqVO updateReqVO) {
+    public CommonResult<Boolean> updateUserAdjustment(@Valid @RequestBody AppUserAdjustmentUpdateReqVO updateReqVO) {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
         userAdjustmentService.updateUserAdjustment(userId, updateReqVO);
         return success(true);

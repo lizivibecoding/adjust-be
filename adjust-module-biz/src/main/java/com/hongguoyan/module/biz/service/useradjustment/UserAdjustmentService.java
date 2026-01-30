@@ -15,12 +15,12 @@ public interface UserAdjustmentService {
     /**
      * 创建用户发布调剂
      */
-    Long createUserAdjustment(Long userId, @Valid AppUserAdjustmentSaveReqVO createReqVO);
+    Long createUserAdjustment(Long userId, @Valid AppUserAdjustmentCreateReqVO createReqVO);
 
     /**
      * 更新用户发布调剂
      */
-    void updateUserAdjustment(Long userId, @Valid AppUserAdjustmentSaveReqVO updateReqVO);
+    void updateUserAdjustment(Long userId, @Valid AppUserAdjustmentUpdateReqVO updateReqVO);
 
     /**
      * 发布调剂列表(公开)
