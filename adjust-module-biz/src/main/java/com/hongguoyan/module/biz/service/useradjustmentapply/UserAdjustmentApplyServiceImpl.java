@@ -7,12 +7,17 @@ import jakarta.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.*;
 import com.hongguoyan.module.biz.controller.app.useradjustmentapply.vo.*;
+import com.hongguoyan.module.biz.dal.dataobject.major.MajorDO;
+import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
 import com.hongguoyan.module.biz.dal.dataobject.useradjustmentapply.UserAdjustmentApplyDO;
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.framework.common.util.object.BeanUtils;
 
+import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
+import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
 import com.hongguoyan.module.biz.dal.mysql.useradjustmentapply.UserAdjustmentApplyMapper;
 import com.hongguoyan.module.biz.dal.dataobject.useradjustment.UserAdjustmentDO;
 import com.hongguoyan.module.biz.dal.mysql.useradjustment.UserAdjustmentMapper;
@@ -36,10 +41,14 @@ public class UserAdjustmentApplyServiceImpl implements UserAdjustmentApplyServic
     private UserAdjustmentApplyMapper userAdjustmentApplyMapper;
     @Resource
     private UserAdjustmentMapper userAdjustmentMapper;
+    @Resource
+    private SchoolMapper schoolMapper;
+    @Resource
+    private MajorMapper majorMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long createUserAdjustmentApply(Long userId, AppUserAdjustmentApplySaveReqVO createReqVO) {
+    public Long createUserAdjustmentApply(Long userId, AppUserAdjustmentApplyCreateReqVO createReqVO) {
         UserAdjustmentDO userAdjustment = userAdjustmentMapper.selectById(createReqVO.getUserAdjustmentId());
         if (userAdjustment == null) {
             throw exception(USER_ADJUSTMENT_NOT_EXISTS);
@@ -57,11 +66,49 @@ public class UserAdjustmentApplyServiceImpl implements UserAdjustmentApplyServic
         if (exists != null && exists > 0) {
             throw exception(USER_ADJUSTMENT_ALREADY_APPLIED);
         }
-        UserAdjustmentApplyDO userAdjustmentApply = BeanUtils.toBean(createReqVO, UserAdjustmentApplyDO.class);
+        SchoolDO firstSchool = schoolMapper.selectById(createReqVO.getFirstSchoolId());
+        if (firstSchool == null) {
+            throw exception(SCHOOL_NOT_EXISTS);
+        }
+        MajorDO firstMajor = majorMapper.selectById(createReqVO.getFirstMajorId());
+        if (firstMajor == null || Boolean.TRUE.equals(firstMajor.getDeleted())) {
+            throw exception(MAJOR_NOT_EXISTS);
+        }
+        BigDecimal totalScore = createReqVO.getTotalScore();
+        if (totalScore == null) {
+            totalScore = safe(createReqVO.getSubjectScore1())
+                    .add(safe(createReqVO.getSubjectScore2()))
+                    .add(safe(createReqVO.getSubjectScore3()))
+                    .add(safe(createReqVO.getSubjectScore4()));
+        }
+
+        UserAdjustmentApplyDO userAdjustmentApply = new UserAdjustmentApplyDO();
         userAdjustmentApply.setId(null);
         userAdjustmentApply.setUserId(userId);
+        userAdjustmentApply.setUserAdjustmentId(createReqVO.getUserAdjustmentId());
+        userAdjustmentApply.setCandidateName(StrUtil.blankToDefault(createReqVO.getCandidateName(), ""));
+        userAdjustmentApply.setContact(StrUtil.blankToDefault(createReqVO.getContact(), ""));
+
+        userAdjustmentApply.setFirstSchoolId(createReqVO.getFirstSchoolId());
+        userAdjustmentApply.setFirstSchoolName(StrUtil.blankToDefault(firstSchool.getSchoolName(), ""));
+
+        userAdjustmentApply.setFirstMajorId(createReqVO.getFirstMajorId());
+        userAdjustmentApply.setFirstMajorCode(StrUtil.blankToDefault(firstMajor.getCode(), ""));
+        userAdjustmentApply.setFirstMajorName(StrUtil.blankToDefault(firstMajor.getName(), ""));
+
+        userAdjustmentApply.setSubjectScore1(createReqVO.getSubjectScore1());
+        userAdjustmentApply.setSubjectScore2(createReqVO.getSubjectScore2());
+        userAdjustmentApply.setSubjectScore3(createReqVO.getSubjectScore3());
+        userAdjustmentApply.setSubjectScore4(createReqVO.getSubjectScore4());
+        userAdjustmentApply.setTotalScore(totalScore);
+        userAdjustmentApply.setNote(StrUtil.blankToDefault(createReqVO.getNote(), ""));
+
         userAdjustmentApplyMapper.insert(userAdjustmentApply);
         return userAdjustmentApply.getId();
+    }
+
+    private BigDecimal safe(BigDecimal v) {
+        return v != null ? v : BigDecimal.ZERO;
     }
 
     @Override

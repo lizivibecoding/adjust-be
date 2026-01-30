@@ -17,7 +17,7 @@ public interface UserAdjustmentApplyService {
     /**
      * 创建用户发布调剂申请记录
      */
-    Long createUserAdjustmentApply(Long userId, @Valid AppUserAdjustmentApplySaveReqVO createReqVO);
+    Long createUserAdjustmentApply(Long userId, @Valid AppUserAdjustmentApplyCreateReqVO createReqVO);
 
     /**
      * 我申请的调剂分页

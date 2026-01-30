@@ -30,9 +30,10 @@ public class AppUserAdjustmentApplyController {
 
     @PostMapping("/create")
     @Operation(summary = "创建用户发布调剂申请记录")
-    public CommonResult<Long> createUserAdjustmentApply(@Valid @RequestBody AppUserAdjustmentApplySaveReqVO createReqVO) {
+    public CommonResult<Boolean> createUserAdjustmentApply(@Valid @RequestBody AppUserAdjustmentApplyCreateReqVO createReqVO) {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
-        return success(userAdjustmentApplyService.createUserAdjustmentApply(userId, createReqVO));
+        userAdjustmentApplyService.createUserAdjustmentApply(userId, createReqVO);
+        return success(true);
     }
 
     @GetMapping("/get")
