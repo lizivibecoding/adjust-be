@@ -115,6 +115,11 @@ public class CandidateProfilesDO extends BaseDO {
      */
     private String targetDirectionName;
     /**
+     * 一志愿研究方向ID(biz_school_direction.id)
+     */
+    @TableField("target_direction_id")
+    private Long targetDirectionId;
+    /**
      * 科目1代码
      */
     private String subjectCode1;

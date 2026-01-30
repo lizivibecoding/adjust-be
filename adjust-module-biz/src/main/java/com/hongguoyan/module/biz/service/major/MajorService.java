@@ -66,4 +66,13 @@ public interface MajorService {
      */
     List<AppMajorLevel1RespVO> getMajorLevel1List();
 
+    /**
+     * 获得学科/专业列表（按层级懒加载）
+     *
+     * @param parentCode 父级专业代码（level>1 必传；level=2 传一级 code；level=3 传二级 code）
+     * @param level      层级（1=一级学科,2=二级学科,3=三级学科）
+     * @return 列表
+     */
+    List<AppMajorChildRespVO> getMajorList(String parentCode, Integer level);
+
 }

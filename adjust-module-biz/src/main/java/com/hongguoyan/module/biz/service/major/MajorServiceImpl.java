@@ -1,6 +1,7 @@
 package com.hongguoyan.module.biz.service.major;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import org.springframework.stereotype.Service;
 import jakarta.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
@@ -14,6 +15,8 @@ import com.hongguoyan.framework.common.pojo.PageParam;
 import com.hongguoyan.framework.common.util.object.BeanUtils;
 
 import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
+import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
+import com.hongguoyan.framework.common.exception.ErrorCode;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertList;
@@ -85,6 +88,65 @@ public class MajorServiceImpl implements MajorService {
     @Override
     public List<AppMajorLevel1RespVO> getMajorLevel1List() {
         return majorMapper.selectLevel1List();
+    }
+
+    @Override
+    public List<AppMajorChildRespVO> getMajorList(String parentCode, Integer level) {
+        if (level == null || level < 1 || level > 3) {
+            throw exception(new ErrorCode(400, "level must be 1, 2 or 3"));
+        }
+        if (level > 1 && StrUtil.isBlank(parentCode)) {
+            throw exception(new ErrorCode(400, "parentCode is required when level > 1"));
+        }
+
+        String pc = level == 1 ? null : parentCode;
+        List<MajorDO> children = majorMapper.selectListByLevelAndParentCode(pc, level);
+        if (children == null || children.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // build hasChildren for level=1/2 only (level=3 is leaf)
+        Set<String> hasChildParentCodes = Collections.emptySet();
+        if (level < 3) {
+            List<String> codes = new ArrayList<>(children.size());
+            for (MajorDO item : children) {
+                if (item != null && item.getCode() != null) {
+                    codes.add(item.getCode());
+                }
+            }
+            if (!codes.isEmpty()) {
+                List<MajorDO> level3 = majorMapper.selectList(new LambdaQueryWrapperX<MajorDO>()
+                        .select(MajorDO::getParentCode)
+                        .in(MajorDO::getParentCode, codes)
+                        .eq(MajorDO::getLevel, level + 1)
+                        .eq(MajorDO::getDeleted, false)
+                        .groupBy(MajorDO::getParentCode));
+                if (level3 != null && !level3.isEmpty()) {
+                    Set<String> set = new HashSet<>();
+                    for (MajorDO item : level3) {
+                        if (item != null && item.getParentCode() != null) {
+                            set.add(item.getParentCode());
+                        }
+                    }
+                    hasChildParentCodes = set;
+                }
+            }
+        }
+
+        List<AppMajorChildRespVO> result = new ArrayList<>(children.size());
+        for (MajorDO item : children) {
+            if (item == null) {
+                continue;
+            }
+            AppMajorChildRespVO vo = new AppMajorChildRespVO();
+            vo.setCode(item.getCode());
+            vo.setName(item.getName());
+            vo.setLevel(level);
+            vo.setDegreeType(item.getDegreeType());
+            vo.setHasChildren(level < 3 && item.getCode() != null && hasChildParentCodes.contains(item.getCode()));
+            result.add(vo);
+        }
+        return result;
     }
 
 }

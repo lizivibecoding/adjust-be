@@ -44,4 +44,14 @@ public class AppMajorController {
         return success(majorService.getMajorLevel1List());
     }
 
+    @GetMapping("/list")
+    @Operation(summary = "获得学科/专业列表(按层级)")
+    @Parameter(name = "level", description = "层级(1=一级学科,2=二级学科,3=三级学科)", required = true, example = "1")
+    @Parameter(name = "parentCode", description = "父级 code(level>1 时必传；level=2 传一级 code；level=3 传二级 code)", example = "01")
+    public CommonResult<List<AppMajorChildRespVO>> getMajorList(
+            @RequestParam("level") @NotNull Integer level,
+            @RequestParam(value = "parentCode", required = false) String parentCode) {
+        return success(majorService.getMajorList(parentCode, level));
+    }
+
 }

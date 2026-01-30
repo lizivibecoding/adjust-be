@@ -39,4 +39,18 @@ public interface MajorMapper extends BaseMapperX<MajorDO> {
     List<String> selectSuggestMajorNames(@Param("keyword") String keyword,
                                          @Param("limit") Integer limit);
 
+    default List<MajorDO> selectListByLevelAndParentCode(@Param("parentCode") String parentCode,
+                                                         @Param("level") Integer level) {
+        // NOTE: do not chain eqIfPresent after select(), because select() returns MP wrapper type
+        LambdaQueryWrapperX<MajorDO> qw = new LambdaQueryWrapperX<>();
+        qw.select(MajorDO::getCode, MajorDO::getName, MajorDO::getLevel, MajorDO::getDegreeType);
+        qw.eqIfPresent(MajorDO::getParentCode, parentCode);
+        qw.eq(MajorDO::getLevel, level);
+        qw.isNotNull(MajorDO::getCode);
+        qw.ne(MajorDO::getCode, "");
+        qw.eq(MajorDO::getDeleted, false);
+        qw.orderByAsc(MajorDO::getCode);
+        return selectList(qw);
+    }
+
 }
