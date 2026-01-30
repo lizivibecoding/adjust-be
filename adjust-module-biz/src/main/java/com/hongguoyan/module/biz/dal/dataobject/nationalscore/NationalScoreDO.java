@@ -62,10 +62,12 @@ public class NationalScoreDO extends BaseDO {
     /**
      * 单科(满分=100)
      */
+    @TableField("single_100")
     private Short single100;
     /**
      * 单科(满分=150)
      */
+    @TableField("single_150")
     private Short single150;
 
 

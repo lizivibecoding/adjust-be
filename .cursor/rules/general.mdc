@@ -9,3 +9,4 @@ alwaysApply: true
 - Only modify code inside `adjust-module-biz`
 - Do not change other modules or shared frameworks unless explicitly asked
 - Prefer MyBatis-Plus wrapper/code queries; only write SQL in XML mappers when necessary
+- Do not run `mvn` (Maven) commands; the user will run and verify locally

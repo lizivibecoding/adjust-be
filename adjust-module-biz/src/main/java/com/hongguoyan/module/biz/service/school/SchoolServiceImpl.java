@@ -98,7 +98,7 @@ public class SchoolServiceImpl implements SchoolService {
         List<SchoolDO> list = schoolMapper.selectList(new LambdaQueryWrapper<SchoolDO>()
                 .select(SchoolDO::getId, SchoolDO::getSchoolName)
                 .eq(SchoolDO::getDeleted, false)
-                .orderByAsc(SchoolDO::getSchoolName));
+                .orderByAsc(SchoolDO::getId));
         if (list == null || list.isEmpty()) {
             return Collections.emptyList();
         }

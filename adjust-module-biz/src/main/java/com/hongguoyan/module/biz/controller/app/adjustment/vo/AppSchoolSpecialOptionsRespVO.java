@@ -16,6 +16,9 @@ public class AppSchoolSpecialOptionsRespVO {
     @Schema(description = "选项列表(type=1/2/3 返回)")
     private List<Option> options;
 
+    @Schema(description = "方向列表(type=3 返回，每条包含 studyMode)")
+    private List<DirectionOption> directions;
+
     @Schema(description = "学习方式映射(type=2 返回，key=majorId)")
     private Map<Long, List<String>> studyModes;
 
@@ -33,6 +36,22 @@ public class AppSchoolSpecialOptionsRespVO {
 
         @Schema(description = "名称", example = "美术学院")
         private String name;
+    }
+
+    @Data
+    public static class DirectionOption {
+
+        @Schema(description = "方向ID", example = "20106")
+        private Long id;
+
+        @Schema(description = "方向代码", example = "01")
+        private String directionCode;
+
+        @Schema(description = "方向名称", example = "人工智能")
+        private String directionName;
+
+        @Schema(description = "学习方式", example = "全日制")
+        private String studyMode;
     }
 
     @Data

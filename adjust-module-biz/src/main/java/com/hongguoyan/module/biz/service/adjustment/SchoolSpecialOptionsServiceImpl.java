@@ -70,7 +70,7 @@ public class SchoolSpecialOptionsServiceImpl implements SchoolSpecialOptionsServ
             return respVO;
         }
         if (TYPE_DIRECTION == type) {
-            respVO.setOptions(buildDirectionOptions(reqVO));
+            respVO.setDirections(buildDirectionOptions(reqVO));
             return respVO;
         }
         if (TYPE_SCORE_LIMIT == type) {
@@ -166,7 +166,7 @@ public class SchoolSpecialOptionsServiceImpl implements SchoolSpecialOptionsServ
         respVO.setStudyModes(map);
     }
 
-    private List<AppSchoolSpecialOptionsRespVO.Option> buildDirectionOptions(AppSchoolSpecialOptionsReqVO reqVO) {
+    private List<AppSchoolSpecialOptionsRespVO.DirectionOption> buildDirectionOptions(AppSchoolSpecialOptionsReqVO reqVO) {
         Long schoolId = reqVO.getSchoolId();
         Long collegeId = reqVO.getCollegeId();
         Long majorId = reqVO.getMajorId();
@@ -180,28 +180,31 @@ public class SchoolSpecialOptionsServiceImpl implements SchoolSpecialOptionsServ
         if (majorId == null) {
             throw exception(new ErrorCode(400, "majorId is required"));
         }
-        if (StrUtil.isBlank(studyMode)) {
-            throw exception(new ErrorCode(400, "studyMode is required"));
-        }
 
-        List<SchoolDirectionDO> list = schoolDirectionMapper.selectList(new LambdaQueryWrapper<SchoolDirectionDO>()
-                .select(SchoolDirectionDO::getId, SchoolDirectionDO::getDirectionCode, SchoolDirectionDO::getDirectionName)
+        LambdaQueryWrapper<SchoolDirectionDO> qw = new LambdaQueryWrapper<SchoolDirectionDO>()
+                .select(SchoolDirectionDO::getId, SchoolDirectionDO::getDirectionCode,
+                        SchoolDirectionDO::getDirectionName, SchoolDirectionDO::getStudyMode)
                 .eq(SchoolDirectionDO::getSchoolId, schoolId)
                 .eq(SchoolDirectionDO::getCollegeId, collegeId)
                 .eq(SchoolDirectionDO::getMajorId, majorId)
-                .eq(SchoolDirectionDO::getStudyMode, studyMode)
                 .eq(SchoolDirectionDO::getDeleted, false)
                 .orderByAsc(SchoolDirectionDO::getDirectionCode)
-                .orderByAsc(SchoolDirectionDO::getDirectionName));
-
-        List<AppSchoolSpecialOptionsRespVO.Option> options = new ArrayList<>();
-        for (SchoolDirectionDO item : list) {
-            AppSchoolSpecialOptionsRespVO.Option opt = new AppSchoolSpecialOptionsRespVO.Option();
-            opt.setId(item.getId());
-            opt.setName(buildDirectionDisplayName(item.getDirectionCode(), item.getDirectionName()));
-            options.add(opt);
+                .orderByAsc(SchoolDirectionDO::getDirectionName);
+        if (StrUtil.isNotBlank(studyMode)) {
+            qw.eq(SchoolDirectionDO::getStudyMode, studyMode);
         }
-        return options;
+        List<SchoolDirectionDO> list = schoolDirectionMapper.selectList(qw);
+
+        List<AppSchoolSpecialOptionsRespVO.DirectionOption> directions = new ArrayList<>();
+        for (SchoolDirectionDO item : list) {
+            AppSchoolSpecialOptionsRespVO.DirectionOption opt = new AppSchoolSpecialOptionsRespVO.DirectionOption();
+            opt.setId(item.getId());
+            opt.setDirectionCode(StrUtil.blankToDefault(item.getDirectionCode(), ""));
+            opt.setDirectionName(StrUtil.blankToDefault(item.getDirectionName(), ""));
+            opt.setStudyMode(StrUtil.blankToDefault(item.getStudyMode(), ""));
+            directions.add(opt);
+        }
+        return directions;
     }
 
     private AppSchoolSpecialOptionsRespVO.ScoreLimit buildScoreLimit(AppSchoolSpecialOptionsReqVO reqVO) {
