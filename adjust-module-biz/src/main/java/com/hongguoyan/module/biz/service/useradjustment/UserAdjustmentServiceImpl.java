@@ -1,7 +1,6 @@
 package com.hongguoyan.module.biz.service.useradjustment;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.StrUtil;
 import org.springframework.stereotype.Service;
 import jakarta.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
@@ -131,7 +130,7 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
         AppUserAdjustmentDetailRespVO respVO = BeanUtils.toBean(userAdjustment, AppUserAdjustmentDetailRespVO.class);
         respVO.setViewCount(current + 1);
         if (!canViewContact) {
-            respVO.setContact(maskContact(userAdjustment.getContact()) + "（申请调剂后可查看）");
+            respVO.setContact("******（申请调剂后可查看）");
         }
         return respVO;
     }
@@ -241,23 +240,6 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
             result.put(majorId, cur != null && cur.getLevel() != null && cur.getLevel() == 1 ? cur.getName() : "");
         }
         return result;
-    }
-
-    private String maskContact(String contact) {
-        if (StrUtil.isBlank(contact)) {
-            return "******";
-        }
-        String s = contact.trim();
-        // phone 11 digits
-        if (s.matches("^1\\d{10}$")) {
-            return s.substring(0, 3) + "****" + s.substring(7);
-        }
-        if (s.length() <= 2) {
-            return "*";
-        }
-        String prefix = s.substring(0, Math.min(2, s.length()));
-        String suffix = s.substring(Math.max(s.length() - 2, 0));
-        return prefix + "****" + suffix;
     }
 
 }

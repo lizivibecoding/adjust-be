@@ -42,9 +42,6 @@ public class AppUserAdjustmentDetailRespVO {
     @Schema(description = "原计划招生人数/剩余(参考)")
     private Integer adjustLeft;
 
-    @Schema(description = "招生人数展示文本(如：暂不确定/12)")
-    private String quotaText;
-
     @Schema(description = "联系方式(未申请时会脱敏)")
     private String contact;
 
