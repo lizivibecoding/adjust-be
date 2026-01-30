@@ -10,10 +10,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.*;
 import com.hongguoyan.module.biz.controller.app.useradjustment.vo.*;
+import com.hongguoyan.module.biz.dal.dataobject.major.MajorDO;
+import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
 import com.hongguoyan.module.biz.dal.dataobject.useradjustment.UserAdjustmentDO;
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.framework.common.util.object.BeanUtils;
 
+import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
+import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
 import com.hongguoyan.module.biz.dal.mysql.useradjustment.UserAdjustmentMapper;
 import com.hongguoyan.module.biz.dal.dataobject.publisher.PublisherDO;
 import com.hongguoyan.module.biz.dal.mysql.publisher.PublisherMapper;
@@ -36,6 +40,10 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
 
     @Resource
     private UserAdjustmentMapper userAdjustmentMapper;
+    @Resource
+    private SchoolMapper schoolMapper;
+    @Resource
+    private MajorMapper majorMapper;
     @Resource
     private PublisherMapper publisherMapper;
     @Resource
@@ -81,9 +89,12 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
             pageReqVO.setStatus(1);
         }
         PageResult<UserAdjustmentDO> pageResult = userAdjustmentMapper.selectPage(pageReqVO);
+        List<UserAdjustmentDO> records = pageResult.getList();
+        Map<Long, String> schoolLogoMap = buildSchoolLogoMap(records);
+        Map<Long, String> majorLevel1NameMap = buildMajorLevel1NameMap(records);
         List<AppUserAdjustmentListRespVO> list = new ArrayList<>();
-        for (UserAdjustmentDO item : pageResult.getList()) {
-            list.add(toListResp(item));
+        for (UserAdjustmentDO item : records) {
+            list.add(toListResp(item, schoolLogoMap, majorLevel1NameMap));
         }
         return new PageResult<>(list, pageResult.getTotal());
     }
@@ -92,9 +103,12 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
     public PageResult<AppUserAdjustmentListRespVO> getMyUserAdjustmentPage(Long userId, AppUserAdjustmentPageReqVO pageReqVO) {
         pageReqVO.setUserId(userId);
         PageResult<UserAdjustmentDO> pageResult = userAdjustmentMapper.selectPage(pageReqVO);
+        List<UserAdjustmentDO> records = pageResult.getList();
+        Map<Long, String> schoolLogoMap = buildSchoolLogoMap(records);
+        Map<Long, String> majorLevel1NameMap = buildMajorLevel1NameMap(records);
         List<AppUserAdjustmentListRespVO> list = new ArrayList<>();
-        for (UserAdjustmentDO item : pageResult.getList()) {
-            list.add(toListResp(item));
+        for (UserAdjustmentDO item : records) {
+            list.add(toListResp(item, schoolLogoMap, majorLevel1NameMap));
         }
         return new PageResult<>(list, pageResult.getTotal());
     }
@@ -116,7 +130,6 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
 
         AppUserAdjustmentDetailRespVO respVO = BeanUtils.toBean(userAdjustment, AppUserAdjustmentDetailRespVO.class);
         respVO.setViewCount(current + 1);
-        respVO.setQuotaText(buildQuotaText(userAdjustment));
         if (!canViewContact) {
             respVO.setContact(maskContact(userAdjustment.getContact()) + "（申请调剂后可查看）");
         }
@@ -139,27 +152,95 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
         }
     }
 
-    private AppUserAdjustmentListRespVO toListResp(UserAdjustmentDO item) {
+    private AppUserAdjustmentListRespVO toListResp(UserAdjustmentDO item,
+                                                   Map<Long, String> schoolLogoMap,
+                                                   Map<Long, String> majorLevel1NameMap) {
         AppUserAdjustmentListRespVO vo = new AppUserAdjustmentListRespVO();
         vo.setId(item.getId());
         vo.setTitle(item.getTitle());
         vo.setSchoolName(item.getSchoolName());
+        vo.setSchoolLogo(schoolLogoMap.get(item.getSchoolId()));
+        vo.setMajorLevel1Name(majorLevel1NameMap.get(item.getMajorId()));
         vo.setMajorCode(item.getMajorCode());
         vo.setMajorName(item.getMajorName());
+        vo.setDegreeType(item.getDegreeType());
+        vo.setAdjustCount(item.getAdjustCount());
         vo.setPublishTime(item.getPublishTime());
-        vo.setQuotaText(buildQuotaText(item));
         return vo;
     }
 
-    private String buildQuotaText(UserAdjustmentDO item) {
-        Integer left = item.getAdjustLeft();
-        Integer count = item.getAdjustCount();
-        if ((left == null || left <= 0) && (count == null || count <= 0)) {
-            return "暂不确定";
+    private Map<Long, String> buildSchoolLogoMap(List<UserAdjustmentDO> records) {
+        if (records == null || records.isEmpty()) {
+            return Collections.emptyMap();
         }
-        // prefer adjustLeft for "招生人数"
-        int v = (left != null && left > 0) ? left : (count != null ? count : 0);
-        return String.valueOf(v);
+        Set<Long> schoolIds = new HashSet<>();
+        for (UserAdjustmentDO item : records) {
+            if (item != null && item.getSchoolId() != null) {
+                schoolIds.add(item.getSchoolId());
+            }
+        }
+        if (schoolIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<SchoolDO> schools = schoolMapper.selectBatchIds(schoolIds);
+        if (schools == null || schools.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Map<Long, String> map = new HashMap<>();
+        for (SchoolDO school : schools) {
+            if (school != null && school.getId() != null) {
+                map.put(school.getId(), school.getSchoolLogo());
+            }
+        }
+        return map;
+    }
+
+    private Map<Long, String> buildMajorLevel1NameMap(List<UserAdjustmentDO> records) {
+        if (records == null || records.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Set<Long> majorIds = new HashSet<>();
+        for (UserAdjustmentDO item : records) {
+            if (item != null && item.getMajorId() != null) {
+                majorIds.add(item.getMajorId());
+            }
+        }
+        if (majorIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Map<Long, MajorDO> majorMap = new HashMap<>();
+        Set<Long> toLoad = new HashSet<>(majorIds);
+        // best-effort: load ancestor chain by parentId
+        for (int i = 0; i < 10 && !toLoad.isEmpty(); i++) {
+            List<MajorDO> majors = majorMapper.selectBatchIds(toLoad);
+            toLoad.clear();
+            if (majors == null || majors.isEmpty()) {
+                break;
+            }
+            for (MajorDO major : majors) {
+                if (major == null || major.getId() == null) {
+                    continue;
+                }
+                majorMap.put(major.getId(), major);
+                Long parentId = major.getParentId();
+                if (parentId != null && !majorMap.containsKey(parentId)) {
+                    toLoad.add(parentId);
+                }
+            }
+        }
+        Map<Long, String> result = new HashMap<>();
+        for (Long majorId : majorIds) {
+            MajorDO cur = majorMap.get(majorId);
+            while (cur != null && cur.getLevel() != null && cur.getLevel() != 1) {
+                Long parentId = cur.getParentId();
+                if (parentId == null) {
+                    break;
+                }
+                cur = majorMap.get(parentId);
+            }
+            result.put(majorId, cur != null && cur.getLevel() != null && cur.getLevel() == 1 ? cur.getName() : "");
+        }
+        return result;
     }
 
     private String maskContact(String contact) {
