@@ -42,4 +42,5 @@ public interface ErrorCodeConstants {
     ErrorCode USER_ADJUSTMENT_ALREADY_APPLIED = new ErrorCode(35, "已申请过该调剂");
     ErrorCode USER_PREFERENCE_NOT_EXISTS = new ErrorCode(36, "用户志愿不存在");
     ErrorCode USER_PREFERENCE_NO_INVALID = new ErrorCode(37, "志愿序号不合法");
+    ErrorCode USER_SUBSCRIPTION_NOT_EXISTS = new ErrorCode(38, "用户调剂订阅不存在");
 }
