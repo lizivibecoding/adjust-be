@@ -50,7 +50,7 @@ public abstract class BaseDO implements Serializable, TransPojo {
     /**
      * 是否删除
      */
-    @TableLogic
+//    @TableLogic
     private Boolean deleted;
 
     /**

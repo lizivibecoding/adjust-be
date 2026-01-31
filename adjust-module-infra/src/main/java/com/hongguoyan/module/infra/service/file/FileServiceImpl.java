@@ -15,6 +15,7 @@ import com.hongguoyan.module.infra.dal.dataobject.file.FileDO;
 import com.hongguoyan.module.infra.dal.mysql.file.FileMapper;
 import com.hongguoyan.module.infra.framework.file.core.client.FileClient;
 import com.hongguoyan.module.infra.framework.file.core.utils.FileTypeUtils;
+import com.hongguoyan.module.infra.service.file.bo.FileCreateRespBO;
 import com.google.common.annotations.VisibleForTesting;
 import jakarta.annotation.Resource;
 import lombok.SneakyThrows;
@@ -62,6 +63,12 @@ public class FileServiceImpl implements FileService {
     @Override
     @SneakyThrows
     public String createFile(byte[] content, String name, String directory, String type) {
+        return createFileWithPath(content, name, directory, type).getUrl();
+    }
+
+    @Override
+    @SneakyThrows
+    public FileCreateRespBO createFileWithPath(byte[] content, String name, String directory, String type) {
         // 1.1 处理 type 为空的情况
         if (StrUtil.isEmpty(type)) {
             type = FileTypeUtils.getMineType(content, name);
@@ -89,7 +96,8 @@ public class FileServiceImpl implements FileService {
         fileMapper.insert(new FileDO().setConfigId(client.getId())
                 .setName(name).setPath(path).setUrl(url)
                 .setType(type).setSize((long) content.length));
-        return url;
+
+        return FileCreateRespBO.builder().path(path).url(url).build();
     }
 
     @VisibleForTesting
