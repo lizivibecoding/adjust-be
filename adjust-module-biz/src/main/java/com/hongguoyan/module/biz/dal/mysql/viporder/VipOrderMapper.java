@@ -8,6 +8,7 @@ import com.hongguoyan.framework.mybatis.core.mapper.BaseMapperX;
 import com.hongguoyan.module.biz.dal.dataobject.viporder.VipOrderDO;
 import org.apache.ibatis.annotations.Mapper;
 import com.hongguoyan.module.biz.controller.admin.viporder.vo.*;
+import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderPageReqVO;
 
 /**
  * 会员订单 Mapper
@@ -34,6 +35,14 @@ public interface VipOrderMapper extends BaseMapperX<VipOrderDO> {
                 .betweenIfPresent(VipOrderDO::getCancelTime, reqVO.getCancelTime())
                 .eqIfPresent(VipOrderDO::getExtra, reqVO.getExtra())
                 .betweenIfPresent(VipOrderDO::getCreateTime, reqVO.getCreateTime())
+                .orderByDesc(VipOrderDO::getId));
+    }
+
+    default PageResult<VipOrderDO> selectAppPage(Long userId, AppVipOrderPageReqVO reqVO) {
+        return selectPage(reqVO, new LambdaQueryWrapperX<VipOrderDO>()
+                .eq(VipOrderDO::getUserId, userId)
+                .eqIfPresent(VipOrderDO::getStatus, reqVO.getStatus())
+                .eq(VipOrderDO::getDeleted, false)
                 .orderByDesc(VipOrderDO::getId));
     }
 

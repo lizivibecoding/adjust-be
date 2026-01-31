@@ -1,11 +1,14 @@
 package com.hongguoyan.module.biz.controller.app.vip;
 
 import com.hongguoyan.framework.common.pojo.CommonResult;
+import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.framework.security.core.util.SecurityFrameworkUtils;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipCouponRedeemReqVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipMeRespVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderCreateReqVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderCreateRespVO;
+import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderPageReqVO;
+import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderRespVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipPlanRespVO;
 import com.hongguoyan.module.biz.service.vip.VipAppService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -57,6 +60,13 @@ public class AppVipController {
     public CommonResult<AppVipMeRespVO> redeemCoupon(@Valid @RequestBody AppVipCouponRedeemReqVO reqVO) {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
         return success(vipAppService.redeemCoupon(userId, reqVO));
+    }
+
+    @GetMapping("/order/page")
+    @Operation(summary = "我的订单分页")
+    public CommonResult<PageResult<AppVipOrderRespVO>> getMyOrderPage(@Valid AppVipOrderPageReqVO reqVO) {
+        Long userId = SecurityFrameworkUtils.getLoginUserId();
+        return success(vipAppService.getMyOrderPage(userId, reqVO));
     }
 
 }

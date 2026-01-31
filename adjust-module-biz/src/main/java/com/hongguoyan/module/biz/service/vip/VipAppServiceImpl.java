@@ -9,8 +9,11 @@ import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipCouponRedeemReqVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipMeRespVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderCreateReqVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderCreateRespVO;
+import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderPageReqVO;
+import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderRespVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipPlanFeatureRespVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipPlanRespVO;
+import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.module.biz.dal.dataobject.vipcouponbatch.VipCouponBatchDO;
 import com.hongguoyan.module.biz.dal.dataobject.vipcouponcode.VipCouponCodeDO;
 import com.hongguoyan.module.biz.dal.dataobject.vipcouponlog.VipCouponLogDO;
@@ -33,6 +36,7 @@ import org.springframework.validation.annotation.Validated;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -322,6 +326,77 @@ public class VipAppServiceImpl implements VipAppService {
                 .eq(VipCouponBatchDO::getBatchNo, coupon.getBatchNo()));
 
         return getMyVipInfo(userId);
+    }
+
+    @Override
+    public PageResult<AppVipOrderRespVO> getMyOrderPage(Long userId, AppVipOrderPageReqVO reqVO) {
+        if (userId == null) {
+            throw exception(VIP_LOGIN_REQUIRED);
+        }
+
+        PageResult<VipOrderDO> pageResult = vipOrderMapper.selectAppPage(userId, reqVO);
+        List<VipOrderDO> orders = pageResult.getList();
+        if (CollUtil.isEmpty(orders)) {
+            return new PageResult<>(List.of(), pageResult.getTotal());
+        }
+
+        // plan map
+        List<String> planCodes = convertList(orders, VipOrderDO::getPlanCode);
+        List<VipPlanDO> plans = vipPlanMapper.selectList(new LambdaQueryWrapperX<VipPlanDO>()
+                .in(VipPlanDO::getCode, planCodes));
+        Map<String, VipPlanDO> planMap = new HashMap<>();
+        for (VipPlanDO plan : plans) {
+            if (plan != null && StrUtil.isNotBlank(plan.getCode())) {
+                planMap.put(plan.getCode(), plan);
+            }
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        List<AppVipOrderRespVO> respList = new ArrayList<>(orders.size());
+        for (VipOrderDO order : orders) {
+            AppVipOrderRespVO resp = new AppVipOrderRespVO();
+            resp.setOrderNo(order.getOrderNo());
+            resp.setPlanCode(order.getPlanCode());
+            resp.setStatus(order.getStatus());
+
+            VipPlanDO plan = planMap.get(order.getPlanCode());
+            resp.setPlanName(plan != null ? plan.getName() : order.getPlanCode());
+
+            LocalDateTime buyTime = order.getPayTime() != null ? order.getPayTime() : order.getCreateTime();
+            resp.setBuyTime(buyTime);
+
+            LocalDateTime endTime = null;
+            if (order.getPayTime() != null && plan != null && plan.getDuration() != null) {
+                endTime = order.getPayTime().plusDays(plan.getDuration());
+            }
+            resp.setEndTime(endTime);
+            resp.setDisplayStatus(buildDisplayStatus(order.getStatus(), endTime, now));
+            respList.add(resp);
+        }
+
+        return new PageResult<>(respList, pageResult.getTotal());
+    }
+
+    private String buildDisplayStatus(Integer status, LocalDateTime endTime, LocalDateTime now) {
+        if (Objects.equals(status, 2)) {
+            if (endTime != null && (endTime.isAfter(now) || endTime.isEqual(now))) {
+                return "生效中";
+            }
+            return "已失效";
+        }
+        if (Objects.equals(status, 1)) {
+            return "待支付";
+        }
+        if (Objects.equals(status, 3)) {
+            return "已过期";
+        }
+        if (Objects.equals(status, 4)) {
+            return "已退款";
+        }
+        if (Objects.equals(status, 5)) {
+            return "已取消";
+        }
+        return "已失效";
     }
 
 }
