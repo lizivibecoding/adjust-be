@@ -40,4 +40,6 @@ public interface ErrorCodeConstants {
     ErrorCode USER_ADJUSTMENT_CLOSED = new ErrorCode(33, "调剂已关闭");
     ErrorCode USER_ADJUSTMENT_SELF_APPLY_NOT_ALLOWED = new ErrorCode(34, "不能申请自己发布的调剂");
     ErrorCode USER_ADJUSTMENT_ALREADY_APPLIED = new ErrorCode(35, "已申请过该调剂");
+    ErrorCode USER_PREFERENCE_NOT_EXISTS = new ErrorCode(36, "用户志愿不存在");
+    ErrorCode USER_PREFERENCE_NO_INVALID = new ErrorCode(37, "志愿序号不合法");
 }
