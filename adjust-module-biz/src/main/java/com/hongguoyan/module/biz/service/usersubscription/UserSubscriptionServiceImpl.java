@@ -1,23 +1,23 @@
 package com.hongguoyan.module.biz.service.usersubscription;
 
-import cn.hutool.core.collection.CollUtil;
 import org.springframework.stereotype.Service;
 import jakarta.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import com.hongguoyan.module.biz.controller.app.usersubscription.vo.*;
 import com.hongguoyan.module.biz.dal.dataobject.usersubscription.UserSubscriptionDO;
 import com.hongguoyan.framework.common.pojo.PageResult;
-import com.hongguoyan.framework.common.pojo.PageParam;
-import com.hongguoyan.framework.common.util.object.BeanUtils;
+import com.hongguoyan.module.biz.controller.app.usersubscription.vo.AppUserSubscriptionPageMajorRespVO;
+import com.hongguoyan.module.biz.controller.app.usersubscription.vo.AppUserSubscriptionPageReqVO;
+import com.hongguoyan.module.biz.controller.app.usersubscription.vo.AppUserSubscriptionPageRespVO;
+import com.hongguoyan.module.biz.controller.app.usersubscription.vo.AppUserSubscriptionSubscribeReqVO;
+import com.hongguoyan.module.biz.controller.app.usersubscription.vo.AppUserSubscriptionUnsubscribeReqVO;
 
+import com.hongguoyan.module.biz.dal.dataobject.adjustment.AdjustmentDO;
+import com.hongguoyan.module.biz.dal.mysql.adjustment.AdjustmentMapper;
 import com.hongguoyan.module.biz.dal.mysql.usersubscription.UserSubscriptionMapper;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
-import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertList;
-import static com.hongguoyan.framework.common.util.collection.CollectionUtils.diffList;
 import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.*;
 
 /**
@@ -33,53 +33,82 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
     private UserSubscriptionMapper userSubscriptionMapper;
 
     @Override
-    public Long createUserSubscription(AppUserSubscriptionSaveReqVO createReqVO) {
-        // 插入
-        UserSubscriptionDO userSubscription = BeanUtils.toBean(createReqVO, UserSubscriptionDO.class);
-        userSubscriptionMapper.insert(userSubscription);
-
-        // 返回
-        return userSubscription.getId();
-    }
-
-    @Override
-    public void updateUserSubscription(AppUserSubscriptionSaveReqVO updateReqVO) {
-        // 校验存在
-        validateUserSubscriptionExists(updateReqVO.getId());
-        // 更新
-        UserSubscriptionDO updateObj = BeanUtils.toBean(updateReqVO, UserSubscriptionDO.class);
-        userSubscriptionMapper.updateById(updateObj);
-    }
-
-    @Override
-    public void deleteUserSubscription(Long id) {
-        // 校验存在
-        validateUserSubscriptionExists(id);
-        // 删除
-        userSubscriptionMapper.deleteById(id);
-    }
-
-    @Override
-        public void deleteUserSubscriptionListByIds(List<Long> ids) {
-        // 删除
-        userSubscriptionMapper.deleteByIds(ids);
+    public void subscribe(Long userId, AppUserSubscriptionSubscribeReqVO reqVO) {
+        AdjustmentDO adjustment = adjustmentMapper.selectById(reqVO.getAdjustmentId());
+        if (adjustment == null) {
+            throw exception(ADJUSTMENT_NOT_EXISTS);
         }
 
+        Long schoolId = adjustment.getSchoolId();
+        Long majorId = adjustment.getMajorId();
+        Long collegeId = adjustment.getCollegeId();
+        if (schoolId == null || majorId == null || collegeId == null) {
+            throw exception(ADJUSTMENT_NOT_EXISTS);
+        }
 
-    private void validateUserSubscriptionExists(Long id) {
-        if (userSubscriptionMapper.selectById(id) == null) {
-            throw exception(USER_SUBSCRIPTION_NOT_EXISTS);
+        UserSubscriptionDO existing = userSubscriptionMapper.selectByUserIdAndSchoolIdAndMajorId(userId, schoolId, majorId);
+        if (existing == null) {
+            UserSubscriptionDO toCreate = new UserSubscriptionDO();
+            toCreate.setUserId(userId);
+            toCreate.setSchoolId(schoolId);
+            toCreate.setCollegeId(collegeId);
+            toCreate.setMajorId(majorId);
+            userSubscriptionMapper.insert(toCreate);
+            return;
+        }
+
+        if (!Objects.equals(existing.getCollegeId(), collegeId)) {
+            UserSubscriptionDO toUpdate = new UserSubscriptionDO();
+            toUpdate.setId(existing.getId());
+            toUpdate.setCollegeId(collegeId);
+            userSubscriptionMapper.updateById(toUpdate);
         }
     }
 
     @Override
-    public UserSubscriptionDO getUserSubscription(Long id) {
-        return userSubscriptionMapper.selectById(id);
+    public Boolean unsubscribe(Long userId, AppUserSubscriptionUnsubscribeReqVO reqVO) {
+        int deleted = userSubscriptionMapper.deleteByUserIdAndSchoolIdAndMajorId(userId, reqVO.getSchoolId(), reqVO.getMajorId());
+        return deleted > 0;
     }
 
     @Override
-    public PageResult<UserSubscriptionDO> getUserSubscriptionPage(AppUserSubscriptionPageReqVO pageReqVO) {
-        return userSubscriptionMapper.selectPage(pageReqVO);
+    public PageResult<AppUserSubscriptionPageRespVO> getMyPage(Long userId, AppUserSubscriptionPageReqVO reqVO) {
+        PageResult<AppUserSubscriptionPageRespVO> schoolPage = userSubscriptionMapper.selectMySchoolPage(userId, reqVO);
+        List<AppUserSubscriptionPageRespVO> schools = schoolPage.getList();
+        if (schools == null || schools.isEmpty()) {
+            return schoolPage;
+        }
+
+        List<Long> schoolIds = new ArrayList<>(schools.size());
+        for (AppUserSubscriptionPageRespVO school : schools) {
+            if (school != null && school.getSchoolId() != null) {
+                schoolIds.add(school.getSchoolId());
+            }
+        }
+        if (schoolIds.isEmpty()) {
+            return schoolPage;
+        }
+
+        List<AppUserSubscriptionPageMajorRespVO> majorList = userSubscriptionMapper.selectMyMajorList(userId, schoolIds, reqVO);
+        Map<Long, List<AppUserSubscriptionPageMajorRespVO>> majorMap = new HashMap<>();
+        for (AppUserSubscriptionPageMajorRespVO item : majorList) {
+            if (item == null || item.getSchoolId() == null) {
+                continue;
+            }
+            majorMap.computeIfAbsent(item.getSchoolId(), k -> new ArrayList<>()).add(item);
+        }
+
+        for (AppUserSubscriptionPageRespVO school : schools) {
+            if (school == null || school.getSchoolId() == null) {
+                continue;
+            }
+            List<AppUserSubscriptionPageMajorRespVO> majors = majorMap.get(school.getSchoolId());
+            school.setMajors(majors != null ? majors : List.of());
+        }
+        return schoolPage;
     }
+
+    @Resource
+    private AdjustmentMapper adjustmentMapper;
 
 }

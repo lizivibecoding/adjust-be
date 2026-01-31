@@ -1,32 +1,23 @@
 package com.hongguoyan.module.biz.controller.app.usersubscription.vo;
 
 import lombok.*;
-import java.util.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 import com.hongguoyan.framework.common.pojo.PageParam;
-import org.springframework.format.annotation.DateTimeFormat;
-import java.time.LocalDateTime;
-
-import static com.hongguoyan.framework.common.util.date.DateUtils.FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND;
 
 @Schema(description = "用户 APP - 用户调剂订阅分页 Request VO")
 @Data
 public class AppUserSubscriptionPageReqVO extends PageParam {
 
-    @Schema(description = "用户ID", example = "6557")
-    private Long userId;
+    @Schema(description = "省份代码", example = "110000")
+    private String provinceCode;
 
-    @Schema(description = "学校ID", example = "11324")
-    private Long schoolId;
+    @Schema(description = "一级学科ID(biz_major.id, level=1)", example = "7856")
+    private Long majorLevel1Id;
 
-    @Schema(description = "学院ID", example = "16763")
-    private Long collegeId;
+    @Schema(description = "学校层次(1=985,2=211(不含985),3=双一流(不含985、211),4=普通)", example = "4")
+    private Integer schoolLevel;
 
-    @Schema(description = "专业ID", example = "7206")
-    private Long majorId;
-
-    @Schema(description = "创建时间")
-    @DateTimeFormat(pattern = FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND)
-    private LocalDateTime[] createTime;
+    @Schema(description = "更新状态(0=最新,3=3天内,7=7天内)", example = "3")
+    private Integer updateDays;
 
 }

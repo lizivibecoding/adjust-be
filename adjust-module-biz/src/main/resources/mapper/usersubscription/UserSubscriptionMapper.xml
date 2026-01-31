@@ -2,11 +2,105 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.hongguoyan.module.biz.dal.mysql.usersubscription.UserSubscriptionMapper">
 
-    <!--
-        一般情况下，尽可能使用 Mapper 进行 CRUD 增删改查即可。
-        无法满足的场景，例如说多表关联查询，才使用 XML 编写 SQL。
-        代码生成器暂时只生成 Mapper XML 文件本身，更多推荐 MybatisX 快速开发插件来生成查询。
-        文档可见：https://www.iocoder.cn/MyBatis/x-plugins/
-     -->
+    <sql id="SchoolLevelExpr">
+        CASE
+            WHEN IFNULL(s.is_985, 0) = 1 THEN 1
+            WHEN IFNULL(s.is_211, 0) = 1 THEN 2
+            WHEN IFNULL(s.is_syl, 0) = 1 THEN 3
+            ELSE 4
+        END
+    </sql>
+
+    <sql id="BaseWhere">
+        <where>
+            us.user_id = #{userId}
+            <if test="reqVO.provinceCode != null and reqVO.provinceCode != ''">
+                AND s.province_code = #{reqVO.provinceCode}
+            </if>
+            <if test="reqVO.majorLevel1Id != null">
+                AND m1.id = #{reqVO.majorLevel1Id}
+            </if>
+            <if test="reqVO.schoolLevel != null">
+                AND (<include refid="SchoolLevelExpr" />) = #{reqVO.schoolLevel}
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectMySchoolPage"
+            resultType="com.hongguoyan.module.biz.controller.app.usersubscription.vo.AppUserSubscriptionPageRespVO">
+        SELECT
+            s.id AS schoolId,
+            s.school_name AS schoolName,
+            s.school_logo AS schoolLogo,
+            s.province_name AS provinceName,
+            (<include refid="SchoolLevelExpr" />) AS schoolLevel,
+            MAX(a.update_time) AS updateTime
+        FROM biz_user_subscription us
+        LEFT JOIN biz_school s ON s.id = us.school_id
+        LEFT JOIN biz_major m3 ON m3.id = us.major_id
+        LEFT JOIN biz_major m2 ON m2.code = m3.parent_code AND m2.level = 2
+        LEFT JOIN biz_major m1 ON m1.code = m2.parent_code AND m1.level = 1
+        LEFT JOIN biz_adjustment a ON a.school_id = us.school_id AND a.major_id = us.major_id
+        <include refid="BaseWhere" />
+        GROUP BY
+            s.id, s.school_name, s.school_logo, s.province_name, s.is_985, s.is_211, s.is_syl
+        <if test="reqVO.updateDays != null and reqVO.updateDays &gt; 0">
+            HAVING MAX(a.update_time) &gt;= DATE_SUB(NOW(), INTERVAL #{reqVO.updateDays} DAY)
+        </if>
+        ORDER BY updateTime DESC
+    </select>
+
+    <select id="selectMyMajorList"
+            resultType="com.hongguoyan.module.biz.controller.app.usersubscription.vo.AppUserSubscriptionPageMajorRespVO">
+        SELECT
+            us.school_id AS schoolId,
+            us.major_id AS majorId,
+            m3.code AS majorCode,
+            m3.name AS majorName,
+            (
+                SELECT a1.id
+                FROM biz_adjustment a1
+                WHERE a1.school_id = us.school_id
+                  AND a1.major_id = us.major_id
+                ORDER BY a1.update_time DESC, a1.id DESC
+                LIMIT 1
+            ) AS adjustmentId,
+            (
+                SELECT MAX(a2.update_time)
+                FROM biz_adjustment a2
+                WHERE a2.school_id = us.school_id
+                  AND a2.major_id = us.major_id
+            ) AS updateTime
+        FROM biz_user_subscription us
+        LEFT JOIN biz_school s ON s.id = us.school_id
+        LEFT JOIN biz_major m3 ON m3.id = us.major_id
+        LEFT JOIN biz_major m2 ON m2.code = m3.parent_code AND m2.level = 2
+        LEFT JOIN biz_major m1 ON m1.code = m2.parent_code AND m1.level = 1
+        <where>
+            us.user_id = #{userId}
+            AND us.school_id IN
+            <foreach collection="schoolIds" item="schoolId" open="(" separator="," close=")">
+                #{schoolId}
+            </foreach>
+            <if test="reqVO.provinceCode != null and reqVO.provinceCode != ''">
+                AND s.province_code = #{reqVO.provinceCode}
+            </if>
+            <if test="reqVO.majorLevel1Id != null">
+                AND m1.id = #{reqVO.majorLevel1Id}
+            </if>
+            <if test="reqVO.schoolLevel != null">
+                AND (<include refid="SchoolLevelExpr" />) = #{reqVO.schoolLevel}
+            </if>
+            <if test="reqVO.updateDays != null and reqVO.updateDays &gt; 0">
+                AND (
+                    SELECT MAX(a2.update_time)
+                    FROM biz_adjustment a2
+                    WHERE a2.school_id = us.school_id
+                      AND a2.major_id = us.major_id
+                ) &gt;= DATE_SUB(NOW(), INTERVAL #{reqVO.updateDays} DAY)
+            </if>
+        </where>
+        ORDER BY updateTime DESC
+    </select>
 
 </mapper>
