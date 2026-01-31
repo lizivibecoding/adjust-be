@@ -2,8 +2,10 @@ package com.hongguoyan.module.biz.service.adjustmentadmit;
 
 import java.util.*;
 import jakarta.validation.*;
+import jakarta.validation.constraints.NotNull;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentAnalysisReqVO;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentAnalysisRespVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreAxisRespVO;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScorePageReqVO;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreStatReqVO;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreItemRespVO;
@@ -88,6 +90,14 @@ public interface AdjustmentAdmitService {
      * @return 分页列表
      */
     PageResult<AppSameScoreItemRespVO> getSameScorePage(@Valid AppSameScorePageReqVO reqVO);
+
+    /**
+     * 获取同分调剂分数区间轴(基于用户初试总分上下 20 分)
+     *
+     * @param userId 用户ID
+     * @return 分数区间轴
+     */
+    AppSameScoreAxisRespVO getSameScoreAxis(@NotNull Long userId);
 
     /**
      * 同分调剂去向院校层次统计(按学校去重计数)

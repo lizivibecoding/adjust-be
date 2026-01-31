@@ -24,6 +24,7 @@ import com.hongguoyan.framework.excel.core.util.ExcelUtils;
 
 import com.hongguoyan.framework.apilog.core.annotation.ApiAccessLog;
 import static com.hongguoyan.framework.apilog.core.enums.OperateTypeEnum.*;
+import com.hongguoyan.framework.security.core.util.SecurityFrameworkUtils;
 
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.*;
 import com.hongguoyan.module.biz.controller.app.adjustmentadmit.vo.AppAdjustmentAdmitListItemRespVO;
@@ -107,6 +108,13 @@ public class AppAdjustmentController {
     @Operation(summary = "同分调剂去向列表(按初试分数区间聚合)")
     public CommonResult<PageResult<AppSameScoreItemRespVO>> getSameScorePage(@Valid AppSameScorePageReqVO reqVO) {
         return success(adjustmentAdmitService.getSameScorePage(reqVO));
+    }
+
+    @GetMapping("/same-score-axis")
+    @Operation(summary = "同分调剂分数区间轴(基于用户初试总分上下20分)")
+    public CommonResult<AppSameScoreAxisRespVO> getSameScoreAxis() {
+        Long userId = SecurityFrameworkUtils.getLoginUserId();
+        return success(adjustmentAdmitService.getSameScoreAxis(userId));
     }
 
     @GetMapping("/same-score-stat")

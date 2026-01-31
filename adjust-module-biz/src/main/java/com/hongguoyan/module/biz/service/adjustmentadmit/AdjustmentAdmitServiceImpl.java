@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentAnalysisReqVO;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentAnalysisRespVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreAxisRespVO;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreItemRespVO;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScorePageReqVO;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreStatItemRespVO;
@@ -27,6 +28,8 @@ import com.hongguoyan.framework.common.util.object.BeanUtils;
 
 import com.hongguoyan.module.biz.dal.mysql.adjustmentadmit.AdjustmentAdmitMapper;
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
+import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
+import com.hongguoyan.module.biz.service.userprofile.UserProfileService;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertList;
@@ -46,6 +49,8 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
     private AdjustmentAdmitMapper adjustmentAdmitMapper;
     @Resource
     private SchoolMapper schoolMapper;
+    @Resource
+    private UserProfileService userProfileService;
 
     @Override
     public Long createAdjustmentAdmit(AppAdjustmentAdmitSaveReqVO createReqVO) {
@@ -206,6 +211,30 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
     @Override
     public PageResult<AppSameScoreItemRespVO> getSameScorePage(AppSameScorePageReqVO reqVO) {
         return adjustmentAdmitMapper.selectSameScorePage(reqVO);
+    }
+
+    @Override
+    public AppSameScoreAxisRespVO getSameScoreAxis(Long userId) {
+        UserProfileDO profile = userProfileService.getUserProfileByUserId(userId);
+        if (profile == null) {
+            throw exception(CANDIDATE_PROFILES_NOT_EXISTS);
+        }
+        BigDecimal scoreTotal = profile.getScoreTotal();
+        if (scoreTotal == null) {
+            throw exception(CANDIDATE_SCORE_TOTAL_NOT_EXISTS);
+        }
+
+        int base = scoreTotal.setScale(0, RoundingMode.FLOOR).intValue();
+        int min = Math.max(0, base - 20);
+        int max = base + 20;
+
+        AppSameScoreAxisRespVO respVO = new AppSameScoreAxisRespVO();
+        respVO.setBaseScore(base);
+        respVO.setMinScore(min);
+        respVO.setMaxScore(max);
+        respVO.setBeginScore(min);
+        respVO.setEndScore(max);
+        return respVO;
     }
 
     @Override
