@@ -1,0 +1,64 @@
+name: Deploy
+
+on:
+  push:
+    branches: ["dev"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # NOTE: change "production" to your GitHub Environment name
+    environment: dev
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Build jar
+        run: mvn -B -ntp -DskipTests clean package
+
+      - name: Prepare deploy artifact name
+        shell: bash
+        run: |
+          set -e
+          JAR=""
+          for f in adjust-server/target/*.jar; do
+            case "$f" in
+              *original*) continue ;;
+            esac
+            JAR="$f"
+            break
+          done
+          if [ -z "$JAR" ]; then
+            echo "No jar found under adjust-server/target"
+            exit 1
+          fi
+          cp "$JAR" adjust-server.jar
+
+      - name: Upload jar
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ vars.DEPLOY_HOST }}
+          username: ${{ vars.DEPLOY_USER }}
+          password: ${{ secrets.DEPLOY_PASSWORD }}
+          source: "adjust-server.jar"
+          target: "/home/cndinx/app"
+
+      - name: Restart app
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ vars.DEPLOY_HOST }}
+          username: ${{ vars.DEPLOY_USER }}
+          password: ${{ secrets.DEPLOY_PASSWORD }}
+          script: |
+            set -e
+            cd /home/cndinx/app
+            pkill -f "adjust-server.jar" || true
+            nohup java -Xmx800m -jar adjust-server.jar --spring.profiles.active=local > app.log 2>&1 &
