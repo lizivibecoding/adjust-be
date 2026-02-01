@@ -14,6 +14,7 @@ import com.hongguoyan.module.biz.controller.app.school.vo.AppSchoolAdjustmentPag
 import com.hongguoyan.module.biz.controller.app.school.vo.AppSchoolAdjustmentRespVO;
 import com.hongguoyan.module.biz.dal.dataobject.area.AreaDO;
 import com.hongguoyan.module.biz.dal.dataobject.adjustment.AdjustmentDO;
+import com.hongguoyan.module.biz.dal.dataobject.major.MajorDO;
 import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.framework.common.pojo.PageParam;
@@ -153,7 +154,7 @@ public class AdjustmentServiceImpl implements AdjustmentService {
     }
 
     @Override
-    public AppAdjustmentFilterConfigRespVO getAdjustmentFilterConfig() {
+    public AppAdjustmentFilterConfigRespVO getAdjustmentFilterConfig(String majorCode) {
         AppAdjustmentFilterConfigRespVO respVO = new AppAdjustmentFilterConfigRespVO();
         List<AppAdjustmentFilterConfigRespVO.Group> groups = new ArrayList<>();
 
@@ -168,19 +169,38 @@ public class AdjustmentServiceImpl implements AdjustmentService {
         provinceGroup.setChildren(areaChildren);
         groups.add(provinceGroup);
 
-        // 2) studyMode
+        // 2) target major (level2)
+        AppAdjustmentFilterConfigRespVO.Group level2MajorGroup = new AppAdjustmentFilterConfigRespVO.Group();
+        level2MajorGroup.setKey("level2MajorCodes");
+        level2MajorGroup.setName("目标专业");
+        List<AppAdjustmentFilterConfigRespVO.Option> level2MajorOptions = new ArrayList<>();
+        if (StrUtil.isNotBlank(majorCode)) {
+            List<MajorDO> level2List = majorMapper.selectListByLevelAndParentCode(majorCode, 2, null);
+            if (level2List != null && !level2List.isEmpty()) {
+                for (MajorDO item : level2List) {
+                    if (item == null || StrUtil.isBlank(item.getCode()) || StrUtil.isBlank(item.getName())) {
+                        continue;
+                    }
+                    level2MajorOptions.add(option(item.getCode(), item.getName()));
+                }
+            }
+        }
+        level2MajorGroup.setOptions(level2MajorOptions);
+        groups.add(level2MajorGroup);
+
+        // 3) studyMode
         groups.add(group("studyMode", "学习方式", Arrays.asList(
                 option("全日制", "全日制"),
                 option("非全日制", "非全日制")
         )));
 
-        // 3) degreeType
+        // 4) degreeType
         groups.add(group("degreeType", "学术类型", Arrays.asList(
                 option("2", "学硕"),
                 option("1", "专硕")
         )));
 
-        // 4) schoolFeature (985/211/双一流/其他)
+        // 5) schoolFeature (985/211/双一流/其他)
         groups.add(group("schoolFeature", "学校属性", Arrays.asList(
                 option("985", "985"),
                 option("211", "211"),
@@ -189,20 +209,20 @@ public class AdjustmentServiceImpl implements AdjustmentService {
         )));
 
 
-        // 6) specialPlan
+        // 7) specialPlan
         groups.add(group("specialPlan", "专项计划", Collections.singletonList(
                 option("1", "只看专项计划")
         )));
 
 
-        // 8) mathSubject
+        // 9) mathSubject
         groups.add(group("mathSubject", "数学科目", Arrays.asList(
                 option("301", "数学（一）"),
                 option("302", "数学（二）"),
                 option("303", "数学（三）")
         )));
 
-        // 9) foreignSubject
+        // 10) foreignSubject
         groups.add(group("foreignSubject", "外语科目", Arrays.asList(
                 option("201", "英语（一）"),
                 option("204", "英语（二）"),

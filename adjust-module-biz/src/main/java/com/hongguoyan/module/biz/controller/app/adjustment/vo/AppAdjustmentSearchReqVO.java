@@ -41,6 +41,9 @@ public class AppAdjustmentSearchReqVO extends PageParam {
     @Schema(description = "考研分区：A区/B区")
     private String provinceArea;
 
+    @Schema(description = "目标专业二级 code(多选)")
+    private List<String> level2MajorCodes;
+
     @Schema(description = "是否985")
     private Boolean is985;
 

@@ -82,7 +82,7 @@ public interface AdjustmentService {
      *
      * @return 筛选配置
      */
-    AppAdjustmentFilterConfigRespVO getAdjustmentFilterConfig();
+    AppAdjustmentFilterConfigRespVO getAdjustmentFilterConfig(String majorCode);
 
     /**
      * 调剂详情切换选项(年份/学院)

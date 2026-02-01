@@ -46,14 +46,7 @@ spring:
       primary: master
       datasource:
         master:
-          url: jdbc:mysql://rm-bp1bq6os2rt65n2sg0o.mysql.rds.aliyuncs.com:3306/adjust?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true&rewriteBatchedStatements=true # MySQL Connector/J 8.X 连接的示例
-          #          url: jdbc:mysql://127.0.0.1:3306/ruoyi-vue-pro?useSSL=true&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&rewriteBatchedStatements=true # MySQL Connector/J 5.X 连接的示例
-          #          url: jdbc:postgresql://127.0.0.1:5432/ruoyi-vue-pro # PostgreSQL 连接的示例
-          #          url: jdbc:oracle:thin:@127.0.0.1:1521:xe # Oracle 连接的示例
-          #          url: jdbc:sqlserver://127.0.0.1:1433;DatabaseName=ruoyi-vue-pro;SelectMethod=cursor;encrypt=false;rewriteBatchedStatements=true;useUnicode=true;characterEncoding=utf-8 # SQLServer 连接的示例
-          #          url: jdbc:dm://127.0.0.1:5236?schema=RUOYI_VUE_PRO # DM 连接的示例
-          #          url: jdbc:kingbase8://127.0.0.1:54321/test  # 人大金仓 KingbaseES 连接的示例
-          #          url: jdbc:postgresql://127.0.0.1:5432/postgres # OpenGauss 连接的示例
+          url: jdbc:mysql://rm-bp1bq6os2rt65n2sg0o.mysql.rds.aliyuncs.com:3306/adjust?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true&rewriteBatchedStatements=true
           username: root
           password: Z3uFf@rrn5Ghzyx
           #          username: sa # SQL Server 连接的示例

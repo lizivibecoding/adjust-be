@@ -39,6 +39,14 @@
                 AND s.province_area = #{reqVO.provinceArea}
             </if>
 
+            <if test="reqVO.level2MajorCodes != null and reqVO.level2MajorCodes.size() &gt; 0">
+                AND (
+                <foreach collection="reqVO.level2MajorCodes" item="code" separator=" OR ">
+                    a.major_code LIKE CONCAT(#{code}, '%')
+                </foreach>
+                )
+            </if>
+
             <if test="reqVO.is985 != null">
                 AND s.is_985 = #{reqVO.is985}
             </if>

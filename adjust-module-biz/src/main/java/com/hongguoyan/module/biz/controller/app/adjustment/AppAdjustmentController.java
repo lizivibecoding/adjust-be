@@ -62,8 +62,9 @@ public class AppAdjustmentController {
 
     @GetMapping("/filter-config")
     @Operation(summary = "调剂筛选配置(按筛选器分组返回)")
-    public CommonResult<AppAdjustmentFilterConfigRespVO> getAdjustmentFilterConfig() {
-        return success(adjustmentService.getAdjustmentFilterConfig());
+    public CommonResult<AppAdjustmentFilterConfigRespVO> getAdjustmentFilterConfig(
+            @RequestParam(value = "majorCode", required = false) String majorCode) {
+        return success(adjustmentService.getAdjustmentFilterConfig(majorCode));
     }
 
     @GetMapping("/suggest")
