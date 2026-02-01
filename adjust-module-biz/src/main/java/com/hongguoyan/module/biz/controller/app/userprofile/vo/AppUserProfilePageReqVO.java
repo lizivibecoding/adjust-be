@@ -31,6 +31,9 @@ public class AppUserProfilePageReqVO extends PageParam {
     @Schema(description = "本科专业大类(如电子信息类，辅助匹配)")
     private String graduateMajorClass;
 
+    @Schema(description = "本科平均分")
+    private BigDecimal graduateAverageScore;
+
     @Schema(description = "本科绩点 (GPA)")
     private BigDecimal undergraduateGpa;
 
@@ -42,6 +45,9 @@ public class AppUserProfilePageReqVO extends PageParam {
 
     @Schema(description = "本科阶段获奖情况描述")
     private String undergraduateAwards;
+
+    @Schema(description = "本科获奖次数")
+    private Integer awardCount;
 
     @Schema(description = "一志愿报考学校ID(biz_school.id)", example = "14765")
     private Long targetSchoolId;

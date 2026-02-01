@@ -188,22 +188,12 @@ public class AdjustmentServiceImpl implements AdjustmentService {
                 option("other", "其他")
         )));
 
-        // 5) adjustType
-        groups.add(group("adjustType", "调剂类型", Arrays.asList(
-                option("1", "校内调剂"),
-                option("2", "校外调剂")
-        )));
 
         // 6) specialPlan
         groups.add(group("specialPlan", "专项计划", Collections.singletonList(
                 option("1", "只看专项计划")
         )));
 
-        // 7) adjustStatus
-        groups.add(group("adjustStatus", "招生状态", Arrays.asList(
-                option("0", "已经停招"),
-                option("1", "正常招生")
-        )));
 
         // 8) mathSubject
         groups.add(group("mathSubject", "数学科目", Arrays.asList(

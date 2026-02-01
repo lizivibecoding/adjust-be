@@ -110,10 +110,12 @@ public class UserProfileServiceImpl implements UserProfileService {
         toSave.setGraduateMajorClass(majorClass);
 
         // base score & background
+        toSave.setGraduateAverageScore(reqVO.getGraduateAverageScore());
         toSave.setUndergraduateGpa(reqVO.getUndergraduateGpa());
         toSave.setCet4Score(reqVO.getCet4Score());
         toSave.setCet6Score(reqVO.getCet6Score());
         toSave.setUndergraduateAwards(reqVO.getUndergraduateAwards());
+        toSave.setAwardCount(reqVO.getAwardCount());
 
         // target direction (id -> school/college/major + snapshots)
         Long targetDirectionId = reqVO.getTargetDirectionId();
@@ -160,13 +162,13 @@ public class UserProfileServiceImpl implements UserProfileService {
         toSave.setScoreTotal(reqVO.getScoreTotal());
 
         toSave.setSelfIntroduction(StrUtil.blankToDefault(reqVO.getSelfIntroduction(), ""));
-        toSave.setPaperCount(reqVO.getPaperCount() != null ? reqVO.getPaperCount() : 0);
+        toSave.setPaperCount(reqVO.getPaperCount());
 
         // competitions: ids json + count computed on backend
         List<Long> competitionIds = reqVO.getCompetitionIds();
         if (competitionIds == null) {
             toSave.setCompetitionIds(null);
-            toSave.setCompetitionCount(0);
+            toSave.setCompetitionCount(reqVO.getCompetitionCount());
         } else {
             List<Long> cleaned = new ArrayList<>();
             Set<Long> dedup = new HashSet<>();
@@ -179,7 +181,7 @@ public class UserProfileServiceImpl implements UserProfileService {
                 }
             }
             toSave.setCompetitionIds(cleaned.isEmpty() ? null : JSONUtil.toJsonStr(cleaned));
-            toSave.setCompetitionCount(dedup.size());
+            toSave.setCompetitionCount(dedup.isEmpty() ? null : dedup.size());
         }
 
         toSave.setSelfAssessedScore(reqVO.getSelfAssessedScore() != null ? reqVO.getSelfAssessedScore() : 0);

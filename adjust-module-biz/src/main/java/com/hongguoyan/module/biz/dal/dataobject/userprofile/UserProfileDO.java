@@ -59,6 +59,11 @@ public class UserProfileDO extends BaseDO {
      */
     private String graduateMajorClass;
     /**
+     * 本科平均分
+     */
+    @TableField("graduate_average_score")
+    private BigDecimal graduateAverageScore;
+    /**
      * 本科绩点 (GPA)
      */
     private BigDecimal undergraduateGpa;
@@ -74,6 +79,11 @@ public class UserProfileDO extends BaseDO {
      * 本科阶段获奖情况描述
      */
     private String undergraduateAwards;
+    /**
+     * 本科获奖次数
+     */
+    @TableField("award_count")
+    private Integer awardCount;
     /**
      * 一志愿报考学校ID(biz_school.id)
      */

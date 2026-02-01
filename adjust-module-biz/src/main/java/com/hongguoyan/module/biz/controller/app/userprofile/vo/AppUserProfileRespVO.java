@@ -16,10 +16,6 @@ public class AppUserProfileRespVO {
     @ExcelProperty("主键ID")
     private Long id;
 
-    @Schema(description = "用户ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "25443")
-    @ExcelProperty("用户ID")
-    private Long userId;
-
     @Schema(description = "本科毕业院校ID(biz_school.id)", requiredMode = Schema.RequiredMode.REQUIRED, example = "3320")
     @ExcelProperty("本科毕业院校ID(biz_school.id)")
     private Long graduateSchoolId;
@@ -40,6 +36,10 @@ public class AppUserProfileRespVO {
     @ExcelProperty("本科专业大类(如电子信息类，辅助匹配)")
     private String graduateMajorClass;
 
+    @Schema(description = "本科平均分")
+    @ExcelProperty("本科平均分")
+    private BigDecimal graduateAverageScore;
+
     @Schema(description = "本科绩点 (GPA)")
     @ExcelProperty("本科绩点 (GPA)")
     private BigDecimal undergraduateGpa;
@@ -55,6 +55,10 @@ public class AppUserProfileRespVO {
     @Schema(description = "本科阶段获奖情况描述")
     @ExcelProperty("本科阶段获奖情况描述")
     private String undergraduateAwards;
+
+    @Schema(description = "本科获奖次数")
+    @ExcelProperty("本科获奖次数")
+    private Integer awardCount;
 
     @Schema(description = "一志愿报考学校ID(biz_school.id)", example = "14765")
     @ExcelProperty("一志愿报考学校ID(biz_school.id)")
@@ -96,49 +100,17 @@ public class AppUserProfileRespVO {
     @ExcelProperty("一志愿研究方向名称")
     private String targetDirectionName;
 
-    @Schema(description = "科目1代码", requiredMode = Schema.RequiredMode.REQUIRED)
-    @ExcelProperty("科目1代码")
-    private String subjectCode1;
-
-    @Schema(description = "科目1名称", requiredMode = Schema.RequiredMode.REQUIRED)
-    @ExcelProperty("科目1名称")
-    private String subjectName1;
-
     @Schema(description = "科目1分数")
     @ExcelProperty("科目1分数")
     private BigDecimal subjectScore1;
-
-    @Schema(description = "科目2代码", requiredMode = Schema.RequiredMode.REQUIRED)
-    @ExcelProperty("科目2代码")
-    private String subjectCode2;
-
-    @Schema(description = "科目2名称", requiredMode = Schema.RequiredMode.REQUIRED)
-    @ExcelProperty("科目2名称")
-    private String subjectName2;
 
     @Schema(description = "科目2分数")
     @ExcelProperty("科目2分数")
     private BigDecimal subjectScore2;
 
-    @Schema(description = "科目3代码", requiredMode = Schema.RequiredMode.REQUIRED)
-    @ExcelProperty("科目3代码")
-    private String subjectCode3;
-
-    @Schema(description = "科目3名称", requiredMode = Schema.RequiredMode.REQUIRED)
-    @ExcelProperty("科目3名称")
-    private String subjectName3;
-
     @Schema(description = "科目3分数")
     @ExcelProperty("科目3分数")
     private BigDecimal subjectScore3;
-
-    @Schema(description = "科目4代码", requiredMode = Schema.RequiredMode.REQUIRED)
-    @ExcelProperty("科目4代码")
-    private String subjectCode4;
-
-    @Schema(description = "科目4名称", requiredMode = Schema.RequiredMode.REQUIRED)
-    @ExcelProperty("科目4名称")
-    private String subjectName4;
 
     @Schema(description = "科目4分数")
     @ExcelProperty("科目4分数")
@@ -152,37 +124,21 @@ public class AppUserProfileRespVO {
     @ExcelProperty("自我介绍/个人优势")
     private String selfIntroduction;
 
-    @Schema(description = "论文数量(一作/二作合计或按你们口径)", requiredMode = Schema.RequiredMode.REQUIRED, example = "870")
+    @Schema(description = "论文数量(一作/二作合计或按你们口径)", example = "870")
     @ExcelProperty("论文数量(一作/二作合计或按你们口径)")
     private Integer paperCount;
-
-    @Schema(description = "论文发表经历(描述型)")
-    @ExcelProperty("论文发表经历(描述型)")
-    private String paperExperience;
 
     @Schema(description = "比赛经历ID列表(前端多选)")
     @ExcelProperty("比赛经历ID列表(前端多选)")
     private String competitionIds;
 
-    @Schema(description = "省二以上比赛次数(由多选统计)", requiredMode = Schema.RequiredMode.REQUIRED, example = "10458")
+    @Schema(description = "省二以上比赛次数(由多选统计)", example = "10458")
     @ExcelProperty("省二以上比赛次数(由多选统计)")
     private Integer competitionCount;
-
-    @Schema(description = "比赛经历描述(可回填/拼接展示)")
-    @ExcelProperty("比赛经历描述(可回填/拼接展示)")
-    private String competitionExperience;
 
     @Schema(description = "软实力自评(0-10)", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("软实力自评(0-10)")
     private Integer selfAssessedScore;
-
-    @Schema(description = "基础信息是否锁定: 0-否 1-是", requiredMode = Schema.RequiredMode.REQUIRED)
-    @ExcelProperty("基础信息是否锁定: 0-否 1-是")
-    private Boolean basicLocked;
-
-    @Schema(description = "提交时间(锁定时写入)")
-    @ExcelProperty("提交时间(锁定时写入)")
-    private LocalDateTime submitTime;
 
     @Schema(description = "创建时间", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("创建时间")

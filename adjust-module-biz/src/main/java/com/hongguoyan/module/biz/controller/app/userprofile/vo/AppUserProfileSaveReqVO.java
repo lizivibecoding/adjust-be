@@ -21,6 +21,9 @@ public class AppUserProfileSaveReqVO {
     @NotNull(message = "本科专业ID不能为空")
     private Long graduateMajorId;
 
+    @Schema(description = "本科平均分")
+    private BigDecimal graduateAverageScore;
+
     @Schema(description = "本科绩点 (GPA)")
     private BigDecimal undergraduateGpa;
 
@@ -56,13 +59,18 @@ public class AppUserProfileSaveReqVO {
     @NotEmpty(message = "自我介绍/个人优势不能为空")
     private String selfIntroduction;
 
-    @Schema(description = "论文数量(一作/二作合计或按你们口径)", requiredMode = Schema.RequiredMode.REQUIRED, example = "870")
-    @NotNull(message = "论文数量(一作/二作合计或按你们口径)不能为空")
+    @Schema(description = "论文数量(一作/二作合计或按你们口径)", example = "870")
     private Integer paperCount;
 
     @Schema(description = "比赛经历ID列表(前端多选)")
     @JsonDeserialize(using = LongListOrCommaSeparatedDeserializer.class)
     private List<Long> competitionIds;
+
+    @Schema(description = "省二以上比赛次数(仅传数量时使用)", example = "2")
+    private Integer competitionCount;
+
+    @Schema(description = "本科获奖次数", example = "3")
+    private Integer awardCount;
 
     @Schema(description = "软实力自评(0-10)", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "软实力自评(0-10)不能为空")
