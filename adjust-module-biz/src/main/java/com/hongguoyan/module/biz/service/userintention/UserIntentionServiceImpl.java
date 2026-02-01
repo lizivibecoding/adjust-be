@@ -52,6 +52,7 @@ public class UserIntentionServiceImpl implements UserIntentionService {
         respVO.setIsSpecialPlan(userIntention.getIsSpecialPlan());
         respVO.setIsAcceptResearchInst(userIntention.getIsAcceptResearchInst());
         respVO.setIsAcceptCrossMajor(userIntention.getIsAcceptCrossMajor());
+        respVO.setIsAcceptCrossExam(userIntention.getIsAcceptCrossExam());
         respVO.setAdjustPriority(userIntention.getAdjustPriority());
         respVO.setCreateTime(userIntention.getCreateTime());
         return respVO;
@@ -71,6 +72,7 @@ public class UserIntentionServiceImpl implements UserIntentionService {
         toSave.setIsSpecialPlan(reqVO.getIsSpecialPlan());
         toSave.setIsAcceptResearchInst(reqVO.getIsAcceptResearchInst());
         toSave.setIsAcceptCrossMajor(reqVO.getIsAcceptCrossMajor());
+        toSave.setIsAcceptCrossExam(reqVO.getIsAcceptCrossExam());
         toSave.setAdjustPriority(reqVO.getAdjustPriority());
 
         if (existing == null) {

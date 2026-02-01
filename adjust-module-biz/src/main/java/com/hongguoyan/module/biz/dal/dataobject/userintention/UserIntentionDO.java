@@ -72,6 +72,10 @@ public class UserIntentionDO extends BaseDO {
      */
     private Boolean isAcceptCrossMajor;
     /**
+     * 是否接受跨考: 0-否 1-是
+     */
+    private Boolean isAcceptCrossExam;
+    /**
      * 调剂优先级: 1-优先院校层次 2-优先专业匹配度
      */
     private Integer adjustPriority;

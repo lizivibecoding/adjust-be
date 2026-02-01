@@ -27,6 +27,7 @@ public interface UserIntentionMapper extends BaseMapperX<UserIntentionDO> {
                 .eqIfPresent(UserIntentionDO::getIsSpecialPlan, reqVO.getIsSpecialPlan())
                 .eqIfPresent(UserIntentionDO::getIsAcceptResearchInst, reqVO.getIsAcceptResearchInst())
                 .eqIfPresent(UserIntentionDO::getIsAcceptCrossMajor, reqVO.getIsAcceptCrossMajor())
+                .eqIfPresent(UserIntentionDO::getIsAcceptCrossExam, reqVO.getIsAcceptCrossExam())
                 .eqIfPresent(UserIntentionDO::getAdjustPriority, reqVO.getAdjustPriority())
                 .betweenIfPresent(UserIntentionDO::getCreateTime, reqVO.getCreateTime())
                 .orderByDesc(UserIntentionDO::getId));

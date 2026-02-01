@@ -50,6 +50,10 @@ public class AppUserIntentionSaveReqVO {
     @NotNull(message = "是否接受跨专业调剂: 0-否 1-是不能为空")
     private Boolean isAcceptCrossMajor;
 
+    @Schema(description = "是否接受跨考: 0-否 1-是", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull(message = "是否接受跨考: 0-否 1-是不能为空")
+    private Boolean isAcceptCrossExam;
+
     @Schema(description = "调剂优先级: 1-优先院校层次 2-优先专业匹配度", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "调剂优先级: 1-优先院校层次 2-优先专业匹配度不能为空")
     private Integer adjustPriority;

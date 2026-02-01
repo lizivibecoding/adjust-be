@@ -42,6 +42,9 @@ public class AppUserIntentionPageReqVO extends PageParam {
     @Schema(description = "是否接受跨专业调剂: 0-否 1-是")
     private Boolean isAcceptCrossMajor;
 
+    @Schema(description = "是否接受跨考: 0-否 1-是")
+    private Boolean isAcceptCrossExam;
+
     @Schema(description = "调剂优先级: 1-优先院校层次 2-优先专业匹配度")
     private Integer adjustPriority;
 
