@@ -48,10 +48,12 @@ public class AppMajorController {
     @Operation(summary = "获得学科/专业列表(按层级)")
     @Parameter(name = "level", description = "层级(1=一级学科,2=二级学科,3=三级学科)", required = true, example = "1")
     @Parameter(name = "parentCode", description = "父级 code(level>1 时必传；level=2 传一级 code；level=3 传二级 code)", example = "01")
+    @Parameter(name = "degreeType", description = "学位类型筛选(0=不区分,1=专硕,2=学硕；仅对 level=2/3 生效)", example = "1")
     public CommonResult<List<AppMajorChildRespVO>> getMajorList(
             @RequestParam("level") @NotNull Integer level,
-            @RequestParam(value = "parentCode", required = false) String parentCode) {
-        return success(majorService.getMajorList(parentCode, level));
+            @RequestParam(value = "parentCode", required = false) String parentCode,
+            @RequestParam(value = "degreeType", required = false) Integer degreeType) {
+        return success(majorService.getMajorList(parentCode, level, degreeType));
     }
 
     @GetMapping("/tree")

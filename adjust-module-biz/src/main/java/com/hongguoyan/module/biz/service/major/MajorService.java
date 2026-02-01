@@ -71,9 +71,10 @@ public interface MajorService {
      *
      * @param parentCode 父级专业代码（level>1 必传；level=2 传一级 code；level=3 传二级 code）
      * @param level      层级（1=一级学科,2=二级学科,3=三级学科）
+     * @param degreeType 学位类型筛选（0 或 null 表示不区分；仅对 level=2/3 生效）
      * @return 列表
      */
-    List<AppMajorChildRespVO> getMajorList(String parentCode, Integer level);
+    List<AppMajorChildRespVO> getMajorList(String parentCode, Integer level, Integer degreeType);
 
     /**
      * 获得专业树（仅包含有 code 的节点）

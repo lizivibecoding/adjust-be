@@ -35,8 +35,8 @@ public class AppAdjustmentSearchReqVO extends PageParam {
     @Schema(description = "学位类型(0=未知/不区分,1=专硕,2=学硕)")
     private Integer degreeType;
 
-    @Schema(description = "省份代码")
-    private String provinceCode;
+    @Schema(description = "省份代码(多选)")
+    private List<String> provinceCodes;
 
     @Schema(description = "考研分区：A区/B区")
     private String provinceArea;

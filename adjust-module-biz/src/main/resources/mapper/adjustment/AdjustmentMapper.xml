@@ -29,8 +29,11 @@
                 AND a.degree_type = #{reqVO.degreeType}
             </if>
 
-            <if test="reqVO.provinceCode != null and reqVO.provinceCode != ''">
-                AND s.province_code = #{reqVO.provinceCode}
+            <if test="reqVO.provinceCodes != null and reqVO.provinceCodes.size() &gt; 0">
+                AND s.province_code IN
+                <foreach collection="reqVO.provinceCodes" item="code" open="(" separator="," close=")">
+                    #{code}
+                </foreach>
             </if>
             <if test="reqVO.provinceArea != null and reqVO.provinceArea != ''">
                 AND s.province_area = #{reqVO.provinceArea}

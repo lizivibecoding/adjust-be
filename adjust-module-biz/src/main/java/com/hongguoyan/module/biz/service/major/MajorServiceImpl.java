@@ -91,7 +91,7 @@ public class MajorServiceImpl implements MajorService {
     }
 
     @Override
-    public List<AppMajorChildRespVO> getMajorList(String parentCode, Integer level) {
+    public List<AppMajorChildRespVO> getMajorList(String parentCode, Integer level, Integer degreeType) {
         if (level == null || level < 1 || level > 3) {
             throw exception(new ErrorCode(400, "level must be 1, 2 or 3"));
         }
@@ -100,7 +100,12 @@ public class MajorServiceImpl implements MajorService {
         }
 
         String pc = level == 1 ? null : parentCode;
-        List<MajorDO> children = majorMapper.selectListByLevelAndParentCode(pc, level);
+        // degreeType filter applies only to level=2/3, and 0/null means "no filter"
+        Integer degreeTypeFilter = null;
+        if ((level == 2 || level == 3) && degreeType != null && degreeType != 0) {
+            degreeTypeFilter = degreeType;
+        }
+        List<MajorDO> children = majorMapper.selectListByLevelAndParentCode(pc, level, degreeTypeFilter);
         if (children == null || children.isEmpty()) {
             return Collections.emptyList();
         }
