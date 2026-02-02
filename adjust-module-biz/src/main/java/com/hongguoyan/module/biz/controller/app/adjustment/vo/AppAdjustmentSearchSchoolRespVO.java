@@ -1,5 +1,6 @@
 package com.hongguoyan.module.biz.controller.app.adjustment.vo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -23,6 +24,14 @@ public class AppAdjustmentSearchSchoolRespVO {
 
     @Schema(description = "调剂年份")
     private Integer year;
+
+    @JsonIgnore
+    @Schema(hidden = true)
+    private Long collegeId;
+
+    @JsonIgnore
+    @Schema(hidden = true)
+    private Long majorId;
 
     @Schema(description = "统考招生人数")
     private Integer recruitNumber;

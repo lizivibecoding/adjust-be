@@ -140,21 +140,7 @@
             a.publish_time AS updateTime,
             COALESCE(sm.view_count, 0) AS viewCount,
             COALESCE(sm.hot_score, 0) AS hotScore,
-            s.province_name AS provinceName,
-            r.recruit_number AS recruitNumber,
-            CASE
-                WHEN a.year = YEAR(CURDATE())
-                 AND EXISTS (
-                    SELECT 1
-                    FROM biz_adjustment hx
-                    WHERE hx.school_id = a.school_id
-                      AND hx.college_id = a.college_id
-                      AND hx.major_id = a.major_id
-                      AND hx.year &lt; YEAR(CURDATE())
-                      AND hx.adjust_count &gt; 0
-                )
-                THEN 1 ELSE 0
-            END AS highAdjustChance
+            s.province_name AS provinceName
         FROM (
             SELECT a2.*
             FROM biz_adjustment a2
@@ -184,29 +170,6 @@
         LEFT JOIN biz_school_major sm ON sm.school_id = a.school_id
             AND sm.college_id = a.college_id
             AND sm.major_id = a.major_id
-        LEFT JOIN (
-            SELECT r2.school_id, r2.college_id, r2.major_id, r2.year, r2.recruit_number
-            FROM biz_recruit r2
-            JOIN (
-                SELECT
-                    school_id, college_id, major_id, year,
-                    CASE
-                        WHEN year = YEAR(CURDATE()) THEN
-                            MAX(CONCAT(DATE_FORMAT(publish_time, '%Y%m%d%H%i%s'), '-', LPAD(id, 20, '0')))
-                        ELSE
-                            MIN(CONCAT(DATE_FORMAT(publish_time, '%Y%m%d%H%i%s'), '-', LPAD(id, 20, '0')))
-                    END AS pick_key
-                FROM biz_recruit
-                GROUP BY school_id, college_id, major_id, year
-            ) pick ON pick.school_id = r2.school_id
-                AND pick.college_id = r2.college_id
-                AND pick.major_id = r2.major_id
-                AND pick.year = r2.year
-                AND pick.pick_key = CONCAT(DATE_FORMAT(r2.publish_time, '%Y%m%d%H%i%s'), '-', LPAD(r2.id, 20, '0'))
-        ) r ON r.school_id = a.school_id
-            AND r.college_id = a.college_id
-            AND r.major_id = a.major_id
-            AND r.year = a.year
         ORDER BY hotScore DESC, updateTime DESC
     </select>
 
@@ -225,21 +188,7 @@
             a.publish_time AS updateTime,
             COALESCE(sm.view_count, 0) AS viewCount,
             COALESCE(sm.hot_score, 0) AS hotScore,
-            s.province_name AS provinceName,
-            r.recruit_number AS recruitNumber,
-            CASE
-                WHEN a.year = YEAR(CURDATE())
-                 AND EXISTS (
-                    SELECT 1
-                    FROM biz_adjustment hx
-                    WHERE hx.school_id = a.school_id
-                      AND hx.college_id = a.college_id
-                      AND hx.major_id = a.major_id
-                      AND hx.year &lt; YEAR(CURDATE())
-                      AND hx.adjust_count &gt; 0
-                )
-                THEN 1 ELSE 0
-            END AS highAdjustChance
+            s.province_name AS provinceName
         FROM (
             SELECT a2.*
             FROM biz_adjustment a2
@@ -269,29 +218,6 @@
         LEFT JOIN biz_school_major sm ON sm.school_id = a.school_id
             AND sm.college_id = a.college_id
             AND sm.major_id = a.major_id
-        LEFT JOIN (
-            SELECT r2.school_id, r2.college_id, r2.major_id, r2.year, r2.recruit_number
-            FROM biz_recruit r2
-            JOIN (
-                SELECT
-                    school_id, college_id, major_id, year,
-                    CASE
-                        WHEN year = YEAR(CURDATE()) THEN
-                            MAX(CONCAT(DATE_FORMAT(publish_time, '%Y%m%d%H%i%s'), '-', LPAD(id, 20, '0')))
-                        ELSE
-                            MIN(CONCAT(DATE_FORMAT(publish_time, '%Y%m%d%H%i%s'), '-', LPAD(id, 20, '0')))
-                    END AS pick_key
-                FROM biz_recruit
-                GROUP BY school_id, college_id, major_id, year
-            ) pick ON pick.school_id = r2.school_id
-                AND pick.college_id = r2.college_id
-                AND pick.major_id = r2.major_id
-                AND pick.year = r2.year
-                AND pick.pick_key = CONCAT(DATE_FORMAT(r2.publish_time, '%Y%m%d%H%i%s'), '-', LPAD(r2.id, 20, '0'))
-        ) r ON r.school_id = a.school_id
-            AND r.college_id = a.college_id
-            AND r.major_id = a.major_id
-            AND r.year = a.year
         ORDER BY hotScore DESC, updateTime DESC
     </select>
 
@@ -303,7 +229,8 @@
             s.school_type AS schoolType,
             s.province_name AS provinceName,
             a.year,
-            r.recruit_number AS recruitNumber,
+            a.college_id AS collegeId,
+            a.major_id AS majorId,
             a.adjust_count AS adjustCount,
             a.publish_time AS updateTime,
             s.is_985 AS is985,
@@ -331,30 +258,80 @@
                 AND pick.pick_key = CONCAT(DATE_FORMAT(a2.publish_time, '%Y%m%d%H%i%s'), '-', LPAD(a2.id, 20, '0'))
         ) a
         LEFT JOIN biz_school s ON s.id = a.school_id
-        LEFT JOIN (
-            SELECT r2.school_id, r2.college_id, r2.major_id, r2.year, r2.recruit_number
-            FROM biz_recruit r2
-            JOIN (
-                SELECT
-                    school_id, college_id, major_id, year,
-                    CASE
-                        WHEN year = YEAR(CURDATE()) THEN
-                            MAX(CONCAT(DATE_FORMAT(publish_time, '%Y%m%d%H%i%s'), '-', LPAD(id, 20, '0')))
-                        ELSE
-                            MIN(CONCAT(DATE_FORMAT(publish_time, '%Y%m%d%H%i%s'), '-', LPAD(id, 20, '0')))
-                    END AS pick_key
-                FROM biz_recruit
-                GROUP BY school_id, college_id, major_id, year
-            ) pick ON pick.school_id = r2.school_id
-                AND pick.college_id = r2.college_id
-                AND pick.major_id = r2.major_id
-                AND pick.year = r2.year
-                AND pick.pick_key = CONCAT(DATE_FORMAT(r2.publish_time, '%Y%m%d%H%i%s'), '-', LPAD(r2.id, 20, '0'))
-        ) r ON r.school_id = a.school_id
-            AND r.college_id = a.college_id
-            AND r.major_id = a.major_id
-            AND r.year = a.year
         ORDER BY updateTime DESC
+    </select>
+
+    <select id="selectRecruitSnapshotLatest"
+            resultType="com.hongguoyan.module.biz.dal.mysql.adjustment.dto.RecruitSnapshotRowDTO">
+        SELECT
+            r.school_id AS schoolId,
+            r.college_id AS collegeId,
+            r.major_id AS majorId,
+            r.year,
+            r.recruit_number AS recruitNumber
+        FROM biz_recruit r
+        JOIN (
+            SELECT
+                school_id,
+                college_id,
+                major_id,
+                year,
+                MAX(CONCAT(DATE_FORMAT(publish_time, '%Y%m%d%H%i%s'), '-', LPAD(id, 20, '0'))) AS pick_key
+            FROM biz_recruit
+            WHERE (school_id, college_id, major_id, year) IN
+            <foreach collection="keys" item="k" open="(" separator="," close=")">
+                (#{k.schoolId}, #{k.collegeId}, #{k.majorId}, #{k.year})
+            </foreach>
+            GROUP BY school_id, college_id, major_id, year
+        ) pick ON pick.school_id = r.school_id
+            AND pick.college_id = r.college_id
+            AND pick.major_id = r.major_id
+            AND pick.year = r.year
+            AND pick.pick_key = CONCAT(DATE_FORMAT(r.publish_time, '%Y%m%d%H%i%s'), '-', LPAD(r.id, 20, '0'))
+    </select>
+
+    <select id="selectRecruitSnapshotEarliest"
+            resultType="com.hongguoyan.module.biz.dal.mysql.adjustment.dto.RecruitSnapshotRowDTO">
+        SELECT
+            r.school_id AS schoolId,
+            r.college_id AS collegeId,
+            r.major_id AS majorId,
+            r.year,
+            r.recruit_number AS recruitNumber
+        FROM biz_recruit r
+        JOIN (
+            SELECT
+                school_id,
+                college_id,
+                major_id,
+                year,
+                MIN(CONCAT(DATE_FORMAT(publish_time, '%Y%m%d%H%i%s'), '-', LPAD(id, 20, '0'))) AS pick_key
+            FROM biz_recruit
+            WHERE (school_id, college_id, major_id, year) IN
+            <foreach collection="keys" item="k" open="(" separator="," close=")">
+                (#{k.schoolId}, #{k.collegeId}, #{k.majorId}, #{k.year})
+            </foreach>
+            GROUP BY school_id, college_id, major_id, year
+        ) pick ON pick.school_id = r.school_id
+            AND pick.college_id = r.college_id
+            AND pick.major_id = r.major_id
+            AND pick.year = r.year
+            AND pick.pick_key = CONCAT(DATE_FORMAT(r.publish_time, '%Y%m%d%H%i%s'), '-', LPAD(r.id, 20, '0'))
+    </select>
+
+    <select id="selectMajorsHasHistoryAdjust"
+            resultType="com.hongguoyan.module.biz.dal.mysql.adjustment.dto.BizMajorKeyDTO">
+        SELECT DISTINCT
+            hx.school_id AS schoolId,
+            hx.college_id AS collegeId,
+            hx.major_id AS majorId
+        FROM biz_adjustment hx
+        WHERE hx.year &lt; #{currentYear}
+          AND hx.adjust_count &gt; 0
+          AND (hx.school_id, hx.college_id, hx.major_id) IN
+          <foreach collection="triplets" item="k" open="(" separator="," close=")">
+              (#{k.schoolId}, #{k.collegeId}, #{k.majorId})
+          </foreach>
     </select>
 
     <select id="selectOptionYears" resultType="java.lang.Integer">

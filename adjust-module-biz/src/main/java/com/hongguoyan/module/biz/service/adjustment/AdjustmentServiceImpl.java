@@ -8,6 +8,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.time.Year;
 import java.util.regex.Pattern;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.*;
 import com.hongguoyan.module.biz.controller.app.school.vo.AppSchoolAdjustmentPageReqVO;
@@ -23,6 +24,8 @@ import com.hongguoyan.framework.common.util.object.BeanUtils;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.hongguoyan.module.biz.dal.mysql.area.AreaMapper;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.AdjustmentMapper;
+import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.BizMajorKeyDTO;
+import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.RecruitSnapshotRowDTO;
 import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
 import com.hongguoyan.module.biz.dal.mysql.schoolmajor.SchoolMajorMapper;
@@ -139,12 +142,14 @@ public class AdjustmentServiceImpl implements AdjustmentService {
         AppAdjustmentSearchTabRespVO respVO = new AppAdjustmentSearchTabRespVO();
         if (schoolTab) {
             PageResult<AppAdjustmentSearchSchoolRespVO> pageResult = adjustmentMapper.selectSearchSchoolPage(reqVO);
+            fillRecruitNumberForSchoolList(pageResult.getList());
             respVO.setTotal(pageResult.getTotal());
             respVO.setSchoolList(pageResult.getList());
             respVO.setMajorList(Collections.emptyList());
         } else {
             PageResult<AppAdjustmentSearchRespVO> pageResult = adjustmentMapper.selectSearchMajorPage(reqVO);
             List<AppAdjustmentSearchRespVO> majorList = pageResult.getList();
+            fillRecruitNumberAndHighAdjustChance(majorList);
             for (AppAdjustmentSearchRespVO item : majorList) {
                 item.setHeat(calcHeat(item.getHotScore()));
             }
@@ -423,6 +428,7 @@ public class AdjustmentServiceImpl implements AdjustmentService {
         if (list == null || list.isEmpty()) {
             return pageResult;
         }
+        fillRecruitNumberAndHighAdjustChance(list);
         for (AppAdjustmentSearchRespVO item : list) {
             item.setHeat(calcHeat(item.getHotScore()));
         }
@@ -432,6 +438,144 @@ public class AdjustmentServiceImpl implements AdjustmentService {
     @Override
     public PageResult<AppSchoolAdjustmentRespVO> getSchoolAdjustmentPage(@Valid AppSchoolAdjustmentPageReqVO reqVO) {
         return adjustmentMapper.selectSchoolAdjustmentPage(reqVO);
+    }
+
+    private void fillRecruitNumberAndHighAdjustChance(List<AppAdjustmentSearchRespVO> list) {
+        if (list == null || list.isEmpty()) {
+            return;
+        }
+        int currentYear = Year.now().getValue();
+
+        // 1) recruit number (batch)
+        List<BizMajorKeyDTO> keys = new ArrayList<>(list.size());
+        for (AppAdjustmentSearchRespVO item : list) {
+            if (item == null || item.getSchoolId() == null || item.getCollegeId() == null
+                    || item.getMajorId() == null || item.getYear() == null) {
+                continue;
+            }
+            BizMajorKeyDTO key = new BizMajorKeyDTO();
+            key.setSchoolId(item.getSchoolId());
+            key.setCollegeId(item.getCollegeId());
+            key.setMajorId(item.getMajorId());
+            key.setYear(item.getYear());
+            keys.add(key);
+        }
+        Map<String, Integer> recruitMap = loadRecruitNumberByKeys(keys, currentYear);
+        for (AppAdjustmentSearchRespVO item : list) {
+            if (item == null) {
+                continue;
+            }
+            String k = key(item.getSchoolId(), item.getCollegeId(), item.getMajorId(), item.getYear());
+            if (k != null) {
+                item.setRecruitNumber(recruitMap.get(k));
+            }
+        }
+
+        // 2) high adjust chance (batch; only meaningful for current year)
+        List<BizMajorKeyDTO> triplets = new ArrayList<>();
+        for (AppAdjustmentSearchRespVO item : list) {
+            if (item == null || item.getYear() == null || item.getYear() != currentYear) {
+                continue;
+            }
+            if (item.getSchoolId() == null || item.getCollegeId() == null || item.getMajorId() == null) {
+                continue;
+            }
+            BizMajorKeyDTO t = new BizMajorKeyDTO();
+            t.setSchoolId(item.getSchoolId());
+            t.setCollegeId(item.getCollegeId());
+            t.setMajorId(item.getMajorId());
+            triplets.add(t);
+        }
+        Set<String> hasHistory = new HashSet<>();
+        if (!triplets.isEmpty()) {
+            List<BizMajorKeyDTO> hits = adjustmentMapper.selectMajorsHasHistoryAdjust(triplets, currentYear);
+            for (BizMajorKeyDTO hit : hits) {
+                hasHistory.add(key(hit.getSchoolId(), hit.getCollegeId(), hit.getMajorId(), null));
+            }
+        }
+        for (AppAdjustmentSearchRespVO item : list) {
+            if (item == null || item.getYear() == null) {
+                continue;
+            }
+            if (item.getYear() != currentYear) {
+                item.setHighAdjustChance(false);
+                continue;
+            }
+            String k = key(item.getSchoolId(), item.getCollegeId(), item.getMajorId(), null);
+            item.setHighAdjustChance(k != null && hasHistory.contains(k));
+        }
+    }
+
+    private void fillRecruitNumberForSchoolList(List<AppAdjustmentSearchSchoolRespVO> list) {
+        if (list == null || list.isEmpty()) {
+            return;
+        }
+        int currentYear = Year.now().getValue();
+        List<BizMajorKeyDTO> keys = new ArrayList<>(list.size());
+        for (AppAdjustmentSearchSchoolRespVO item : list) {
+            if (item == null || item.getSchoolId() == null || item.getCollegeId() == null
+                    || item.getMajorId() == null || item.getYear() == null) {
+                continue;
+            }
+            BizMajorKeyDTO key = new BizMajorKeyDTO();
+            key.setSchoolId(item.getSchoolId());
+            key.setCollegeId(item.getCollegeId());
+            key.setMajorId(item.getMajorId());
+            key.setYear(item.getYear());
+            keys.add(key);
+        }
+        Map<String, Integer> recruitMap = loadRecruitNumberByKeys(keys, currentYear);
+        for (AppAdjustmentSearchSchoolRespVO item : list) {
+            if (item == null) {
+                continue;
+            }
+            String k = key(item.getSchoolId(), item.getCollegeId(), item.getMajorId(), item.getYear());
+            if (k != null) {
+                item.setRecruitNumber(recruitMap.get(k));
+            }
+        }
+    }
+
+    private Map<String, Integer> loadRecruitNumberByKeys(List<BizMajorKeyDTO> keys, int currentYear) {
+        if (keys == null || keys.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<BizMajorKeyDTO> current = new ArrayList<>();
+        List<BizMajorKeyDTO> history = new ArrayList<>();
+        for (BizMajorKeyDTO k : keys) {
+            if (k == null || k.getYear() == null) {
+                continue;
+            }
+            if (k.getYear() == currentYear) {
+                current.add(k);
+            } else {
+                history.add(k);
+            }
+        }
+
+        Map<String, Integer> result = new HashMap<>();
+        if (!current.isEmpty()) {
+            List<RecruitSnapshotRowDTO> rows = adjustmentMapper.selectRecruitSnapshotLatest(current);
+            for (RecruitSnapshotRowDTO row : rows) {
+                result.put(key(row.getSchoolId(), row.getCollegeId(), row.getMajorId(), row.getYear()),
+                        row.getRecruitNumber());
+            }
+        }
+        if (!history.isEmpty()) {
+            List<RecruitSnapshotRowDTO> rows = adjustmentMapper.selectRecruitSnapshotEarliest(history);
+            for (RecruitSnapshotRowDTO row : rows) {
+                result.put(key(row.getSchoolId(), row.getCollegeId(), row.getMajorId(), row.getYear()),
+                        row.getRecruitNumber());
+            }
+        }
+        return result;
+    }
+
+    private String key(Long schoolId, Long collegeId, Long majorId, Integer year) {
+        if (schoolId == null || collegeId == null || majorId == null) {
+            return null;
+        }
+        return schoolId + ":" + collegeId + ":" + majorId + ":" + (year != null ? year : "");
     }
 
     private List<String> splitToList(String text) {

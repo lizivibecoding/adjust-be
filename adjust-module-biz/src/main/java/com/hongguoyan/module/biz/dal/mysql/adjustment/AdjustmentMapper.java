@@ -12,6 +12,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.*;
+import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.BizMajorKeyDTO;
+import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.RecruitSnapshotRowDTO;
 import com.hongguoyan.module.biz.controller.app.school.vo.AppSchoolAdjustmentPageReqVO;
 import com.hongguoyan.module.biz.controller.app.school.vo.AppSchoolAdjustmentRespVO;
 
@@ -104,6 +106,23 @@ public interface AdjustmentMapper extends BaseMapperX<AdjustmentDO> {
 
     List<AppAdjustmentSearchRespVO> selectHotRankingPage(IPage<AppAdjustmentSearchRespVO> page,
                                                          @Param("reqVO") AppAdjustmentHotRankingReqVO reqVO);
+
+    /**
+     * Batch load recruit snapshot (current year: latest by publish_time, id).
+     */
+    List<RecruitSnapshotRowDTO> selectRecruitSnapshotLatest(@Param("keys") List<BizMajorKeyDTO> keys);
+
+    /**
+     * Batch load recruit snapshot (history years: earliest by publish_time, id).
+     */
+    List<RecruitSnapshotRowDTO> selectRecruitSnapshotEarliest(@Param("keys") List<BizMajorKeyDTO> keys);
+
+    /**
+     * Batch load majors that have history adjust (year < currentYear, adjust_count > 0).
+     * Only (schoolId, collegeId, majorId) are meaningful in results.
+     */
+    List<BizMajorKeyDTO> selectMajorsHasHistoryAdjust(@Param("triplets") List<BizMajorKeyDTO> triplets,
+                                                      @Param("currentYear") Integer currentYear);
 
     List<Integer> selectOptionYears(@Param("schoolId") Long schoolId,
                                     @Param("majorId") Long majorId);
