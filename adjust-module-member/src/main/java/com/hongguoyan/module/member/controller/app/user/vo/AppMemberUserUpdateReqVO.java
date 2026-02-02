@@ -17,6 +17,9 @@ public class AppMemberUserUpdateReqVO {
     @URL(message = "头像必须是 URL 格式")
     private String avatar;
 
+    @Schema(description = "专业代码", example = "080901")
+    private String majorCode;
+
     @Schema(description = "性别", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
     private Integer sex;
 

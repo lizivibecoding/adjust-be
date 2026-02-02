@@ -25,6 +25,9 @@ import com.hongguoyan.module.biz.dal.mysql.area.AreaMapper;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.AdjustmentMapper;
 import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
+import com.hongguoyan.module.biz.dal.mysql.schoolmajor.SchoolMajorMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertList;
@@ -40,6 +43,8 @@ import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.*;
 @Validated
 public class AdjustmentServiceImpl implements AdjustmentService {
 
+    private static final Logger log = LoggerFactory.getLogger(AdjustmentServiceImpl.class);
+
     @Resource
     private AdjustmentMapper adjustmentMapper;
     @Resource
@@ -48,9 +53,31 @@ public class AdjustmentServiceImpl implements AdjustmentService {
     private MajorMapper majorMapper;
     @Resource
     private AreaMapper areaMapper;
+    @Resource
+    private SchoolMajorMapper schoolMajorMapper;
 
     private static final Pattern SPLIT_PATTERN = Pattern.compile("[\\n;,，；]+");
     private static final int DEFAULT_STATS_YEAR = 2025;
+
+    private static final int HEAT_MAX = 98;
+    /**
+     * Exponential saturation factor (tau). Smaller => faster to reach cap.
+     */
+    private static final double HEAT_TAU = 150D;
+
+    private static int calcHeat(Long hotScore) {
+        long score = hotScore != null ? hotScore : 0L;
+        if (score <= 0) {
+            return 0;
+        }
+        // heat = floor(HEAT_MAX * (1 - exp(-score / tau)))
+        double heat = HEAT_MAX * (1D - Math.exp(-score / HEAT_TAU));
+        int value = (int) Math.floor(heat);
+        if (value < 0) {
+            return 0;
+        }
+        return Math.min(HEAT_MAX, value);
+    }
 
     @Override
     public Long createAdjustment(AppAdjustmentSaveReqVO createReqVO) {
@@ -119,9 +146,7 @@ public class AdjustmentServiceImpl implements AdjustmentService {
             PageResult<AppAdjustmentSearchRespVO> pageResult = adjustmentMapper.selectSearchMajorPage(reqVO);
             List<AppAdjustmentSearchRespVO> majorList = pageResult.getList();
             for (AppAdjustmentSearchRespVO item : majorList) {
-                Integer viewCount = item.getViewCount();
-                // Keep consistent with UI: heat in [0, 100], same as viewCount capped by SQL
-                item.setHeat(viewCount != null ? viewCount : 0);
+                item.setHeat(calcHeat(item.getHotScore()));
             }
             respVO.setTotal(pageResult.getTotal());
             respVO.setMajorList(majorList);
@@ -172,7 +197,7 @@ public class AdjustmentServiceImpl implements AdjustmentService {
         // 2) target major (level2)
         AppAdjustmentFilterConfigRespVO.Group level2MajorGroup = new AppAdjustmentFilterConfigRespVO.Group();
         level2MajorGroup.setKey("level2MajorCodes");
-        level2MajorGroup.setName("目标专业");
+        level2MajorGroup.setName("一级学科");
         List<AppAdjustmentFilterConfigRespVO.Option> level2MajorOptions = new ArrayList<>();
         if (StrUtil.isNotBlank(majorCode)) {
             List<MajorDO> level2List = majorMapper.selectListByLevelAndParentCode(majorCode, 2, null);
@@ -300,6 +325,15 @@ public class AdjustmentServiceImpl implements AdjustmentService {
             throw exception(ADJUSTMENT_NOT_EXISTS);
         }
 
+        // best-effort: detail view should +1 view_count and +1 hot_score for the major
+        try {
+            schoolMajorMapper.incrViewAndHotByBizKey(reqVO.getSchoolId(), reqVO.getCollegeId(), reqVO.getMajorId(),
+                    1, 1L);
+        } catch (Exception e) {
+            log.warn("Failed to incr view/hot score. schoolId={}, collegeId={}, majorId={}",
+                    reqVO.getSchoolId(), reqVO.getCollegeId(), reqVO.getMajorId(), e);
+        }
+
         // 按 directionCode 从小到大排序（兼容 00/01/02 以及 1/2/10）
         list.sort((a, b) -> compareDirectionCode(a.getDirectionCode(), b.getDirectionCode()));
 
@@ -390,8 +424,7 @@ public class AdjustmentServiceImpl implements AdjustmentService {
             return pageResult;
         }
         for (AppAdjustmentSearchRespVO item : list) {
-            Integer viewCount = item.getViewCount();
-            item.setHeat(viewCount != null ? viewCount : 0);
+            item.setHeat(calcHeat(item.getHotScore()));
         }
         return pageResult;
     }

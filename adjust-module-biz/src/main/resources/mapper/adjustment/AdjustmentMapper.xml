@@ -139,6 +139,7 @@
             SUM(a.adjust_count) AS adjustCount,
             MAX(a.update_time) AS updateTime,
             LEAST(MAX(sm.view_count), 100) AS viewCount,
+            COALESCE(MAX(sm.hot_score), 0) AS hotScore,
             MAX(s.province_name) AS provinceName,
             SUM(r.recruit_number) AS recruitNumber
         FROM biz_adjustment a
@@ -152,7 +153,7 @@
             AND r.year = a.year
         <include refid="SearchWhere" />
         GROUP BY a.school_id, a.college_id, a.major_id, a.year
-        ORDER BY viewCount DESC, MAX(a.update_time) DESC
+        ORDER BY hotScore DESC, MAX(a.update_time) DESC
     </select>
 
     <select id="selectHotRankingPage"
@@ -169,6 +170,7 @@
             SUM(a.adjust_count) AS adjustCount,
             MAX(a.update_time) AS updateTime,
             LEAST(MAX(sm.view_count), 100) AS viewCount,
+            COALESCE(MAX(sm.hot_score), 0) AS hotScore,
             MAX(s.province_name) AS provinceName,
             SUM(r.recruit_number) AS recruitNumber
         FROM biz_adjustment a
@@ -182,7 +184,7 @@
             AND r.year = a.year
         <include refid="HotRankingWhere" />
         GROUP BY a.school_id, a.college_id, a.major_id, a.year
-        ORDER BY viewCount DESC, MAX(a.update_time) DESC
+        ORDER BY hotScore DESC, MAX(a.update_time) DESC
     </select>
 
     <select id="selectSearchSchoolPage"

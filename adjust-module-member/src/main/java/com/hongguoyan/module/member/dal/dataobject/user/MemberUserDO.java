@@ -87,6 +87,11 @@ public class MemberUserDO extends TenantBaseDO {
     private String avatar;
 
     /**
+     * 专业代码
+     */
+    private String majorCode;
+
+    /**
      * 真实名字
      */
     private String name;

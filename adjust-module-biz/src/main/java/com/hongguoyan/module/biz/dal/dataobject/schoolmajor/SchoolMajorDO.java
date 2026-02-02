@@ -52,9 +52,14 @@ public class SchoolMajorDO extends BaseDO {
      */
     private Integer degreeType;
     /**
-     * 热度值
+     * View count (used for legacy heat/display)
      */
     private Integer viewCount;
+
+    /**
+     * Hot score accumulator (used for global ranking)
+     */
+    private Long hotScore;
 
 
 }

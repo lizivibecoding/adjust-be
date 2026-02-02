@@ -32,6 +32,8 @@ import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.*;
 @Validated
 public class UserPreferenceServiceImpl implements UserPreferenceService {
 
+    private static final long HOT_SCORE_PREFERENCE_DELTA = 10L;
+
     @Resource
     private UserPreferenceMapper userPreferenceMapper;
 
@@ -102,6 +104,9 @@ public class UserPreferenceServiceImpl implements UserPreferenceService {
 
         if (existing == null) {
             userPreferenceMapper.insert(toSave);
+            // hot_score +10 for new preference
+            schoolMajorMapper.incrHotScoreByBizKey(direction.getSchoolId(), direction.getCollegeId(),
+                    direction.getMajorId(), HOT_SCORE_PREFERENCE_DELTA);
         } else {
             userPreferenceMapper.updateById(toSave);
         }

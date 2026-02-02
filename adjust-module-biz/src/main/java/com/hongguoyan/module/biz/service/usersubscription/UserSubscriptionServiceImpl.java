@@ -15,6 +15,7 @@ import com.hongguoyan.module.biz.controller.app.usersubscription.vo.AppUserSubsc
 
 import com.hongguoyan.module.biz.dal.dataobject.adjustment.AdjustmentDO;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.AdjustmentMapper;
+import com.hongguoyan.module.biz.dal.mysql.schoolmajor.SchoolMajorMapper;
 import com.hongguoyan.module.biz.dal.mysql.usersubscription.UserSubscriptionMapper;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
@@ -29,8 +30,12 @@ import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.*;
 @Validated
 public class UserSubscriptionServiceImpl implements UserSubscriptionService {
 
+    private static final long HOT_SCORE_SUBSCRIBE_DELTA = 50L;
+
     @Resource
     private UserSubscriptionMapper userSubscriptionMapper;
+    @Resource
+    private SchoolMajorMapper schoolMajorMapper;
 
     @Override
     public void subscribe(Long userId, AppUserSubscriptionSubscribeReqVO reqVO) {
@@ -54,6 +59,8 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
             toCreate.setCollegeId(collegeId);
             toCreate.setMajorId(majorId);
             userSubscriptionMapper.insert(toCreate);
+            // hot_score +50 for new subscription
+            schoolMajorMapper.incrHotScoreByBizKey(schoolId, collegeId, majorId, HOT_SCORE_SUBSCRIBE_DELTA);
             return;
         }
 

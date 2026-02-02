@@ -47,6 +47,10 @@ public class AppAdjustmentSearchRespVO {
     @JsonIgnore
     private Integer viewCount;
 
+    @Schema(description = "热度分(内部字段，不对外返回)", hidden = true)
+    @JsonIgnore
+    private Long hotScore;
+
     @Schema(description = "热力值")
     private Integer heat;
 
