@@ -42,6 +42,12 @@ jobs:
           fi
           cp "$JAR" adjust-server.jar
 
+      - name: Prepare deploy Dockerfile
+        shell: bash
+        run: |
+          set -e
+          cp deploy/adjust-server.Dockerfile Dockerfile.adjust-server
+
       - name: Upload jar
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -49,6 +55,15 @@ jobs:
           username: ${{ vars.DEPLOY_USER }}
           password: ${{ secrets.DEPLOY_PASSWORD }}
           source: "adjust-server.jar"
+          target: "/home/cndinx/app"
+
+      - name: Upload Dockerfile
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ vars.DEPLOY_HOST }}
+          username: ${{ vars.DEPLOY_USER }}
+          password: ${{ secrets.DEPLOY_PASSWORD }}
+          source: "Dockerfile.adjust-server"
           target: "/home/cndinx/app"
 
       - name: Restart app
@@ -60,5 +75,9 @@ jobs:
           script: |
             set -e
             cd /home/cndinx/app
-            pkill -f "adjust-server.jar" || true
-            setsid java -Xmx800m -jar adjust-server.jar --spring.profiles.active=local > app.log 2>&1 < /dev/null &
+            docker rm -f adjust-server || true
+            docker build -f Dockerfile.adjust-server -t adjust-server:${{ github.sha }} .
+            docker run -d --name adjust-server \
+              --restart unless-stopped \
+              -p 48080:48080 \
+              adjust-server:${{ github.sha }}
