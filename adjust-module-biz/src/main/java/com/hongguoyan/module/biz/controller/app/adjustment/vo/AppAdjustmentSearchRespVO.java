@@ -58,6 +58,6 @@ public class AppAdjustmentSearchRespVO {
     private String provinceName;
 
     @Schema(description = "今年调剂概率大")
-    private Boolean highAdjustChance = true;
+    private Boolean highAdjustChance;
 
 }

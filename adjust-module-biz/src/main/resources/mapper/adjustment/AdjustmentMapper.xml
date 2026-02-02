@@ -141,7 +141,20 @@
             COALESCE(sm.view_count, 0) AS viewCount,
             COALESCE(sm.hot_score, 0) AS hotScore,
             s.province_name AS provinceName,
-            r.recruit_number AS recruitNumber
+            r.recruit_number AS recruitNumber,
+            CASE
+                WHEN a.year = YEAR(CURDATE())
+                 AND EXISTS (
+                    SELECT 1
+                    FROM biz_adjustment hx
+                    WHERE hx.school_id = a.school_id
+                      AND hx.college_id = a.college_id
+                      AND hx.major_id = a.major_id
+                      AND hx.year &lt; YEAR(CURDATE())
+                      AND hx.adjust_count &gt; 0
+                )
+                THEN 1 ELSE 0
+            END AS highAdjustChance
         FROM (
             SELECT a2.*
             FROM biz_adjustment a2
@@ -213,7 +226,20 @@
             COALESCE(sm.view_count, 0) AS viewCount,
             COALESCE(sm.hot_score, 0) AS hotScore,
             s.province_name AS provinceName,
-            r.recruit_number AS recruitNumber
+            r.recruit_number AS recruitNumber,
+            CASE
+                WHEN a.year = YEAR(CURDATE())
+                 AND EXISTS (
+                    SELECT 1
+                    FROM biz_adjustment hx
+                    WHERE hx.school_id = a.school_id
+                      AND hx.college_id = a.college_id
+                      AND hx.major_id = a.major_id
+                      AND hx.year &lt; YEAR(CURDATE())
+                      AND hx.adjust_count &gt; 0
+                )
+                THEN 1 ELSE 0
+            END AS highAdjustChance
         FROM (
             SELECT a2.*
             FROM biz_adjustment a2
