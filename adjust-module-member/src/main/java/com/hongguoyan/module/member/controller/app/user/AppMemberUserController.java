@@ -1,6 +1,8 @@
 package com.hongguoyan.module.member.controller.app.user;
 
+import cn.hutool.core.util.StrUtil;
 import com.hongguoyan.framework.common.pojo.CommonResult;
+import com.hongguoyan.module.infra.api.file.FileApi;
 import com.hongguoyan.module.member.controller.app.user.vo.*;
 import com.hongguoyan.module.member.convert.user.MemberUserConvert;
 import com.hongguoyan.module.member.dal.dataobject.level.MemberLevelDO;
@@ -30,13 +32,33 @@ public class AppMemberUserController {
     private MemberUserService userService;
     @Resource
     private MemberLevelService levelService;
+    @Resource
+    private FileApi fileApi;
 
     @GetMapping("/get")
     @Operation(summary = "获得基本信息")
     public CommonResult<AppMemberUserInfoRespVO> getUserInfo() {
         MemberUserDO user = userService.getUser(getLoginUserId());
         MemberLevelDO level = levelService.getLevel(user.getLevelId());
-        return success(MemberUserConvert.INSTANCE.convert(user, level));
+        AppMemberUserInfoRespVO respVO = MemberUserConvert.INSTANCE.convert(user, level);
+        respVO.setAvatar(resolveAvatarUrl(respVO.getAvatar()));
+        return success(respVO);
+    }
+
+    /**
+     * 将存储的 avatar（path 或完整 URL）转换为可访问的 URL。
+     */
+    private String resolveAvatarUrl(String avatar) {
+        if (StrUtil.isBlank(avatar)) {
+            return avatar;
+        }
+        try {
+            // 7 天有效期
+            return fileApi.presignGetUrl(avatar, 3 * 24 * 60 * 60);
+        } catch (Exception e) {
+            log.warn("Failed to presign avatar, return original. avatar={}", avatar, e);
+            return avatar;
+        }
     }
 
     @PutMapping("/update")
