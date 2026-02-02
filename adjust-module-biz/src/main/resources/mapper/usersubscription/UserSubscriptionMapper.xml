@@ -50,6 +50,30 @@
         ORDER BY updateTime DESC
     </select>
 
+    <select id="selectMySchoolList"
+            resultType="com.hongguoyan.module.biz.controller.app.usersubscription.vo.AppUserSubscriptionPageRespVO">
+        SELECT
+            s.id AS schoolId,
+            s.school_name AS schoolName,
+            s.school_logo AS schoolLogo,
+            s.province_name AS provinceName,
+            (<include refid="SchoolLevelExpr" />) AS schoolLevel,
+            MAX(a.update_time) AS updateTime
+        FROM biz_user_subscription us
+        LEFT JOIN biz_school s ON s.id = us.school_id
+        LEFT JOIN biz_major m3 ON m3.id = us.major_id
+        LEFT JOIN biz_major m2 ON m2.code = m3.parent_code AND m2.level = 2
+        LEFT JOIN biz_major m1 ON m1.code = m2.parent_code AND m1.level = 1
+        LEFT JOIN biz_adjustment a ON a.school_id = us.school_id AND a.major_id = us.major_id
+        <include refid="BaseWhere" />
+        GROUP BY
+            s.id, s.school_name, s.school_logo, s.province_name, s.is_985, s.is_211, s.is_syl
+        <if test="reqVO.updateDays != null and reqVO.updateDays &gt; 0">
+            HAVING MAX(a.update_time) &gt;= DATE_SUB(NOW(), INTERVAL #{reqVO.updateDays} DAY)
+        </if>
+        ORDER BY updateTime DESC
+    </select>
+
     <select id="selectMyMajorList"
             resultType="com.hongguoyan.module.biz.controller.app.usersubscription.vo.AppUserSubscriptionPageMajorRespVO">
         SELECT

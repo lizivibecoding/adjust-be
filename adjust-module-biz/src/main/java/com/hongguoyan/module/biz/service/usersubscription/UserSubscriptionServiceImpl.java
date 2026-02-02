@@ -73,10 +73,10 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
 
     @Override
     public PageResult<AppUserSubscriptionPageRespVO> getMyPage(Long userId, AppUserSubscriptionPageReqVO reqVO) {
-        PageResult<AppUserSubscriptionPageRespVO> schoolPage = userSubscriptionMapper.selectMySchoolPage(userId, reqVO);
-        List<AppUserSubscriptionPageRespVO> schools = schoolPage.getList();
+        // Keep API response shape unchanged (PageResult), but query all data without pagination
+        List<AppUserSubscriptionPageRespVO> schools = userSubscriptionMapper.selectMySchoolList(userId, reqVO);
         if (schools == null || schools.isEmpty()) {
-            return schoolPage;
+            return new PageResult<>(List.of(), 0L);
         }
 
         List<Long> schoolIds = new ArrayList<>(schools.size());
@@ -86,7 +86,7 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
             }
         }
         if (schoolIds.isEmpty()) {
-            return schoolPage;
+            return new PageResult<>(schools, (long) schools.size());
         }
 
         List<AppUserSubscriptionPageMajorRespVO> majorList = userSubscriptionMapper.selectMyMajorList(userId, schoolIds, reqVO);
@@ -105,7 +105,7 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
             List<AppUserSubscriptionPageMajorRespVO> majors = majorMap.get(school.getSchoolId());
             school.setMajors(majors != null ? majors : List.of());
         }
-        return schoolPage;
+        return new PageResult<>(schools, (long) schools.size());
     }
 
     @Resource

@@ -46,6 +46,12 @@ public interface UserSubscriptionMapper extends BaseMapperX<UserSubscriptionDO> 
                                                            @Param("userId") Long userId,
                                                            @Param("reqVO") AppUserSubscriptionPageReqVO reqVO);
 
+    /**
+     * 我的订阅 - 学校列表（不分页）
+     */
+    List<AppUserSubscriptionPageRespVO> selectMySchoolList(@Param("userId") Long userId,
+                                                           @Param("reqVO") AppUserSubscriptionPageReqVO reqVO);
+
     List<AppUserSubscriptionPageMajorRespVO> selectMyMajorList(@Param("userId") Long userId,
                                                                @Param("schoolIds") Collection<Long> schoolIds,
                                                                @Param("reqVO") AppUserSubscriptionPageReqVO reqVO);
