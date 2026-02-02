@@ -63,14 +63,6 @@
             <version>${revision}</version>
         </dependency>
 
-
-        <!-- AI 大模型相关模块。默认注释，保证编译速度 -->
-        <dependency>
-            <groupId>com.hongguoyan</groupId>
-            <artifactId>adjust-module-ai</artifactId>
-            <version>${revision}</version>
-        </dependency>
-
         <!-- spring boot 配置所需依赖 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

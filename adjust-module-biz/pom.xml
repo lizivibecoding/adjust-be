@@ -59,6 +59,12 @@
             <artifactId>adjust-spring-boot-starter-excel</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.volcengine</groupId>
+            <artifactId>volcengine-java-sdk-ark-runtime</artifactId>
+            <version>LATEST</version>
+        </dependency>
+
     </dependencies>
 
 </project>
