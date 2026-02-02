@@ -128,63 +128,145 @@
     <select id="selectSearchMajorPage"
             resultType="com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentSearchRespVO">
         SELECT
-            MAX(a.school_id) AS schoolId,
-            MAX(a.college_id) AS collegeId,
-            MAX(a.major_id) AS majorId,
-            MAX(a.school_name) AS schoolName,
-            MAX(a.major_code) AS majorCode,
-            MAX(a.major_name) AS majorName,
+            a.school_id AS schoolId,
+            a.college_id AS collegeId,
+            a.major_id AS majorId,
+            a.school_name AS schoolName,
+            a.major_code AS majorCode,
+            a.major_name AS majorName,
             a.year,
-            MAX(a.study_mode) AS studyMode,
-            SUM(a.adjust_count) AS adjustCount,
-            MAX(a.update_time) AS updateTime,
-            LEAST(MAX(sm.view_count), 100) AS viewCount,
-            COALESCE(MAX(sm.hot_score), 0) AS hotScore,
-            MAX(s.province_name) AS provinceName,
-            SUM(r.recruit_number) AS recruitNumber
-        FROM biz_adjustment a
+            a.study_mode AS studyMode,
+            a.adjust_count AS adjustCount,
+            a.publish_time AS updateTime,
+            COALESCE(sm.view_count, 0) AS viewCount,
+            COALESCE(sm.hot_score, 0) AS hotScore,
+            s.province_name AS provinceName,
+            r.recruit_number AS recruitNumber
+        FROM (
+            SELECT a2.*
+            FROM biz_adjustment a2
+            JOIN (
+                SELECT
+                    a.school_id,
+                    a.college_id,
+                    a.major_id,
+                    a.year,
+                    CASE
+                        WHEN a.year = YEAR(CURDATE()) THEN
+                            MAX(CONCAT(DATE_FORMAT(a.publish_time, '%Y%m%d%H%i%s'), '-', LPAD(a.id, 20, '0')))
+                        ELSE
+                            MIN(CONCAT(DATE_FORMAT(a.publish_time, '%Y%m%d%H%i%s'), '-', LPAD(a.id, 20, '0')))
+                    END AS pick_key
+                FROM biz_adjustment a
+                LEFT JOIN biz_school s ON s.id = a.school_id
+                <include refid="SearchWhere" />
+                GROUP BY a.school_id, a.college_id, a.major_id, a.year
+            ) pick ON pick.school_id = a2.school_id
+                AND pick.college_id = a2.college_id
+                AND pick.major_id = a2.major_id
+                AND pick.year = a2.year
+                AND pick.pick_key = CONCAT(DATE_FORMAT(a2.publish_time, '%Y%m%d%H%i%s'), '-', LPAD(a2.id, 20, '0'))
+        ) a
         LEFT JOIN biz_school s ON s.id = a.school_id
         LEFT JOIN biz_school_major sm ON sm.school_id = a.school_id
             AND sm.college_id = a.college_id
             AND sm.major_id = a.major_id
-        LEFT JOIN biz_recruit r ON r.school_id = a.school_id
+        LEFT JOIN (
+            SELECT r2.school_id, r2.college_id, r2.major_id, r2.year, r2.recruit_number
+            FROM biz_recruit r2
+            JOIN (
+                SELECT
+                    school_id, college_id, major_id, year,
+                    CASE
+                        WHEN year = YEAR(CURDATE()) THEN
+                            MAX(CONCAT(DATE_FORMAT(publish_time, '%Y%m%d%H%i%s'), '-', LPAD(id, 20, '0')))
+                        ELSE
+                            MIN(CONCAT(DATE_FORMAT(publish_time, '%Y%m%d%H%i%s'), '-', LPAD(id, 20, '0')))
+                    END AS pick_key
+                FROM biz_recruit
+                GROUP BY school_id, college_id, major_id, year
+            ) pick ON pick.school_id = r2.school_id
+                AND pick.college_id = r2.college_id
+                AND pick.major_id = r2.major_id
+                AND pick.year = r2.year
+                AND pick.pick_key = CONCAT(DATE_FORMAT(r2.publish_time, '%Y%m%d%H%i%s'), '-', LPAD(r2.id, 20, '0'))
+        ) r ON r.school_id = a.school_id
             AND r.college_id = a.college_id
             AND r.major_id = a.major_id
             AND r.year = a.year
-        <include refid="SearchWhere" />
-        GROUP BY a.school_id, a.college_id, a.major_id, a.year
-        ORDER BY hotScore DESC, MAX(a.update_time) DESC
+        ORDER BY hotScore DESC, updateTime DESC
     </select>
 
     <select id="selectHotRankingPage"
             resultType="com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentSearchRespVO">
         SELECT
-            MAX(a.school_id) AS schoolId,
-            MAX(a.college_id) AS collegeId,
-            MAX(a.major_id) AS majorId,
-            MAX(a.school_name) AS schoolName,
-            MAX(a.major_code) AS majorCode,
-            MAX(a.major_name) AS majorName,
+            a.school_id AS schoolId,
+            a.college_id AS collegeId,
+            a.major_id AS majorId,
+            a.school_name AS schoolName,
+            a.major_code AS majorCode,
+            a.major_name AS majorName,
             a.year,
-            MAX(a.study_mode) AS studyMode,
-            SUM(a.adjust_count) AS adjustCount,
-            MAX(a.update_time) AS updateTime,
-            LEAST(MAX(sm.view_count), 100) AS viewCount,
-            COALESCE(MAX(sm.hot_score), 0) AS hotScore,
-            MAX(s.province_name) AS provinceName,
-            SUM(r.recruit_number) AS recruitNumber
-        FROM biz_adjustment a
+            a.study_mode AS studyMode,
+            a.adjust_count AS adjustCount,
+            a.publish_time AS updateTime,
+            COALESCE(sm.view_count, 0) AS viewCount,
+            COALESCE(sm.hot_score, 0) AS hotScore,
+            s.province_name AS provinceName,
+            r.recruit_number AS recruitNumber
+        FROM (
+            SELECT a2.*
+            FROM biz_adjustment a2
+            JOIN (
+                SELECT
+                    a.school_id,
+                    a.college_id,
+                    a.major_id,
+                    a.year,
+                    CASE
+                        WHEN a.year = YEAR(CURDATE()) THEN
+                            MAX(CONCAT(DATE_FORMAT(a.publish_time, '%Y%m%d%H%i%s'), '-', LPAD(a.id, 20, '0')))
+                        ELSE
+                            MIN(CONCAT(DATE_FORMAT(a.publish_time, '%Y%m%d%H%i%s'), '-', LPAD(a.id, 20, '0')))
+                    END AS pick_key
+                FROM biz_adjustment a
+                LEFT JOIN biz_school s ON s.id = a.school_id
+                <include refid="HotRankingWhere" />
+                GROUP BY a.school_id, a.college_id, a.major_id, a.year
+            ) pick ON pick.school_id = a2.school_id
+                AND pick.college_id = a2.college_id
+                AND pick.major_id = a2.major_id
+                AND pick.year = a2.year
+                AND pick.pick_key = CONCAT(DATE_FORMAT(a2.publish_time, '%Y%m%d%H%i%s'), '-', LPAD(a2.id, 20, '0'))
+        ) a
         LEFT JOIN biz_school s ON s.id = a.school_id
         LEFT JOIN biz_school_major sm ON sm.school_id = a.school_id
             AND sm.college_id = a.college_id
             AND sm.major_id = a.major_id
-        LEFT JOIN biz_recruit r ON r.school_id = a.school_id
+        LEFT JOIN (
+            SELECT r2.school_id, r2.college_id, r2.major_id, r2.year, r2.recruit_number
+            FROM biz_recruit r2
+            JOIN (
+                SELECT
+                    school_id, college_id, major_id, year,
+                    CASE
+                        WHEN year = YEAR(CURDATE()) THEN
+                            MAX(CONCAT(DATE_FORMAT(publish_time, '%Y%m%d%H%i%s'), '-', LPAD(id, 20, '0')))
+                        ELSE
+                            MIN(CONCAT(DATE_FORMAT(publish_time, '%Y%m%d%H%i%s'), '-', LPAD(id, 20, '0')))
+                    END AS pick_key
+                FROM biz_recruit
+                GROUP BY school_id, college_id, major_id, year
+            ) pick ON pick.school_id = r2.school_id
+                AND pick.college_id = r2.college_id
+                AND pick.major_id = r2.major_id
+                AND pick.year = r2.year
+                AND pick.pick_key = CONCAT(DATE_FORMAT(r2.publish_time, '%Y%m%d%H%i%s'), '-', LPAD(r2.id, 20, '0'))
+        ) r ON r.school_id = a.school_id
             AND r.college_id = a.college_id
             AND r.major_id = a.major_id
             AND r.year = a.year
-        <include refid="HotRankingWhere" />
-        GROUP BY a.school_id, a.college_id, a.major_id, a.year
-        ORDER BY hotScore DESC, MAX(a.update_time) DESC
+        ORDER BY hotScore DESC, updateTime DESC
     </select>
 
     <select id="selectSearchSchoolPage"
@@ -195,25 +277,58 @@
             s.school_type AS schoolType,
             s.province_name AS provinceName,
             a.year,
-            SUM(r.recruit_number) AS recruitNumber,
-            SUM(a.adjust_count) AS adjustCount,
-            MAX(a.update_time) AS updateTime,
-            LEAST(SUM(sm.view_count), 100) AS viewCount,
-            MAX(s.is_985) AS is985,
-            MAX(s.is_211) AS is211,
-            MAX(s.is_syl) AS isSyl
-        FROM biz_adjustment a
+            r.recruit_number AS recruitNumber,
+            a.adjust_count AS adjustCount,
+            a.publish_time AS updateTime,
+            s.is_985 AS is985,
+            s.is_211 AS is211,
+            s.is_syl AS isSyl
+        FROM (
+            SELECT a2.*
+            FROM biz_adjustment a2
+            JOIN (
+                SELECT
+                    a.school_id,
+                    a.year,
+                    CASE
+                        WHEN a.year = YEAR(CURDATE()) THEN
+                            MAX(CONCAT(DATE_FORMAT(a.publish_time, '%Y%m%d%H%i%s'), '-', LPAD(a.id, 20, '0')))
+                        ELSE
+                            MIN(CONCAT(DATE_FORMAT(a.publish_time, '%Y%m%d%H%i%s'), '-', LPAD(a.id, 20, '0')))
+                    END AS pick_key
+                FROM biz_adjustment a
+                LEFT JOIN biz_school s ON s.id = a.school_id
+                <include refid="SearchWhere" />
+                GROUP BY a.school_id, a.year
+            ) pick ON pick.school_id = a2.school_id
+                AND pick.year = a2.year
+                AND pick.pick_key = CONCAT(DATE_FORMAT(a2.publish_time, '%Y%m%d%H%i%s'), '-', LPAD(a2.id, 20, '0'))
+        ) a
         LEFT JOIN biz_school s ON s.id = a.school_id
-        LEFT JOIN biz_school_major sm ON sm.school_id = a.school_id
-            AND sm.college_id = a.college_id
-            AND sm.major_id = a.major_id
-        LEFT JOIN biz_recruit r ON r.school_id = a.school_id
+        LEFT JOIN (
+            SELECT r2.school_id, r2.college_id, r2.major_id, r2.year, r2.recruit_number
+            FROM biz_recruit r2
+            JOIN (
+                SELECT
+                    school_id, college_id, major_id, year,
+                    CASE
+                        WHEN year = YEAR(CURDATE()) THEN
+                            MAX(CONCAT(DATE_FORMAT(publish_time, '%Y%m%d%H%i%s'), '-', LPAD(id, 20, '0')))
+                        ELSE
+                            MIN(CONCAT(DATE_FORMAT(publish_time, '%Y%m%d%H%i%s'), '-', LPAD(id, 20, '0')))
+                    END AS pick_key
+                FROM biz_recruit
+                GROUP BY school_id, college_id, major_id, year
+            ) pick ON pick.school_id = r2.school_id
+                AND pick.college_id = r2.college_id
+                AND pick.major_id = r2.major_id
+                AND pick.year = r2.year
+                AND pick.pick_key = CONCAT(DATE_FORMAT(r2.publish_time, '%Y%m%d%H%i%s'), '-', LPAD(r2.id, 20, '0'))
+        ) r ON r.school_id = a.school_id
             AND r.college_id = a.college_id
             AND r.major_id = a.major_id
             AND r.year = a.year
-        <include refid="SearchWhere" />
-        GROUP BY a.school_id, a.school_name, s.school_type, s.province_name, a.year
-        ORDER BY viewCount DESC, MAX(a.update_time) DESC
+        ORDER BY updateTime DESC
     </select>
 
     <select id="selectOptionYears" resultType="java.lang.Integer">
@@ -267,7 +382,6 @@
             COUNT(DISTINCT a.school_id) AS totalSchoolCount
         FROM biz_adjustment a
         WHERE a.year = #{year}
-          AND a.deleted = b'0'
     </select>
 
     <select id="selectSchoolAdjustmentPage"
@@ -284,7 +398,6 @@
             SUM(a.adjust_count) AS adjustCount
         FROM biz_adjustment a
         WHERE a.school_id = #{reqVO.schoolId}
-          AND a.deleted = b'0'
         GROUP BY a.school_id, a.college_id, a.major_id, a.year, a.study_mode
         ORDER BY a.year DESC, MAX(a.update_time) DESC
     </select>
