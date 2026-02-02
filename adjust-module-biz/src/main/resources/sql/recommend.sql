@@ -1,0 +1,22 @@
+CREATE TABLE `biz_user_recommend_school` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `user_id` bigint(20) NOT NULL COMMENT '用户ID',
+  `adjustment_id` bigint(20) NOT NULL COMMENT '调剂信息ID',
+  `school_id` bigint(20) NOT NULL COMMENT '学校ID',
+  `school_name` varchar(64) NOT NULL DEFAULT '' COMMENT '学校名称',
+  `major_id` bigint(20) NOT NULL COMMENT '专业ID',
+  `major_name` varchar(64) NOT NULL DEFAULT '' COMMENT '专业名称',
+  `sim_final` decimal(10,4) NOT NULL DEFAULT '0.0000' COMMENT '最终推荐概率',
+  `sim_a` decimal(10,4) NOT NULL DEFAULT '0.0000' COMMENT '分数匹配度',
+  `sim_b` decimal(10,4) NOT NULL DEFAULT '0.0000' COMMENT '专业匹配度',
+  `sim_c` decimal(10,4) NOT NULL DEFAULT '0.0000' COMMENT '竞争力',
+  `category` tinyint(4) NOT NULL DEFAULT '0' COMMENT '推荐分类: 1=冲刺, 2=稳妥, 3=保底',
+  `creator` varchar(64) DEFAULT '' COMMENT '创建者',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updater` varchar(64) DEFAULT '' COMMENT '更新者',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否删除',
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_adjustment_id` (`adjustment_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='推荐结果表';

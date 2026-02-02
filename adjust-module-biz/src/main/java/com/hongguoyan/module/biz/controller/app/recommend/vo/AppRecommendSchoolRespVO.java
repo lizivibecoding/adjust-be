@@ -12,6 +12,9 @@ public class AppRecommendSchoolRespVO {
     @Schema(description = "学校ID", example = "1024")
     private Long schoolId;
 
+    @Schema(description = "调剂ID", example = "1024")
+    private Long adjustment_id;
+
     @Schema(description = "学校名称", example = "清华大学")
     private String schoolName;
 
@@ -21,8 +24,6 @@ public class AppRecommendSchoolRespVO {
     @Schema(description = "省份名称", example = "北京")
     private String provinceName;
 
-    @Schema(description = "学校标签(985/211等)", example = "[\"985\",\"211\"]")
-    private java.util.List<String> tags;
 
     @Schema(description = "专业ID", example = "2048")
     private Long majorId;
@@ -65,18 +66,6 @@ public class AppRecommendSchoolRespVO {
 
     @Schema(description = "院校排名差距描述(较大/适中/较小)", example = "较大")
     private String rankingGapLabel;
-
-    @Schema(description = "匹配详情(SimFinal)", example = "0.85")
-    private Double simFinal;
-
-    @Schema(description = "分数匹配度(SimA)", example = "0.8")
-    private Double simA;
-
-    @Schema(description = "专业匹配度(SimB)", example = "0.9")
-    private Double simB;
-
-    @Schema(description = "竞争力(SimC)", example = "0.7")
-    private Double simC;
 
     @Schema(description = "去年录取平均分", example = "350")
     private BigDecimal lastYearAvgScore;
