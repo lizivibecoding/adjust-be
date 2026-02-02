@@ -1,4 +1,4 @@
-package com.hongguoyan.module.biz.controller.app.usercustomreport.vo;
+package com.hongguoyan.module.biz.controller.app.recommend.vo;
 
 import cn.idev.excel.annotation.ExcelIgnoreUnannotated;
 import cn.idev.excel.annotation.ExcelProperty;
@@ -39,17 +39,17 @@ public class AppUserCustomReportRespVO {
     @ExcelProperty("雷达图-背景维度评分(0-100)")
     private Integer dimBackgroundScore;
 
-    @Schema(description = "雷达图-地区维度评分(0-100)", requiredMode = Schema.RequiredMode.REQUIRED)
-    @ExcelProperty("雷达图-地区维度评分(0-100)")
-    private Integer dimLocationScore;
+    @Schema(description = "雷达图-目标院校层次评分(0-100)", requiredMode = Schema.RequiredMode.REQUIRED)
+    @ExcelProperty("雷达图-目标院校层次评分(0-100)")
+    private Integer dimTargetSchoolLevelScore;
 
-    @Schema(description = "雷达图-英语维度评分(0-100)", requiredMode = Schema.RequiredMode.REQUIRED)
-    @ExcelProperty("雷达图-英语维度评分(0-100)")
-    private Integer dimEnglishScore;
+    @Schema(description = "雷达图-软实力评分(0-100)", requiredMode = Schema.RequiredMode.REQUIRED)
+    @ExcelProperty("雷达图-软实力评分(0-100)")
+    private Integer dimSoftSkillsScore;
 
-    @Schema(description = "雷达图-类型维度评分(0-100)", requiredMode = Schema.RequiredMode.REQUIRED)
-    @ExcelProperty("雷达图-类型维度评分(0-100)")
-    private Integer dimTypeScore;
+    @Schema(description = "雷达图-专业竞争力评分(0-100)", requiredMode = Schema.RequiredMode.REQUIRED)
+    @ExcelProperty("雷达图-专业竞争力评分(0-100)")
+    private Integer dimMajorCompetitivenessScore;
 
     @Schema(description = "雷达图-总分维度评分(0-100)", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("雷达图-总分维度评分(0-100)")
@@ -59,17 +59,17 @@ public class AppUserCustomReportRespVO {
     @ExcelProperty("背景维度分析文案")
     private String analysisBackground;
 
-    @Schema(description = "地区维度分析文案", requiredMode = Schema.RequiredMode.REQUIRED)
-    @ExcelProperty("地区维度分析文案")
-    private String analysisLocation;
+    @Schema(description = "目标院校层次分析文案", requiredMode = Schema.RequiredMode.REQUIRED)
+    @ExcelProperty("目标院校层次分析文案")
+    private String analysisTargetSchoolLevel;
 
-    @Schema(description = "英语维度分析文案", requiredMode = Schema.RequiredMode.REQUIRED)
-    @ExcelProperty("英语维度分析文案")
-    private String analysisEnglish;
+    @Schema(description = "软实力分析文案", requiredMode = Schema.RequiredMode.REQUIRED)
+    @ExcelProperty("软实力分析文案")
+    private String analysisSoftSkills;
 
-    @Schema(description = "类型维度分析文案", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
-    @ExcelProperty("类型维度分析文案")
-    private String analysisType;
+    @Schema(description = "专业竞争力分析文案", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+    @ExcelProperty("专业竞争力分析文案")
+    private String analysisMajorCompetitiveness;
 
     @Schema(description = "总分维度分析文案", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("总分维度分析文案")

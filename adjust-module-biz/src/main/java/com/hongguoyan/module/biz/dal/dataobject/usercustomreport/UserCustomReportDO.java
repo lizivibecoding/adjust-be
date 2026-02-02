@@ -56,17 +56,17 @@ public class UserCustomReportDO extends BaseDO {
      */
     private Integer dimBackgroundScore;
     /**
-     * 雷达图-地区维度评分(0-100)
+     * 雷达图-目标院校层次评分(0-100)
      */
-    private Integer dimLocationScore;
+    private Integer dimTargetSchoolLevelScore;
     /**
-     * 雷达图-英语维度评分(0-100)
+     * 雷达图-软实力评分(0-100)
      */
-    private Integer dimEnglishScore;
+    private Integer dimSoftSkillsScore;
     /**
-     * 雷达图-类型维度评分(0-100)
+     * 雷达图-专业竞争力评分(0-100)
      */
-    private Integer dimTypeScore;
+    private Integer dimMajorCompetitivenessScore;
     /**
      * 雷达图-总分维度评分(0-100)
      */
@@ -76,17 +76,17 @@ public class UserCustomReportDO extends BaseDO {
      */
     private String analysisBackground;
     /**
-     * 地区维度分析文案
+     * 目标院校层次分析文案
      */
-    private String analysisLocation;
+    private String analysisTargetSchoolLevel;
     /**
-     * 英语维度分析文案
+     * 软实力分析文案
      */
-    private String analysisEnglish;
+    private String analysisSoftSkills;
     /**
-     * 类型维度分析文案
+     * 专业竞争力分析文案
      */
-    private String analysisType;
+    private String analysisMajorCompetitiveness;
     /**
      * 总分维度分析文案
      */

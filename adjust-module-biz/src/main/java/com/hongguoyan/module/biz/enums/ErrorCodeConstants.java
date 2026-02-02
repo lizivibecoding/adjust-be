@@ -44,4 +44,6 @@ public interface ErrorCodeConstants {
     ErrorCode USER_PREFERENCE_NO_INVALID = new ErrorCode(37, "志愿序号不合法");
     ErrorCode USER_SUBSCRIPTION_NOT_EXISTS = new ErrorCode(38, "用户调剂订阅不存在");
     ErrorCode CANDIDATE_SCORE_TOTAL_NOT_EXISTS = new ErrorCode(39, "考生初试总分未填写");
+    ErrorCode USER_PROFILE_NOT_EXISTS = new ErrorCode(40, "用户基础信息不存在");
+    ErrorCode USER_NOT_QUALIFIED = new ErrorCode(41, "用户未过一志愿区域国家线");
 }
