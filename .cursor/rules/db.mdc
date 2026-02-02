@@ -76,3 +76,5 @@ create table xxx_table
 
 ## Reference（示例风格参考）
 - 以 `system_menu` 表的字段类型、默认值、comment、collate 写法为准。
+
+1

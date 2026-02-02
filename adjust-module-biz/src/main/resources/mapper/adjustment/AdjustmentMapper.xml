@@ -35,9 +35,6 @@
                     #{code}
                 </foreach>
             </if>
-            <if test="reqVO.provinceArea != null and reqVO.provinceArea != ''">
-                AND s.province_area = #{reqVO.provinceArea}
-            </if>
 
             <if test="reqVO.level2MajorCodes != null and reqVO.level2MajorCodes.size() &gt; 0">
                 AND (
