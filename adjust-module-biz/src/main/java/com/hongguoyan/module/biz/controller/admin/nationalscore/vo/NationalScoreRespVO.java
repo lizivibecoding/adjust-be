@@ -18,7 +18,7 @@ public class NationalScoreRespVO {
 
     @Schema(description = "年份", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("年份")
-    private Short year;
+    private Integer year;
 
     @Schema(description = "学位类型(0=不区分,1=专硕,2=学硕)", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
     @ExcelProperty("学位类型(0=不区分,1=专硕,2=学硕)")

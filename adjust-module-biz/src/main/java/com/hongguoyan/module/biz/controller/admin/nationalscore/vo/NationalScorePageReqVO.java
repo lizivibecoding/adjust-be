@@ -14,7 +14,7 @@ import static com.hongguoyan.framework.common.util.date.DateUtils.FORMAT_YEAR_MO
 public class NationalScorePageReqVO extends PageParam {
 
     @Schema(description = "年份")
-    private Short year;
+    private Integer year;
 
     @Schema(description = "学位类型(0=不区分,1=专硕,2=学硕)", example = "1")
     private Integer degreeType;

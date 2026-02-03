@@ -46,7 +46,9 @@ public class AppRecommendController {
     @Operation(summary = "生成调剂推荐&报告")
     public CommonResult<?> generateRecommend() {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
-        return success(null);
+//        recommendService.generateRecommend(userId);
+        Long reportId = recommendService.generateAssessmentReport(userId);
+        return success(reportId);
     }
 
     /**

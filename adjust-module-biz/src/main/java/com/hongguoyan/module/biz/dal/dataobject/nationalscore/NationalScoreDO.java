@@ -30,7 +30,7 @@ public class NationalScoreDO extends BaseDO {
     /**
      * 年份
      */
-    private Short year;
+    private Integer year;
     /**
      * 学位类型(0=不区分,1=专硕,2=学硕)
      */

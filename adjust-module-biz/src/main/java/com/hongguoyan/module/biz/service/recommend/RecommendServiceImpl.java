@@ -2,25 +2,37 @@ package com.hongguoyan.module.biz.service.recommend;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil;
 import com.hongguoyan.module.biz.controller.app.recommend.vo.AppRecommendSchoolListReqVO;
 import com.hongguoyan.module.biz.controller.app.recommend.vo.AppRecommendSchoolRespVO;
+import com.hongguoyan.module.biz.dal.dataobject.schoolrank.SchoolRankDO;
 import com.hongguoyan.module.biz.dal.dataobject.adjustment.AdjustmentDO;
 import com.hongguoyan.module.biz.dal.dataobject.nationalscore.NationalScoreDO;
 import com.hongguoyan.module.biz.dal.dataobject.recommend.UserRecommendSchoolDO;
 import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
 import com.hongguoyan.module.biz.dal.dataobject.schoolscore.SchoolScoreDO;
+import com.hongguoyan.module.biz.dal.dataobject.usercustomreport.UserCustomReportDO;
+import com.hongguoyan.module.biz.dal.dataobject.userintention.UserIntentionDO;
 import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.AdjustmentMapper;
+import com.hongguoyan.module.biz.dal.mysql.schoolrank.SchoolRankMapper;
 import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
 import com.hongguoyan.module.biz.dal.mysql.nationalscore.NationalScoreMapper;
 import com.hongguoyan.module.biz.dal.mysql.recommend.UserRecommendSchoolMapper;
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
 import com.hongguoyan.module.biz.dal.mysql.schoolscore.SchoolScoreMapper;
+import com.hongguoyan.module.biz.dal.mysql.usercustomreport.UserCustomReportMapper;
 import com.hongguoyan.module.biz.dal.mysql.userintention.UserIntentionMapper;
 import com.hongguoyan.module.biz.dal.mysql.userprofile.UserProfileMapper;
 import com.hongguoyan.module.biz.enums.ErrorCodeConstants;
+import com.hongguoyan.module.biz.service.ai.AiTextService;
+import com.hongguoyan.module.biz.service.ai.dto.AiTextRequest;
+import com.hongguoyan.module.biz.service.ai.dto.AiTextResult;
+import com.hongguoyan.module.biz.service.usercustomreport.UserCustomReportService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,6 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import java.math.BigDecimal;
+import java.time.Year;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -59,6 +72,16 @@ public class RecommendServiceImpl implements RecommendService {
     private AdjustmentMapper adjustmentMapper;
     @Resource
     private UserRecommendSchoolMapper userRecommendSchoolMapper;
+    @Resource
+    private SchoolRankMapper schoolRankMapper;
+    @Resource
+    private UserCustomReportService userCustomReportService;
+    @Resource
+    private UserCustomReportMapper userCustomReportMapper;
+    @Resource
+    private AiTextService aiTextService;
+    @Resource
+    private ObjectMapper objectMapper;
 
     @Override
     public List<AppRecommendSchoolRespVO> recommendSchools(Long userId, AppRecommendSchoolListReqVO reqVO) {
@@ -221,6 +244,116 @@ public class RecommendServiceImpl implements RecommendService {
         return true;
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long generateAssessmentReport(Long userId) {
+        // 1. Load user profile + intention
+        UserProfileDO userProfile = userProfileMapper.selectOne(new LambdaQueryWrapper<UserProfileDO>()
+                .eq(UserProfileDO::getUserId, userId));
+        if (userProfile == null) {
+            log.warn("用户画像不存在，无法生成报告: userId={}", userId);
+            throw ServiceExceptionUtil.exception(ErrorCodeConstants.USER_PROFILE_NOT_EXISTS);
+        }
+
+        UserIntentionDO userIntention = userIntentionMapper.selectOne(new LambdaQueryWrapper<UserIntentionDO>()
+                .eq(UserIntentionDO::getUserId, userId));
+
+        // 2. Resolve basic context
+        // use profile createTime year as report year
+        int currentYear = userProfile.getCreateTime() != null
+                ? userProfile.getCreateTime().getYear()
+                : Year.now().getValue();
+        List<NationalScoreDO> nationalScores = nationalScoreMapper.selectList(new LambdaQueryWrapper<NationalScoreDO>()
+                .eq(NationalScoreDO::getYear, currentYear));
+
+        // only load schools needed by report: graduate school + target school
+        Set<Long> neededSchoolIds = new HashSet<>();
+        if (userProfile.getGraduateSchoolId() != null) {
+            neededSchoolIds.add(userProfile.getGraduateSchoolId());
+        }
+        if (userProfile.getTargetSchoolId() != null) {
+            neededSchoolIds.add(userProfile.getTargetSchoolId());
+        }
+        List<SchoolDO> schools = neededSchoolIds.isEmpty()
+                ? Collections.emptyList()
+                : schoolMapper.selectBatchIds(neededSchoolIds);
+        Map<Long, SchoolDO> schoolMap = schools.stream()
+                .filter(s -> s.getId() != null)
+                .collect(Collectors.toMap(SchoolDO::getId, Function.identity(), (a, b) -> a));
+
+        String firstChoiceArea = resolveFirstChoiceArea(userProfile, schoolMap);
+        NationalScoreDO matchedLine = findMatchedNationalLine(userProfile, firstChoiceArea, nationalScores);
+
+        // Graduate school rank (Ruanke)
+        SchoolRankDO ruanke = null;
+        if (userProfile.getGraduateSchoolId() != null) {
+            ruanke = schoolRankMapper.selectLatestBySchoolId(userProfile.getGraduateSchoolId());
+        }
+        if (ruanke == null && StrUtil.isNotBlank(userProfile.getGraduateSchoolName())) {
+            ruanke = schoolRankMapper.selectLatestBySchoolName(userProfile.getGraduateSchoolName());
+        }
+
+        // Intention majors
+        List<Long> intentionMajorIds = parseJsonLongList(userIntention != null ? userIntention.getMajorIds() : null);
+        Map<Long, String> intentionMajorNameMap = new LinkedHashMap<>();
+        if (CollUtil.isNotEmpty(intentionMajorIds)) {
+            majorMapper.selectBatchIds(intentionMajorIds).forEach(m -> intentionMajorNameMap.put(m.getId(), m.getName()));
+        }
+        // Supply-side: count open adjustments by majorId (best-effort)
+        Map<Long, Long> openAdjustmentCountByMajorId = new LinkedHashMap<>();
+        if (CollUtil.isNotEmpty(intentionMajorIds)) {
+            List<AdjustmentDO> rows = adjustmentMapper.selectList(new LambdaQueryWrapper<AdjustmentDO>()
+                    .select(AdjustmentDO::getMajorId)
+                    .eq(AdjustmentDO::getStatus, 1)
+                    .eq(AdjustmentDO::getAdjustStatus, 1)
+                    .eq(AdjustmentDO::getYear, currentYear)
+                    .in(AdjustmentDO::getMajorId, intentionMajorIds));
+            Map<Long, Long> grouped = rows.stream()
+                    .filter(r -> r.getMajorId() != null)
+                    .collect(Collectors.groupingBy(AdjustmentDO::getMajorId, LinkedHashMap::new, Collectors.counting()));
+            openAdjustmentCountByMajorId.putAll(grouped);
+        }
+
+        // 3. Create new report version row
+        Long reportId = userCustomReportService.createNewVersionByUserId(userId);
+
+        // 4. Ask AI to generate 5-dimension report JSON
+        String prompt = buildAssessmentPrompt(currentYear, userProfile, userIntention, firstChoiceArea, matchedLine, ruanke,
+                schoolMap, intentionMajorNameMap, openAdjustmentCountByMajorId);
+
+        AiTextResult aiResult = aiTextService.generateText(AiTextRequest.builder()
+                .provider("doubao")
+                .prompt(prompt)
+                .timeoutMs(60_000L)
+                .build());
+
+        StudentAssessmentAiReport aiReport = parseAssessmentAiJson(aiResult != null ? aiResult.getText() : null);
+
+        // 5. Persist result
+        UserCustomReportDO toUpdate = new UserCustomReportDO();
+        toUpdate.setId(reportId);
+        toUpdate.setUserId(userId);
+        toUpdate.setReportVersion("v1");
+        toUpdate.setSourceProfileId(userProfile.getId());
+        toUpdate.setSourceIntentionId(userIntention != null ? userIntention.getId() : null);
+
+        if (aiReport != null) {
+            toUpdate.setDimBackgroundScore(aiReport.getDimBackgroundScore());
+            toUpdate.setDimTotalScore(aiReport.getDimTotalScore());
+            toUpdate.setDimTargetSchoolLevelScore(aiReport.getDimTargetSchoolLevelScore());
+            toUpdate.setDimMajorCompetitivenessScore(aiReport.getDimMajorCompetitivenessScore());
+            toUpdate.setDimSoftSkillsScore(aiReport.getDimSoftSkillsScore());
+            toUpdate.setAnalysisBackground(aiReport.getAnalysisBackground());
+            toUpdate.setAnalysisTotal(aiReport.getAnalysisTotal());
+            toUpdate.setAnalysisTargetSchoolLevel(aiReport.getAnalysisTargetSchoolLevel());
+            toUpdate.setAnalysisMajorCompetitiveness(aiReport.getAnalysisMajorCompetitiveness());
+            toUpdate.setAnalysisSoftSkills(aiReport.getAnalysisSoftSkills());
+        }
+
+        userCustomReportMapper.updateById(toUpdate);
+        return reportId;
+    }
+
     // --- Helper Methods ---
 
     /**
@@ -268,6 +401,351 @@ public class RecommendServiceImpl implements RecommendService {
         if (s4 < matchedLine.getSingle150()) return false;
 
         return true;
+    }
+
+    private String resolveFirstChoiceArea(UserProfileDO userProfile, Map<Long, SchoolDO> schoolMap) {
+        String firstChoiceArea = "A";
+        if (userProfile.getTargetSchoolId() != null) {
+            SchoolDO firstChoiceSchool = schoolMap.get(userProfile.getTargetSchoolId());
+            if (firstChoiceSchool != null && StrUtil.isNotBlank(firstChoiceSchool.getProvinceArea())) {
+                firstChoiceArea = firstChoiceSchool.getProvinceArea();
+            }
+        }
+        return firstChoiceArea;
+    }
+
+    private NationalScoreDO findMatchedNationalLine(UserProfileDO user, String area, List<NationalScoreDO> nationalScores) {
+        if (user == null || StrUtil.isBlank(area) || CollUtil.isEmpty(nationalScores)) {
+            return null;
+        }
+        Integer degreeType = user.getTargetDegreeType() != null ? user.getTargetDegreeType() : 1;
+        String majorCode = user.getTargetMajorCode();
+        if (StrUtil.isBlank(majorCode)) {
+            return null;
+        }
+        NationalScoreDO matchedLine = nationalScores.stream()
+                .filter(ns -> ns.getDegreeType().equals(degreeType))
+                .filter(ns -> ns.getArea().equalsIgnoreCase(area))
+                .filter(ns -> majorCode.startsWith(ns.getMajorCode()))
+                .max((o1, o2) -> o1.getMajorCode().length() - o2.getMajorCode().length())
+                .orElse(null);
+        if (matchedLine != null) {
+            return matchedLine;
+        }
+        if (majorCode.length() < 2) {
+            return null;
+        }
+        return nationalScores.stream()
+                .filter(ns -> ns.getDegreeType().equals(degreeType))
+                .filter(ns -> ns.getArea().equalsIgnoreCase(area))
+                .filter(ns -> majorCode.substring(0, 2).equals(ns.getMajorCode()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private List<Long> parseJsonLongList(String json) {
+        if (StrUtil.isBlank(json)) {
+            return Collections.emptyList();
+        }
+        try {
+            List<Object> raw = JSONUtil.parseArray(json).toList(Object.class);
+            if (raw == null || raw.isEmpty()) {
+                return Collections.emptyList();
+            }
+            List<Long> result = new ArrayList<>(raw.size());
+            for (Object item : raw) {
+                if (item == null) {
+                    continue;
+                }
+                try {
+                    result.add(Long.parseLong(String.valueOf(item)));
+                } catch (NumberFormatException ignore) {
+                    // ignore invalid items
+                }
+            }
+            return result;
+        } catch (Exception ignore) {
+            return Collections.emptyList();
+        }
+    }
+
+    private String buildAssessmentPrompt(Integer year,
+                                         UserProfileDO profile,
+                                         UserIntentionDO intention,
+                                         String nationalArea,
+                                         NationalScoreDO nationalLine,
+                                         SchoolRankDO ruankeRank,
+                                         Map<Long, SchoolDO> schoolMap,
+                                         Map<Long, String> intentionMajorNameMap,
+                                         Map<Long, Long> openAdjustmentCountByMajorId) {
+        SchoolDO gradSchool = profile.getGraduateSchoolId() != null ? schoolMap.get(profile.getGraduateSchoolId()) : null;
+        SchoolDO targetSchool = profile.getTargetSchoolId() != null ? schoolMap.get(profile.getTargetSchoolId()) : null;
+
+        Integer scoreTotal = profile.getScoreTotal() != null ? profile.getScoreTotal().intValue() : null;
+        Integer nationalTotal = (nationalLine != null && nationalLine.getTotal() != null)
+                ? nationalLine.getTotal().intValue()
+                : null;
+        Integer delta = (scoreTotal != null && nationalTotal != null) ? (scoreTotal - nationalTotal) : null;
+
+        Map<String, Object> input = new LinkedHashMap<>();
+        input.put("year", year);
+        // NOTE: Map.of does not allow null values, use LinkedHashMap for DB-driven payloads.
+        Map<String, Object> graduateSchool = new LinkedHashMap<>();
+        graduateSchool.put("id", profile.getGraduateSchoolId());
+        graduateSchool.put("name", StrUtil.blankToDefault(profile.getGraduateSchoolName(), gradSchool != null ? gradSchool.getSchoolName() : null));
+        graduateSchool.put("is985", gradSchool != null ? gradSchool.getIs985() : null);
+        graduateSchool.put("is211", gradSchool != null ? gradSchool.getIs211() : null);
+        graduateSchool.put("isSyl", gradSchool != null ? gradSchool.getIsSyl() : null);
+        input.put("graduateSchool", graduateSchool);
+
+        if (ruankeRank == null) {
+            input.put("ruankeRank", null);
+        } else {
+            Map<String, Object> ruankeRankMap = new LinkedHashMap<>();
+            ruankeRankMap.put("year", ruankeRank.getYear());
+            ruankeRankMap.put("ranking", ruankeRank.getRanking());
+            ruankeRankMap.put("score", ruankeRank.getScore());
+            input.put("ruankeRank", ruankeRankMap);
+        }
+
+        Map<String, Object> firstScore = new LinkedHashMap<>();
+        firstScore.put("total", scoreTotal);
+        firstScore.put("nationalArea", nationalArea);
+        firstScore.put("targetMajorCode", profile.getTargetMajorCode());
+        firstScore.put("targetMajorName", profile.getTargetMajorName());
+        firstScore.put("targetDegreeType", profile.getTargetDegreeType());
+        firstScore.put("targetDegreeTypeName", degreeTypeName(profile.getTargetDegreeType()));
+        firstScore.put("nationalLineTotal", nationalTotal);
+        firstScore.put("delta", delta);
+        input.put("firstScore", firstScore);
+
+        Map<String, Object> targetSchoolMap = new LinkedHashMap<>();
+        targetSchoolMap.put("id", profile.getTargetSchoolId());
+        targetSchoolMap.put("name", StrUtil.blankToDefault(profile.getTargetSchoolName(), targetSchool != null ? targetSchool.getSchoolName() : null));
+        targetSchoolMap.put("is985", targetSchool != null ? targetSchool.getIs985() : null);
+        targetSchoolMap.put("is211", targetSchool != null ? targetSchool.getIs211() : null);
+        targetSchoolMap.put("isSyl", targetSchool != null ? targetSchool.getIsSyl() : null);
+        input.put("targetSchool", targetSchoolMap);
+        if (intention == null) {
+            input.put("intention", null);
+        } else {
+            Map<String, Object> intentionMap = new LinkedHashMap<>();
+            intentionMap.put("schoolLevel", intention.getSchoolLevel());
+            intentionMap.put("schoolLevelName", schoolLevelName(intention.getSchoolLevel()));
+            intentionMap.put("studyMode", intention.getStudyMode());
+            intentionMap.put("studyModeName", studyModeName(intention.getStudyMode()));
+            intentionMap.put("degreeType", intention.getDegreeType());
+            intentionMap.put("degreeTypeName", degreeTypeName(intention.getDegreeType()));
+            intentionMap.put("isAcceptCrossMajor", intention.getIsAcceptCrossMajor());
+            intentionMap.put("isAcceptCrossExam", intention.getIsAcceptCrossExam());
+            intentionMap.put("adjustPriority", intention.getAdjustPriority());
+            intentionMap.put("adjustPriorityName", adjustPriorityName(intention.getAdjustPriority()));
+            input.put("intention", intentionMap);
+        }
+        input.put("intentionMajors", intentionMajorNameMap);
+        input.put("openAdjustmentCountByMajorId", openAdjustmentCountByMajorId);
+        // NOTE: Map.of supports up to 10 pairs only; use LinkedHashMap for larger payloads
+        Map<String, Object> softSkills = new LinkedHashMap<>();
+        softSkills.put("cet4", profile.getCet4Score());
+        softSkills.put("cet6", profile.getCet6Score());
+        softSkills.put("paperCount", profile.getPaperCount());
+        softSkills.put("paperExperience", profile.getPaperExperience());
+        softSkills.put("competitionCount", profile.getCompetitionCount());
+        softSkills.put("competitionExperience", profile.getCompetitionExperience());
+        softSkills.put("awardCount", profile.getAwardCount());
+        softSkills.put("awards", profile.getUndergraduateAwards());
+        softSkills.put("gpa", profile.getUndergraduateGpa());
+        softSkills.put("avgScore", profile.getGraduateAverageScore());
+        softSkills.put("selfAssessedScore", profile.getSelfAssessedScore());
+        softSkills.put("selfIntroduction", profile.getSelfIntroduction());
+        input.put("softSkills", softSkills);
+
+        String inputJson;
+        try {
+            inputJson = objectMapper.writeValueAsString(input);
+        } catch (Exception e) {
+            inputJson = "{}";
+        }
+
+        return """
+                你是一名考研调剂咨询顾问，请基于输入数据生成“学生评估报告（5个维度）”。
+                
+                维度：
+                1) 院校背景维度（软科排名/985/211/双一流等）
+                2) 学生初试总分维度（与国家线离散程度：delta=总分-国家线总分）
+                3) 目标院校层次维度（结合一志愿学校层次与调剂意向院校层次）
+                4) 专业竞争力维度（调剂意向专业 + 市场供给：openAdjustmentCountByMajorId）
+                5) 软实力维度（英语/科研/竞赛/获奖/GPA/自评等）
+                
+                输出要求：
+                - 只输出一个 JSON 对象，不要 Markdown，不要额外解释。
+                - 分数字段为 0-100 的整数。
+                - 文案字段使用中文，分段清晰，给出优势/风险/建议。
+                - 字段必须完整，缺数据时也要给合理兜底说明。
+                
+                输出 JSON Schema（必须严格遵守字段名）：
+                {
+                  "dimBackgroundScore": 0,
+                  "analysisBackground": "",
+                  "dimTotalScore": 0,
+                  "analysisTotal": "",
+                  "dimTargetSchoolLevelScore": 0,
+                  "analysisTargetSchoolLevel": "",
+                  "dimMajorCompetitivenessScore": 0,
+                  "analysisMajorCompetitiveness": "",
+                  "dimSoftSkillsScore": 0,
+                  "analysisSoftSkills": ""
+                }
+                
+                输入数据(JSON)：
+                %s
+                """.formatted(inputJson);
+    }
+
+    private String studyModeName(Integer studyMode) {
+        if (studyMode == null) {
+            return null;
+        }
+        return switch (studyMode) {
+            case 0 -> "不限";
+            case 1 -> "全日制";
+            case 2 -> "非全日制";
+            default -> "未知";
+        };
+    }
+
+    private String degreeTypeName(Integer degreeType) {
+        if (degreeType == null) {
+            return null;
+        }
+        return switch (degreeType) {
+            case 0 -> "不限/不区分";
+            case 1 -> "专硕";
+            case 2 -> "学硕";
+            default -> "未知";
+        };
+    }
+
+    private String schoolLevelName(Integer schoolLevel) {
+        if (schoolLevel == null) {
+            return null;
+        }
+        return switch (schoolLevel) {
+            case 1 -> "985";
+            case 2 -> "211";
+            case 3 -> "双一流";
+            case 4 -> "普通";
+            default -> "未知";
+        };
+    }
+
+    private String adjustPriorityName(Integer adjustPriority) {
+        if (adjustPriority == null) {
+            return null;
+        }
+        return switch (adjustPriority) {
+            case 1 -> "优先院校层次";
+            case 2 -> "优先专业匹配度";
+            default -> "未知";
+        };
+    }
+
+    private StudentAssessmentAiReport parseAssessmentAiJson(String text) {
+        if (StrUtil.isBlank(text)) {
+            return null;
+        }
+        String json = extractFirstJsonObject(text);
+        if (StrUtil.isBlank(json)) {
+            return null;
+        }
+        try {
+            JsonNode root = objectMapper.readTree(json);
+            StudentAssessmentAiReport r = new StudentAssessmentAiReport();
+            r.setDimBackgroundScore(intOrNull(root.get("dimBackgroundScore")));
+            r.setAnalysisBackground(textOrNull(root.get("analysisBackground")));
+            r.setDimTotalScore(intOrNull(root.get("dimTotalScore")));
+            r.setAnalysisTotal(textOrNull(root.get("analysisTotal")));
+            r.setDimTargetSchoolLevelScore(intOrNull(root.get("dimTargetSchoolLevelScore")));
+            r.setAnalysisTargetSchoolLevel(textOrNull(root.get("analysisTargetSchoolLevel")));
+            r.setDimMajorCompetitivenessScore(intOrNull(root.get("dimMajorCompetitivenessScore")));
+            r.setAnalysisMajorCompetitiveness(textOrNull(root.get("analysisMajorCompetitiveness")));
+            r.setDimSoftSkillsScore(intOrNull(root.get("dimSoftSkillsScore")));
+            r.setAnalysisSoftSkills(textOrNull(root.get("analysisSoftSkills")));
+            return r;
+        } catch (Exception e) {
+            log.warn("AI 报告 JSON 解析失败: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    private String extractFirstJsonObject(String text) {
+        int start = text.indexOf('{');
+        int end = text.lastIndexOf('}');
+        if (start < 0 || end < 0 || end <= start) {
+            return null;
+        }
+        return text.substring(start, end + 1).trim();
+    }
+
+    private String textOrNull(JsonNode node) {
+        if (node == null || node.isNull()) {
+            return null;
+        }
+        if (node.isTextual()) {
+            return node.asText();
+        }
+        return node.toString();
+    }
+
+    private Integer intOrNull(JsonNode node) {
+        if (node == null || node.isNull()) {
+            return null;
+        }
+        if (node.isInt() || node.isLong()) {
+            return node.asInt();
+        }
+        if (node.isTextual()) {
+            try {
+                return Integer.parseInt(node.asText().trim());
+            } catch (Exception ignore) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private static class StudentAssessmentAiReport {
+        private Integer dimBackgroundScore;
+        private String analysisBackground;
+        private Integer dimTotalScore;
+        private String analysisTotal;
+        private Integer dimTargetSchoolLevelScore;
+        private String analysisTargetSchoolLevel;
+        private Integer dimMajorCompetitivenessScore;
+        private String analysisMajorCompetitiveness;
+        private Integer dimSoftSkillsScore;
+        private String analysisSoftSkills;
+
+        public Integer getDimBackgroundScore() { return dimBackgroundScore; }
+        public void setDimBackgroundScore(Integer v) { this.dimBackgroundScore = v; }
+        public String getAnalysisBackground() { return analysisBackground; }
+        public void setAnalysisBackground(String v) { this.analysisBackground = v; }
+        public Integer getDimTotalScore() { return dimTotalScore; }
+        public void setDimTotalScore(Integer v) { this.dimTotalScore = v; }
+        public String getAnalysisTotal() { return analysisTotal; }
+        public void setAnalysisTotal(String v) { this.analysisTotal = v; }
+        public Integer getDimTargetSchoolLevelScore() { return dimTargetSchoolLevelScore; }
+        public void setDimTargetSchoolLevelScore(Integer v) { this.dimTargetSchoolLevelScore = v; }
+        public String getAnalysisTargetSchoolLevel() { return analysisTargetSchoolLevel; }
+        public void setAnalysisTargetSchoolLevel(String v) { this.analysisTargetSchoolLevel = v; }
+        public Integer getDimMajorCompetitivenessScore() { return dimMajorCompetitivenessScore; }
+        public void setDimMajorCompetitivenessScore(Integer v) { this.dimMajorCompetitivenessScore = v; }
+        public String getAnalysisMajorCompetitiveness() { return analysisMajorCompetitiveness; }
+        public void setAnalysisMajorCompetitiveness(String v) { this.analysisMajorCompetitiveness = v; }
+        public Integer getDimSoftSkillsScore() { return dimSoftSkillsScore; }
+        public void setDimSoftSkillsScore(Integer v) { this.dimSoftSkillsScore = v; }
+        public String getAnalysisSoftSkills() { return analysisSoftSkills; }
+        public void setAnalysisSoftSkills(String v) { this.analysisSoftSkills = v; }
     }
     
     /**
