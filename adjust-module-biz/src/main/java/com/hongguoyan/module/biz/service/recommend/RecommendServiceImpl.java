@@ -86,7 +86,7 @@ public class RecommendServiceImpl implements RecommendService {
         Map<Long, SchoolDO> schoolMap = allSchools.stream()
                 .collect(Collectors.toMap(SchoolDO::getId, Function.identity()));
         
-        Integer currentYear = 2025; // TODO: 动态获取
+        Integer currentYear = 2025;
         List<NationalScoreDO> nationalScores = nationalScoreMapper.selectList(new LambdaQueryWrapper<NationalScoreDO>()
                 .eq(NationalScoreDO::getYear, currentYear));
 
@@ -107,12 +107,8 @@ public class RecommendServiceImpl implements RecommendService {
             log.info("用户未过一志愿区域({})国家线，无法推荐: userId={}", firstChoiceArea, userId);
             throw ServiceExceptionUtil.exception(ErrorCodeConstants.USER_NOT_QUALIFIED);
         }
-        
-        String userQualifyArea = firstChoiceArea; // 用户资格区域跟一志愿区域一致
 
         // 4. 加载并过滤学校
-        // --- Step 2: 过滤学校自划线 & 区域限制 ---
-        // 优化：先过滤学校，再查调剂信息，减少数据量
 
         // 预加载所有学校分数线 (自划线)
         List<SchoolScoreDO> allSchoolScores = schoolScoreMapper.selectList(new LambdaQueryWrapper<SchoolScoreDO>()
@@ -156,7 +152,7 @@ public class RecommendServiceImpl implements RecommendService {
         }
         
         if (candidateSchoolIds.isEmpty()) {
-            return true;
+            throw ServiceExceptionUtil.exception(ErrorCodeConstants.NO_MATCHING_SCHOOLS);
         }
 
         // 5. 获取候选学校的调剂信息
@@ -166,7 +162,7 @@ public class RecommendServiceImpl implements RecommendService {
                 .in(AdjustmentDO::getSchoolId, candidateSchoolIds)); // 限制在候选学校中
         
         if (CollUtil.isEmpty(adjustments)) {
-            return true;
+            throw ServiceExceptionUtil.exception(ErrorCodeConstants.NO_MATCHING_SCHOOLS_ADJUSTS);
         }
         
         // --- Step 4: 院校专业匹配度 (SimFinal) ---
@@ -176,12 +172,6 @@ public class RecommendServiceImpl implements RecommendService {
             SchoolDO school = schoolMap.get(adjustment.getSchoolId());
             if (school == null) continue;
             
-            // 再次精细检查自划线 (Major Level)
-            // 使用内存 Map 检查，避免 loop DB query
-            if (!checkSchoolSelfLineInMemory(userProfile, adjustment, schoolMajorScoreMap)) {
-                continue;
-            }
-
             // Sim Calculations
             double simA = calculateSimAInMemory(userProfile, school, adjustment, schoolMajorScoreMap);
             double simB = calculateSimB(userProfile, adjustment);
@@ -228,9 +218,9 @@ public class RecommendServiceImpl implements RecommendService {
      */
     private boolean checkNationalLineStrict(UserProfileDO user, String area, List<NationalScoreDO> nationalScores) {
         if (user.getScoreTotal() == null) return false;
-        
+
         // 用户的 "Degree Type" 应该取 UserProfile 中的 targetDegreeType (一志愿)
-        Integer degreeType = user.getTargetDegreeType() != null ? user.getTargetDegreeType() : 1; // 默认为专硕? 或根据 targetMajor 判断
+        Integer degreeType = user.getTargetDegreeType() != null ? user.getTargetDegreeType() : 2; // 默认为专硕? 或根据 targetMajor 判断
         // 用户的 "Major Code" (一志愿)
         String majorCode = user.getTargetMajorCode();
         if (StrUtil.isBlank(majorCode)) return false; // 没填一志愿专业，无法判断
@@ -251,7 +241,7 @@ public class RecommendServiceImpl implements RecommendService {
                 .orElse(null);
         }
 
-        if (matchedLine == null) return true; // 无线数据，默认过
+        if (matchedLine == null) return false; // 无线数据，默认过
 
         // 总分
         if (user.getScoreTotal().intValue() < matchedLine.getTotal()) return false;
@@ -265,29 +255,9 @@ public class RecommendServiceImpl implements RecommendService {
         if (s1 < matchedLine.getSingle100()) return false;
         if (s2 < matchedLine.getSingle100()) return false;
         if (s3 < matchedLine.getSingle150()) return false;
-        if (s4 < matchedLine.getSingle150()) return false;
-
-        return true;
+        return s4 >= matchedLine.getSingle150();
     }
     
-    /**
-     * 检查学校自划线 (Memory)
-     */
-    private boolean checkSchoolSelfLineInMemory(UserProfileDO user, AdjustmentDO adjustment, Map<Long, Map<String, SchoolScoreDO>> schoolMajorScoreMap) {
-        Map<String, SchoolScoreDO> majorMap = schoolMajorScoreMap.get(adjustment.getSchoolId());
-        if (majorMap == null) return true; // 无自划线记录
-        
-        SchoolScoreDO schoolScore = majorMap.get(adjustment.getMajorCode());
-        if (schoolScore == null) return true; // 该专业无自划线
-        
-        if (user.getScoreTotal() == null) return false;
-        if (schoolScore.getScoreTotal() != null && user.getScoreTotal().compareTo(schoolScore.getScoreTotal()) < 0) {
-            return false;
-        }
-        return true;
-    }
-
-
     /**
      * 获取学校排名分 (A)
      */

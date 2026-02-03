@@ -46,4 +46,6 @@ public interface ErrorCodeConstants {
     ErrorCode CANDIDATE_SCORE_TOTAL_NOT_EXISTS = new ErrorCode(39, "考生初试总分未填写");
     ErrorCode USER_PROFILE_NOT_EXISTS = new ErrorCode(40, "用户基础信息不存在");
     ErrorCode USER_NOT_QUALIFIED = new ErrorCode(41, "用户未过一志愿区域国家线");
+    ErrorCode NO_MATCHING_SCHOOLS = new ErrorCode(42, "没有匹配的学校");
+    ErrorCode NO_MATCHING_SCHOOLS_ADJUSTS = new ErrorCode(42, "没有匹配的调剂专业");
 }
