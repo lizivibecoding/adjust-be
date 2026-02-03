@@ -51,4 +51,13 @@ public interface ErrorCodeConstants {
     ErrorCode DOUBAO_CONFIG_MISSING = new ErrorCode(42, "AI 配置缺失");
     ErrorCode DOUBAO_REQUEST_FAILED = new ErrorCode(43, "AI 请求失败");
     ErrorCode DOUBAO_TIMEOUT = new ErrorCode(44, "AI 请求超时");
+
+    // ========== VIP Pay Notify ==========
+    ErrorCode VIP_PAY_NOTIFY_ORDER_NOT_FOUND = new ErrorCode(45, "支付回调失败：会员订单不存在");
+    ErrorCode VIP_PAY_NOTIFY_PAY_ORDER_ID_MISMATCH = new ErrorCode(46, "支付回调失败：支付单号不匹配");
+    ErrorCode VIP_PAY_NOTIFY_ORDER_STATUS_INVALID = new ErrorCode(47, "支付回调失败：订单状态异常");
+    ErrorCode VIP_PAY_NOTIFY_PAY_ORDER_NOT_FOUND = new ErrorCode(48, "支付回调失败：支付单不存在");
+    ErrorCode VIP_PAY_NOTIFY_PAY_ORDER_NOT_SUCCESS = new ErrorCode(49, "支付回调失败：支付未成功");
+    ErrorCode VIP_PAY_NOTIFY_PAY_PRICE_NOT_MATCH = new ErrorCode(50, "支付回调失败：支付金额不匹配");
+    ErrorCode VIP_PAY_NOTIFY_MERCHANT_ORDER_ID_NOT_MATCH = new ErrorCode(51, "支付回调失败：商户订单号不匹配");
 }

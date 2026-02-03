@@ -11,9 +11,11 @@ import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderPageReqVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderRespVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipPlanRespVO;
 import com.hongguoyan.module.biz.service.vip.VipAppService;
+import com.hongguoyan.module.pay.api.notify.dto.PayOrderNotifyReqDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
+import jakarta.annotation.security.PermitAll;
 import jakarta.validation.Valid;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -49,10 +51,17 @@ public class AppVipController {
     }
 
     @PostMapping("/order/create")
-    @Operation(summary = "创建会员订单（暂不接支付）")
+    @Operation(summary = "创建会员订单并创建支付单")
     public CommonResult<AppVipOrderCreateRespVO> createOrder(@Valid @RequestBody AppVipOrderCreateReqVO reqVO) {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
         return success(vipAppService.createOrder(userId, reqVO));
+    }
+
+    @PostMapping("/pay/notify")
+    @Operation(summary = "会员支付成功回调（notify）")
+    @PermitAll
+    public CommonResult<Boolean> payNotify(@Valid @RequestBody PayOrderNotifyReqDTO notifyReqDTO) {
+        return success(vipAppService.payNotify(notifyReqDTO));
     }
 
     @PostMapping("/coupon/redeem")

@@ -5,6 +5,7 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
+import com.hongguoyan.framework.common.enums.UserTypeEnum;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipCouponRedeemReqVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipMeRespVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderCreateReqVO;
@@ -28,6 +29,11 @@ import com.hongguoyan.module.biz.dal.mysql.viporder.VipOrderMapper;
 import com.hongguoyan.module.biz.dal.mysql.vipplan.VipPlanMapper;
 import com.hongguoyan.module.biz.dal.mysql.vipplanfeature.VipPlanFeatureMapper;
 import com.hongguoyan.module.biz.dal.mysql.vipsubscription.VipSubscriptionMapper;
+import com.hongguoyan.module.pay.api.notify.dto.PayOrderNotifyReqDTO;
+import com.hongguoyan.module.pay.api.order.PayOrderApi;
+import com.hongguoyan.module.pay.api.order.dto.PayOrderCreateReqDTO;
+import com.hongguoyan.module.pay.api.order.dto.PayOrderRespDTO;
+import com.hongguoyan.module.pay.enums.order.PayOrderStatusEnum;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +51,7 @@ import java.util.stream.Collectors;
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertList;
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertSet;
+import static com.hongguoyan.framework.common.util.servlet.ServletUtils.getClientIP;
 import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.*;
 
 /**
@@ -57,16 +64,20 @@ public class VipAppServiceImpl implements VipAppService {
     private static final int COMMON_STATUS_ENABLE = 1;
 
     private static final int VIP_ORDER_STATUS_WAIT_PAY = 1;
+    private static final int VIP_ORDER_STATUS_PAID = 2;
 
     private static final int VIP_COUPON_STATUS_UNUSED = 1;
     private static final int VIP_COUPON_STATUS_USED = 2;
     private static final int VIP_COUPON_STATUS_EXPIRED = 3;
 
+    private static final int VIP_SUBSCRIPTION_SOURCE_PAY = 1;
     private static final int VIP_SUBSCRIPTION_SOURCE_COUPON = 2;
 
     private static final int VIP_COUPON_LOG_ACTION_OPEN = 1;
     private static final int VIP_COUPON_LOG_ACTION_RENEW = 2;
+    private static final int VIP_COUPON_LOG_SOURCE_PAY = 1;
     private static final int VIP_COUPON_LOG_SOURCE_COUPON = 2;
+    private static final int VIP_COUPON_LOG_REF_TYPE_ORDER = 1;
     private static final int VIP_COUPON_LOG_REF_TYPE_COUPON = 2;
 
     @Resource
@@ -83,6 +94,8 @@ public class VipAppServiceImpl implements VipAppService {
     private VipCouponLogMapper vipCouponLogMapper;
     @Resource
     private VipOrderMapper vipOrderMapper;
+    @Resource
+    private PayOrderApi payOrderApi;
 
     @Override
     public List<AppVipPlanRespVO> getPlanList() {
@@ -199,15 +212,156 @@ public class VipAppServiceImpl implements VipAppService {
         order.setExpireTime(now.plusMinutes(30));
         vipOrderMapper.insert(order);
 
-        // TODO(pay): 这里后续需要调用 pay 创建支付单（merchantOrderId = orderNo），并返回 pay 拉起参数
+        // 创建支付单（merchantOrderId = orderNo）
+        String subject = buildPaySubject(plan);
+        Long payOrderId = payOrderApi.createOrder(new PayOrderCreateReqDTO()
+                .setAppKey("adjust").setUserIp(getClientIP())
+                .setUserId(userId).setUserType(UserTypeEnum.MEMBER.getValue())
+                .setMerchantOrderId(order.getOrderNo())
+                .setSubject(subject).setBody("")
+                .setPrice(order.getAmount())
+                .setExpireTime(order.getExpireTime()));
+        vipOrderMapper.updateById(new VipOrderDO().setId(order.getId()).setPayOrderId(payOrderId));
+        order.setPayOrderId(payOrderId);
 
         AppVipOrderCreateRespVO respVO = new AppVipOrderCreateRespVO();
         respVO.setOrderNo(order.getOrderNo());
         respVO.setAmount(order.getAmount());
         respVO.setStatus(order.getStatus());
         respVO.setExpireTime(order.getExpireTime());
-        respVO.setPayOrderId(null);
+        respVO.setPayOrderId(order.getPayOrderId());
         return respVO;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean payNotify(PayOrderNotifyReqDTO notifyReqDTO) {
+        String merchantOrderId = StrUtil.trim(notifyReqDTO.getMerchantOrderId());
+        Long payOrderId = notifyReqDTO.getPayOrderId();
+
+        // 1. 校验业务订单是否存在
+        VipOrderDO order = vipOrderMapper.selectOne(new LambdaQueryWrapperX<VipOrderDO>()
+                .eq(VipOrderDO::getOrderNo, merchantOrderId));
+        if (order == null) {
+            throw exception(VIP_PAY_NOTIFY_ORDER_NOT_FOUND);
+        }
+
+        // 2. 幂等：已支付直接返回；若支付单号不一致，提示异常便于排查
+        if (Objects.equals(order.getStatus(), VIP_ORDER_STATUS_PAID)) {
+            if (order.getPayOrderId() != null && Objects.equals(order.getPayOrderId(), payOrderId)) {
+                return Boolean.TRUE;
+            }
+            throw exception(VIP_PAY_NOTIFY_PAY_ORDER_ID_MISMATCH);
+        }
+
+        // 3. 校验支付订单
+        PayOrderRespDTO payOrder = validatePayOrderPaid(order, payOrderId);
+
+        // 4. 更新订单为已支付（并发安全：只从待支付改为已支付）
+        int updated = vipOrderMapper.update(null, new LambdaUpdateWrapper<VipOrderDO>()
+                .set(VipOrderDO::getStatus, VIP_ORDER_STATUS_PAID)
+                .set(VipOrderDO::getPayOrderId, payOrderId)
+                .set(VipOrderDO::getPayChannel, payOrder.getChannelCode())
+                .set(VipOrderDO::getPayTime, payOrder.getSuccessTime())
+                .eq(VipOrderDO::getOrderNo, order.getOrderNo())
+                .eq(VipOrderDO::getStatus, VIP_ORDER_STATUS_WAIT_PAY));
+        if (updated == 0) {
+            VipOrderDO latest = vipOrderMapper.selectOne(new LambdaQueryWrapperX<VipOrderDO>()
+                    .eq(VipOrderDO::getOrderNo, order.getOrderNo()));
+            if (latest != null && Objects.equals(latest.getStatus(), VIP_ORDER_STATUS_PAID)) {
+                return Boolean.TRUE;
+            }
+            throw exception(VIP_PAY_NOTIFY_ORDER_STATUS_INVALID);
+        }
+
+        // 5. 续期/开通订阅 + 写流水
+        applySubscriptionByPay(order, payOrder);
+        return Boolean.TRUE;
+    }
+
+    private void applySubscriptionByPay(VipOrderDO order, PayOrderRespDTO payOrder) {
+        // 套餐校验
+        VipPlanDO plan = vipPlanMapper.selectOne(new LambdaQueryWrapperX<VipPlanDO>()
+                .eq(VipPlanDO::getCode, order.getPlanCode()));
+        if (plan == null) {
+            throw exception(VIP_PLAN_NOT_EXISTS);
+        }
+        if (!Objects.equals(plan.getStatus(), COMMON_STATUS_ENABLE)) {
+            throw exception(VIP_PLAN_DISABLED);
+        }
+        Integer grantDays = plan.getDuration();
+        if (grantDays == null || grantDays <= 0) {
+            throw exception(VIP_PLAN_DURATION_INVALID);
+        }
+
+        LocalDateTime baseTime = payOrder.getSuccessTime() != null ? payOrder.getSuccessTime() : LocalDateTime.now();
+
+        VipSubscriptionDO sub = vipSubscriptionMapper.selectOne(new LambdaQueryWrapperX<VipSubscriptionDO>()
+                .eq(VipSubscriptionDO::getUserId, order.getUserId())
+                .eq(VipSubscriptionDO::getPlanCode, order.getPlanCode()));
+        LocalDateTime beforeEndTime = sub != null ? sub.getEndTime() : null;
+        LocalDateTime afterEndTime;
+        int action;
+        if (sub == null) {
+            action = VIP_COUPON_LOG_ACTION_OPEN;
+            afterEndTime = baseTime.plusDays(grantDays);
+            VipSubscriptionDO toCreate = new VipSubscriptionDO();
+            toCreate.setUserId(order.getUserId());
+            toCreate.setPlanCode(order.getPlanCode());
+            toCreate.setStartTime(baseTime);
+            toCreate.setEndTime(afterEndTime);
+            toCreate.setSource(VIP_SUBSCRIPTION_SOURCE_PAY);
+            vipSubscriptionMapper.insert(toCreate);
+        } else if (sub.getEndTime() != null && !sub.getEndTime().isBefore(baseTime)) {
+            action = VIP_COUPON_LOG_ACTION_RENEW;
+            afterEndTime = sub.getEndTime().plusDays(grantDays);
+            sub.setEndTime(afterEndTime);
+            sub.setSource(VIP_SUBSCRIPTION_SOURCE_PAY);
+            vipSubscriptionMapper.updateById(sub);
+        } else {
+            action = VIP_COUPON_LOG_ACTION_OPEN;
+            afterEndTime = baseTime.plusDays(grantDays);
+            sub.setStartTime(baseTime);
+            sub.setEndTime(afterEndTime);
+            sub.setSource(VIP_SUBSCRIPTION_SOURCE_PAY);
+            vipSubscriptionMapper.updateById(sub);
+        }
+
+        VipCouponLogDO log = new VipCouponLogDO();
+        log.setUserId(order.getUserId());
+        log.setPlanCode(order.getPlanCode());
+        log.setAction(action);
+        log.setSource(VIP_COUPON_LOG_SOURCE_PAY);
+        log.setRefType(VIP_COUPON_LOG_REF_TYPE_ORDER);
+        log.setRefId(order.getOrderNo());
+        log.setBeforeEndTime(beforeEndTime);
+        log.setAfterEndTime(afterEndTime);
+        log.setGrantDays(grantDays);
+        log.setRemark("支付开通/续期");
+        vipCouponLogMapper.insert(log);
+    }
+
+    private PayOrderRespDTO validatePayOrderPaid(VipOrderDO order, Long payOrderId) {
+        PayOrderRespDTO payOrder = payOrderApi.getOrder(payOrderId);
+        if (payOrder == null) {
+            throw exception(VIP_PAY_NOTIFY_PAY_ORDER_NOT_FOUND);
+        }
+        if (!PayOrderStatusEnum.isSuccess(payOrder.getStatus())) {
+            throw exception(VIP_PAY_NOTIFY_PAY_ORDER_NOT_SUCCESS);
+        }
+        if (!Objects.equals(payOrder.getPrice(), order.getAmount())) {
+            throw exception(VIP_PAY_NOTIFY_PAY_PRICE_NOT_MATCH);
+        }
+        if (!Objects.equals(payOrder.getMerchantOrderId(), order.getOrderNo())) {
+            throw exception(VIP_PAY_NOTIFY_MERCHANT_ORDER_ID_NOT_MATCH);
+        }
+        return payOrder;
+    }
+
+    private String buildPaySubject(VipPlanDO plan) {
+        // pay 侧限制：<= 32
+        String planCode = plan != null ? StrUtil.upperFirst(StrUtil.trimToEmpty(plan.getCode())).toUpperCase() : "VIP";
+        return planCode + " 会员";
     }
 
     @Override

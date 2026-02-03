@@ -9,6 +9,7 @@ import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderRespVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipPlanRespVO;
 
 import jakarta.validation.Valid;
+import com.hongguoyan.module.pay.api.notify.dto.PayOrderNotifyReqDTO;
 import com.hongguoyan.framework.common.pojo.PageResult;
 import java.util.List;
 
@@ -33,13 +34,21 @@ public interface VipAppService {
     AppVipMeRespVO getMyVipInfo(Long userId);
 
     /**
-     * 创建会员订单（暂不接支付）
+     * 创建会员订单，并创建支付单
      *
      * @param userId 用户 ID
      * @param reqVO 请求
      * @return 创建结果
      */
     AppVipOrderCreateRespVO createOrder(Long userId, @Valid AppVipOrderCreateReqVO reqVO);
+
+    /**
+     * 支付成功回调（pay 模块异步通知）
+     *
+     * @param notifyReqDTO 回调请求体
+     * @return 是否成功（返回 true 表示无需重试）
+     */
+    Boolean payNotify(@Valid PayOrderNotifyReqDTO notifyReqDTO);
 
     /**
      * 券码兑换并续期/开通订阅
