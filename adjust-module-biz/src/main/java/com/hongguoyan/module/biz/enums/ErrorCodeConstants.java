@@ -60,4 +60,6 @@ public interface ErrorCodeConstants {
     ErrorCode VIP_PAY_NOTIFY_PAY_ORDER_NOT_SUCCESS = new ErrorCode(49, "支付回调失败：支付未成功");
     ErrorCode VIP_PAY_NOTIFY_PAY_PRICE_NOT_MATCH = new ErrorCode(50, "支付回调失败：支付金额不匹配");
     ErrorCode VIP_PAY_NOTIFY_MERCHANT_ORDER_ID_NOT_MATCH = new ErrorCode(51, "支付回调失败：商户订单号不匹配");
+    ErrorCode NO_MATCHING_SCHOOLS = new ErrorCode(52, "没有匹配的学校");
+    ErrorCode NO_MATCHING_SCHOOLS_ADJUSTS = new ErrorCode(53, "没有匹配的调剂专业");
 }
