@@ -2,6 +2,7 @@ package com.hongguoyan.module.biz.service.adjustment;
 
 import cn.hutool.core.util.StrUtil;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import jakarta.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
@@ -29,6 +30,9 @@ import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.RecruitSnapshotRowDTO;
 import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
 import com.hongguoyan.module.biz.dal.mysql.schoolmajor.SchoolMajorMapper;
+import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
+import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
+import com.hongguoyan.module.biz.service.userprofile.UserProfileService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,17 +40,17 @@ import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUti
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertList;
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.diffList;
 import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.*;
+import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.*;
 
 /**
  * 调剂 Service 实现类
  *
  * @author hgy
  */
+@Slf4j
 @Service
 @Validated
 public class AdjustmentServiceImpl implements AdjustmentService {
-
-    private static final Logger log = LoggerFactory.getLogger(AdjustmentServiceImpl.class);
 
     @Resource
     private AdjustmentMapper adjustmentMapper;
@@ -58,6 +62,10 @@ public class AdjustmentServiceImpl implements AdjustmentService {
     private AreaMapper areaMapper;
     @Resource
     private SchoolMajorMapper schoolMajorMapper;
+    @Resource
+    private VipBenefitService vipBenefitService;
+    @Resource
+    private UserProfileService userProfileService;
 
     private static final Pattern SPLIT_PATTERN = Pattern.compile("[\\n;,，；]+");
     private static final int DEFAULT_STATS_YEAR = 2025;
@@ -133,7 +141,8 @@ public class AdjustmentServiceImpl implements AdjustmentService {
     }
 
     @Override
-    public AppAdjustmentSearchTabRespVO getAdjustmentSearchPage(AppAdjustmentSearchReqVO reqVO) {
+    public AppAdjustmentSearchTabRespVO getAdjustmentSearchPage(Long userId, AppAdjustmentSearchReqVO reqVO) {
+        validateMajorCategoryAccess(userId, reqVO != null ? reqVO.getMajorCode() : null);
         if (reqVO != null && StrUtil.isNotBlank(reqVO.getKeyword())) {
             reqVO.setKeyword(buildBooleanKeyword(reqVO.getKeyword()));
         }
@@ -158,6 +167,38 @@ public class AdjustmentServiceImpl implements AdjustmentService {
             respVO.setSchoolList(Collections.emptyList());
         }
         return respVO;
+    }
+
+    private void validateMajorCategoryAccess(Long userId, String majorCode) {
+        // TODO VIP-BYPASS: restore major category access check (major_category_open)
+        return;
+        /*
+        if (userId == null) {
+            // allow anonymous access for now (no place to persist defaults)
+            return;
+        }
+        if (StrUtil.isBlank(majorCode)) {
+            return;
+        }
+        String code = majorCode.trim();
+        Set<String> opened = vipBenefitService.getConsumedUniqueKeys(userId, BENEFIT_KEY_MAJOR_CATEGORY_OPEN);
+        if (opened.contains(code)) {
+            return;
+        }
+        throw exception(VIP_MAJOR_CATEGORY_NOT_OPENED);
+         */
+    }
+
+    private String resolveDefaultMajorCategoryCode(Long userId) {
+        UserProfileDO profile = userProfileService.getUserProfileByUserId(userId);
+        if (profile == null || StrUtil.isBlank(profile.getTargetMajorCode())) {
+            return null;
+        }
+        String s = profile.getTargetMajorCode().trim();
+        if (s.length() >= 2) {
+            return s.substring(0, 2);
+        }
+        return s;
     }
 
     @Override
@@ -319,7 +360,7 @@ public class AdjustmentServiceImpl implements AdjustmentService {
     }
 
     @Override
-    public AppAdjustmentDetailRespVO getAdjustmentDetail(AppAdjustmentDetailReqVO reqVO) {
+    public AppAdjustmentDetailRespVO getAdjustmentDetail(Long userId, AppAdjustmentDetailReqVO reqVO) {
         List<AdjustmentDO> list = adjustmentMapper.selectList(new LambdaQueryWrapperX<AdjustmentDO>()
                 .eq(AdjustmentDO::getSchoolId, reqVO.getSchoolId())
                 .eq(AdjustmentDO::getMajorId, reqVO.getMajorId())

@@ -25,7 +25,7 @@ public interface UserAdjustmentService {
     /**
      * 发布调剂列表(公开)
      */
-    PageResult<AppUserAdjustmentListRespVO> getUserAdjustmentPublicPage(AppUserAdjustmentPublicPageReqVO pageReqVO);
+    PageResult<AppUserAdjustmentListRespVO> getUserAdjustmentPublicPage(Long userId, AppUserAdjustmentPublicPageReqVO pageReqVO);
 
     /**
      * 我发布的调剂分页

@@ -30,11 +30,13 @@ import com.hongguoyan.module.biz.dal.mysql.adjustmentadmit.AdjustmentAdmitMapper
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
 import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
 import com.hongguoyan.module.biz.service.userprofile.UserProfileService;
+import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertList;
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.diffList;
 import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.*;
+import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.*;
 
 /**
  * 调剂录取名单 Service 实现类
@@ -51,6 +53,8 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
     private SchoolMapper schoolMapper;
     @Resource
     private UserProfileService userProfileService;
+    @Resource
+    private VipBenefitService vipBenefitService;
 
     @Override
     public Long createAdjustmentAdmit(AppAdjustmentAdmitSaveReqVO createReqVO) {
@@ -103,7 +107,9 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
     }
 
     @Override
-    public List<AppAdjustmentAdmitListItemRespVO> getAdmitList(AppAdjustmentAdmitListReqVO reqVO) {
+    public List<AppAdjustmentAdmitListItemRespVO> getAdmitList(Long userId, AppAdjustmentAdmitListReqVO reqVO) {
+        // TODO VIP-BYPASS: restore benefit check (view_admission_list)
+        // vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_VIEW_ADMISSION_LIST);
         LambdaQueryWrapperX<AdjustmentAdmitDO> wrapper = new LambdaQueryWrapperX<>();
         // 注意：LambdaQueryWrapperX 未重写 select 的返回类型，因此这里不要链式赋值
         wrapper.select(AdjustmentAdmitDO::getCandidateName,
@@ -139,7 +145,9 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
     }
 
     @Override
-    public AppAdjustmentAnalysisRespVO getAnalysis(AppAdjustmentAnalysisReqVO reqVO) {
+    public AppAdjustmentAnalysisRespVO getAnalysis(Long userId, AppAdjustmentAnalysisReqVO reqVO) {
+        // TODO VIP-BYPASS: restore benefit check (view_admission_analysis)
+        // vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_VIEW_ADMISSION_ANALYSIS);
         LambdaQueryWrapperX<AdjustmentAdmitDO> wrapper = new LambdaQueryWrapperX<>();
         wrapper.select(AdjustmentAdmitDO::getFirstSchoolId,
                 AdjustmentAdmitDO::getFirstScore);
@@ -209,12 +217,16 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
     }
 
     @Override
-    public PageResult<AppSameScoreItemRespVO> getSameScorePage(AppSameScorePageReqVO reqVO) {
+    public PageResult<AppSameScoreItemRespVO> getSameScorePage(Long userId, AppSameScorePageReqVO reqVO) {
+        // TODO VIP-BYPASS: restore benefit check (view_same_score)
+        // vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_VIEW_SAME_SCORE);
         return adjustmentAdmitMapper.selectSameScorePage(reqVO);
     }
 
     @Override
     public AppSameScoreAxisRespVO getSameScoreAxis(Long userId) {
+        // TODO VIP-BYPASS: restore benefit check (view_same_score)
+        // vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_VIEW_SAME_SCORE);
         UserProfileDO profile = userProfileService.getUserProfileByUserId(userId);
         if (profile == null) {
             throw exception(CANDIDATE_PROFILES_NOT_EXISTS);
@@ -238,7 +250,9 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
     }
 
     @Override
-    public List<AppSameScoreStatItemRespVO> getSameScoreStat(AppSameScoreStatReqVO reqVO) {
+    public List<AppSameScoreStatItemRespVO> getSameScoreStat(Long userId, AppSameScoreStatReqVO reqVO) {
+        // TODO VIP-BYPASS: restore benefit check (view_same_score)
+        // vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_VIEW_SAME_SCORE);
         List<AppSameScoreStatItemRespVO> list = adjustmentAdmitMapper.selectSameScoreStat(reqVO);
         return list != null ? list : Collections.emptyList();
     }

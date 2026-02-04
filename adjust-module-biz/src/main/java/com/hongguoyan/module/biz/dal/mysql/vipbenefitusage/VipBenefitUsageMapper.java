@@ -5,6 +5,8 @@ import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.hongguoyan.framework.mybatis.core.mapper.BaseMapperX;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipBenefitUsagePageReqVO;
 import com.hongguoyan.module.biz.dal.dataobject.vipbenefitusage.VipBenefitUsageDO;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
@@ -26,5 +28,22 @@ public interface VipBenefitUsageMapper extends BaseMapperX<VipBenefitUsageDO> {
                 .betweenIfPresent(VipBenefitUsageDO::getCreateTime, reqVO.getCreateTime())
                 .orderByDesc(VipBenefitUsageDO::getId));
     }
+
+    /**
+     * Select usage row FOR UPDATE to enforce quota under concurrency.
+     */
+    @Select("""
+            SELECT *
+            FROM biz_vip_benefit_usage
+            WHERE user_id = #{userId}
+              AND benefit_key = #{benefitKey}
+              AND period_start_time = #{periodStartTime}
+              AND period_end_time = #{periodEndTime}
+            FOR UPDATE
+            """)
+    VipBenefitUsageDO selectForUpdate(@Param("userId") Long userId,
+                                      @Param("benefitKey") String benefitKey,
+                                      @Param("periodStartTime") java.time.LocalDateTime periodStartTime,
+                                      @Param("periodEndTime") java.time.LocalDateTime periodEndTime);
 
 }

@@ -27,11 +27,13 @@ import com.hongguoyan.module.biz.dal.dataobject.publisher.PublisherDO;
 import com.hongguoyan.module.biz.dal.mysql.publisher.PublisherMapper;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.hongguoyan.module.biz.dal.mysql.useradjustmentapply.UserAdjustmentApplyMapper;
+import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertList;
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.diffList;
 import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.*;
+import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_PUBLISH_LIST_PREVIEW_LIMIT;
 
 /**
  * 用户发布调剂 Service 实现类
@@ -56,6 +58,8 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
     private PublisherMapper publisherMapper;
     @Resource
     private UserAdjustmentApplyMapper userAdjustmentApplyMapper;
+    @Resource
+    private VipBenefitService vipBenefitService;
 
     @Override
     public Long createUserAdjustment(Long userId, AppUserAdjustmentCreateReqVO createReqVO) {
@@ -90,7 +94,23 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
     }
 
     @Override
-    public PageResult<AppUserAdjustmentListRespVO> getUserAdjustmentPublicPage(AppUserAdjustmentPublicPageReqVO pageReqVO) {
+    public PageResult<AppUserAdjustmentListRespVO> getUserAdjustmentPublicPage(Long userId, AppUserAdjustmentPublicPageReqVO pageReqVO) {
+        // TODO VIP-BYPASS: restore publish list preview limit (publish_list_preview_limit)
+        int limit = -1;
+        // int limit = vipBenefitService.resolveLimitValue(userId, BENEFIT_KEY_PUBLISH_LIST_PREVIEW_LIMIT);
+        // limit > 0 means preview limited; -1 means unlimited
+        if (limit > 0) {
+            // If user requests page > 1, return empty list and cap total to limit (avoid leaking full count)
+            if (pageReqVO != null && pageReqVO.getPageNo() != null && pageReqVO.getPageNo() > 1) {
+                return new PageResult<AppUserAdjustmentListRespVO>(Collections.emptyList(), (long) limit);
+            }
+            if (pageReqVO != null && pageReqVO.getPageSize() != null) {
+                pageReqVO.setPageSize(Math.min(pageReqVO.getPageSize(), limit));
+            } else if (pageReqVO != null) {
+                pageReqVO.setPageSize(limit);
+            }
+        }
+
         PageResult<UserAdjustmentDO> pageResult = userAdjustmentMapper.selectPublicPage(pageReqVO);
         List<UserAdjustmentDO> records = pageResult.getList();
         Map<Long, String> schoolLogoMap = buildSchoolLogoMap(records);
@@ -99,7 +119,14 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
         for (UserAdjustmentDO item : records) {
             list.add(toListResp(item, schoolLogoMap, majorLevel1NameMap));
         }
-        return new PageResult<>(list, pageResult.getTotal());
+        long total = pageResult.getTotal();
+        if (limit > 0) {
+            total = Math.min(total, (long) limit);
+            if (list.size() > limit) {
+                list = list.subList(0, limit);
+            }
+        }
+        return new PageResult<>(list, total);
     }
 
     @Override

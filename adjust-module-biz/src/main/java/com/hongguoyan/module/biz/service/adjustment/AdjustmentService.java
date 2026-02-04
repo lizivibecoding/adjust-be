@@ -64,10 +64,11 @@ public interface AdjustmentService {
     /**
      * 调剂全局搜索（按 Tab 返回）
      *
+     * @param userId 用户ID（可为空，表示未登录）
      * @param reqVO 搜索条件
      * @return 搜索结果
      */
-    AppAdjustmentSearchTabRespVO getAdjustmentSearchPage(AppAdjustmentSearchReqVO reqVO);
+    AppAdjustmentSearchTabRespVO getAdjustmentSearchPage(Long userId, AppAdjustmentSearchReqVO reqVO);
 
     /**
      * 调剂联想词
@@ -95,10 +96,11 @@ public interface AdjustmentService {
     /**
      * 调剂详情(按方向聚合返回)
      *
+     * @param userId 用户ID（可为空，表示未登录）
      * @param reqVO 条件
      * @return 详情
      */
-    AppAdjustmentDetailRespVO getAdjustmentDetail(@Valid AppAdjustmentDetailReqVO reqVO);
+    AppAdjustmentDetailRespVO getAdjustmentDetail(Long userId, @Valid AppAdjustmentDetailReqVO reqVO);
 
     /**
      * 调剂更新统计(默认2025年)

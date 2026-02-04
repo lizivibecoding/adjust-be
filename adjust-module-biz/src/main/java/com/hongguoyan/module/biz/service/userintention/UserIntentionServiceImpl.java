@@ -7,14 +7,19 @@ import com.hongguoyan.module.biz.controller.app.userintention.vo.AppUserIntentio
 import com.hongguoyan.module.biz.controller.app.userintention.vo.AppUserIntentionSaveReqVO;
 import com.hongguoyan.module.biz.dal.dataobject.userintention.UserIntentionDO;
 import com.hongguoyan.module.biz.dal.mysql.userintention.UserIntentionMapper;
+import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 import jakarta.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
+
+import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_CUSTOM_DEMAND_SUBMIT;
+import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.REF_TYPE_CUSTOM_DEMAND_SUBMIT;
 
 /**
  * 用户调剂意向与偏好设置 Service 实现类
@@ -27,6 +32,8 @@ public class UserIntentionServiceImpl implements UserIntentionService {
 
     @Resource
     private UserIntentionMapper userIntentionMapper;
+    @Resource
+    private VipBenefitService vipBenefitService;
 
     @Override
     public UserIntentionDO getUserIntentionByUserId(Long userId) {
@@ -59,6 +66,7 @@ public class UserIntentionServiceImpl implements UserIntentionService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Long saveUserIntentionByUserId(Long userId, AppUserIntentionSaveReqVO reqVO) {
         UserIntentionDO existing = getUserIntentionByUserId(userId);
         UserIntentionDO toSave = new UserIntentionDO();
@@ -78,6 +86,10 @@ public class UserIntentionServiceImpl implements UserIntentionService {
         if (existing == null) {
             toSave.setId(null);
             userIntentionMapper.insert(toSave);
+            // TODO VIP-BYPASS: restore quota consume on first submit (custom_demand_submit)
+            // consume on first submit only
+            // vipBenefitService.consumeQuotaOrThrow(userId, BENEFIT_KEY_CUSTOM_DEMAND_SUBMIT, 1,
+            //         REF_TYPE_CUSTOM_DEMAND_SUBMIT, String.valueOf(toSave.getId()), null);
             return toSave.getId();
         }
 

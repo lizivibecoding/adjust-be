@@ -51,7 +51,8 @@ public class AppAdjustmentController {
     @Operation(summary = "调剂全局搜索")
     public CommonResult<AppAdjustmentSearchTabRespVO> getAdjustmentSearchPage(
             @Valid AppAdjustmentSearchReqVO reqVO) {
-        return success(adjustmentService.getAdjustmentSearchPage(reqVO));
+        Long userId = SecurityFrameworkUtils.getLoginUserId();
+        return success(adjustmentService.getAdjustmentSearchPage(userId, reqVO));
     }
 
     @GetMapping("/hot-ranking")
@@ -90,25 +91,29 @@ public class AppAdjustmentController {
     @GetMapping("/detail")
     @Operation(summary = "调剂详情(按方向聚合返回)")
     public CommonResult<AppAdjustmentDetailRespVO> getAdjustmentDetail(@Valid AppAdjustmentDetailReqVO reqVO) {
-        return success(adjustmentService.getAdjustmentDetail(reqVO));
+        Long userId = SecurityFrameworkUtils.getLoginUserId();
+        return success(adjustmentService.getAdjustmentDetail(userId, reqVO));
     }
 
     @GetMapping("/admit-list")
     @Operation(summary = "录取名单列表")
     public CommonResult<List<AppAdjustmentAdmitListItemRespVO>> getAdmitList(@Valid AppAdjustmentAdmitListReqVO reqVO) {
-        return success(adjustmentAdmitService.getAdmitList(reqVO));
+        Long userId = SecurityFrameworkUtils.getLoginUserId();
+        return success(adjustmentAdmitService.getAdmitList(userId, reqVO));
     }
 
     @GetMapping("/analysis")
     @Operation(summary = "调剂分析(基于录取名单聚合)")
     public CommonResult<AppAdjustmentAnalysisRespVO> getAdjustmentAnalysis(@Valid AppAdjustmentAnalysisReqVO reqVO) {
-        return success(adjustmentAdmitService.getAnalysis(reqVO));
+        Long userId = SecurityFrameworkUtils.getLoginUserId();
+        return success(adjustmentAdmitService.getAnalysis(userId, reqVO));
     }
 
     @GetMapping("/same-score")
     @Operation(summary = "同分调剂去向列表(按初试分数区间聚合)")
     public CommonResult<PageResult<AppSameScoreItemRespVO>> getSameScorePage(@Valid AppSameScorePageReqVO reqVO) {
-        return success(adjustmentAdmitService.getSameScorePage(reqVO));
+        Long userId = SecurityFrameworkUtils.getLoginUserId();
+        return success(adjustmentAdmitService.getSameScorePage(userId, reqVO));
     }
 
     @GetMapping("/same-score-axis")
@@ -121,7 +126,8 @@ public class AppAdjustmentController {
     @GetMapping("/same-score-stat")
     @Operation(summary = "同分调剂去向院校层次统计(按学校去重计数)")
     public CommonResult<List<AppSameScoreStatItemRespVO>> getSameScoreStat(@Valid AppSameScoreStatReqVO reqVO) {
-        return success(adjustmentAdmitService.getSameScoreStat(reqVO));
+        Long userId = SecurityFrameworkUtils.getLoginUserId();
+        return success(adjustmentAdmitService.getSameScoreStat(userId, reqVO));
     }
 
     @GetMapping("/update-stats")

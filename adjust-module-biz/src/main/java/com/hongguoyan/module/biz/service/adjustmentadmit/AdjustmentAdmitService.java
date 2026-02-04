@@ -70,26 +70,29 @@ public interface AdjustmentAdmitService {
     /**
      * 调剂录取名单列表(用于前端展示)
      *
+     * @param userId 用户ID（可为空，表示未登录）
      * @param reqVO 条件
      * @return 列表
      */
-    List<AppAdjustmentAdmitListItemRespVO> getAdmitList(@Valid AppAdjustmentAdmitListReqVO reqVO);
+    List<AppAdjustmentAdmitListItemRespVO> getAdmitList(Long userId, @Valid AppAdjustmentAdmitListReqVO reqVO);
 
     /**
      * 调剂分析(基于录取名单聚合)
      *
+     * @param userId 用户ID（可为空，表示未登录）
      * @param reqVO 条件
      * @return 分析数据
      */
-    AppAdjustmentAnalysisRespVO getAnalysis(@Valid AppAdjustmentAnalysisReqVO reqVO);
+    AppAdjustmentAnalysisRespVO getAnalysis(Long userId, @Valid AppAdjustmentAnalysisReqVO reqVO);
 
     /**
      * 同分调剂去向列表(按初试分数区间聚合)
      *
+     * @param userId 用户ID（可为空，表示未登录）
      * @param reqVO 条件
      * @return 分页列表
      */
-    PageResult<AppSameScoreItemRespVO> getSameScorePage(@Valid AppSameScorePageReqVO reqVO);
+    PageResult<AppSameScoreItemRespVO> getSameScorePage(Long userId, @Valid AppSameScorePageReqVO reqVO);
 
     /**
      * 获取同分调剂分数区间轴(基于用户初试总分上下 20 分)
@@ -102,9 +105,10 @@ public interface AdjustmentAdmitService {
     /**
      * 同分调剂去向院校层次统计(按学校去重计数)
      *
+     * @param userId 用户ID（可为空，表示未登录）
      * @param reqVO 条件
      * @return 统计列表
      */
-    List<AppSameScoreStatItemRespVO> getSameScoreStat(@Valid AppSameScoreStatReqVO reqVO);
+    List<AppSameScoreStatItemRespVO> getSameScoreStat(Long userId, @Valid AppSameScoreStatReqVO reqVO);
 
 }

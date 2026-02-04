@@ -65,4 +65,13 @@ public interface ErrorCodeConstants {
 
     ErrorCode VIP_BENEFIT_LOG_NOT_EXISTS = new ErrorCode(54, "用户权益消耗明细不存在");
     ErrorCode VIP_BENEFIT_USAGE_NOT_EXISTS = new ErrorCode(55, "用户权益用量汇总不存在");
+
+    // ========== VIP Benefit ==========
+    ErrorCode VIP_BENEFIT_FORBIDDEN = new ErrorCode(56, "权益不足，请开通会员");
+    ErrorCode VIP_BENEFIT_CONFIG_MISSING = new ErrorCode(57, "权益配置缺失");
+    ErrorCode VIP_BENEFIT_QUOTA_EXCEEDED = new ErrorCode(58, "权益次数已用完");
+    ErrorCode VIP_BENEFIT_UNIQUE_KEY_REQUIRED = new ErrorCode(59, "权益去重键不能为空");
+    ErrorCode VIP_BENEFIT_TYPE_INVALID = new ErrorCode(60, "权益类型不匹配");
+    ErrorCode VIP_BENEFIT_ALREADY_OPENED = new ErrorCode(61, "已开通");
+    ErrorCode VIP_MAJOR_CATEGORY_NOT_OPENED = new ErrorCode(62, "该专业门类未开通");
 }
