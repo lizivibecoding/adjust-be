@@ -151,14 +151,13 @@ public class AdjustmentServiceImpl implements AdjustmentService {
         AppAdjustmentSearchTabRespVO respVO = new AppAdjustmentSearchTabRespVO();
         if (schoolTab) {
             PageResult<AppAdjustmentSearchSchoolRespVO> pageResult = adjustmentMapper.selectSearchSchoolPage(reqVO);
-            fillRecruitNumberForSchoolList(pageResult.getList());
             respVO.setTotal(pageResult.getTotal());
             respVO.setSchoolList(pageResult.getList());
             respVO.setMajorList(Collections.emptyList());
         } else {
             PageResult<AppAdjustmentSearchRespVO> pageResult = adjustmentMapper.selectSearchMajorPage(reqVO);
             List<AppAdjustmentSearchRespVO> majorList = pageResult.getList();
-            fillRecruitNumberAndHighAdjustChance(majorList);
+            fillHighAdjustChance(majorList);
             for (AppAdjustmentSearchRespVO item : majorList) {
                 item.setHeat(calcHeat(item.getHotScore()));
             }
@@ -469,7 +468,7 @@ public class AdjustmentServiceImpl implements AdjustmentService {
         if (list == null || list.isEmpty()) {
             return pageResult;
         }
-        fillRecruitNumberAndHighAdjustChance(list);
+        fillHighAdjustChance(list);
         for (AppAdjustmentSearchRespVO item : list) {
             item.setHeat(calcHeat(item.getHotScore()));
         }
@@ -479,6 +478,47 @@ public class AdjustmentServiceImpl implements AdjustmentService {
     @Override
     public PageResult<AppSchoolAdjustmentRespVO> getSchoolAdjustmentPage(@Valid AppSchoolAdjustmentPageReqVO reqVO) {
         return adjustmentMapper.selectSchoolAdjustmentPage(reqVO);
+    }
+
+    private void fillHighAdjustChance(List<AppAdjustmentSearchRespVO> list) {
+        if (list == null || list.isEmpty()) {
+            return;
+        }
+        int currentYear = Year.now().getValue();
+
+        // high adjust chance (batch; only meaningful for current year)
+        List<BizMajorKeyDTO> triplets = new ArrayList<>();
+        for (AppAdjustmentSearchRespVO item : list) {
+            if (item == null || item.getYear() == null || item.getYear() != currentYear) {
+                continue;
+            }
+            if (item.getSchoolId() == null || item.getCollegeId() == null || item.getMajorId() == null) {
+                continue;
+            }
+            BizMajorKeyDTO t = new BizMajorKeyDTO();
+            t.setSchoolId(item.getSchoolId());
+            t.setCollegeId(item.getCollegeId());
+            t.setMajorId(item.getMajorId());
+            triplets.add(t);
+        }
+        Set<String> hasHistory = new HashSet<>();
+        if (!triplets.isEmpty()) {
+            List<BizMajorKeyDTO> hits = adjustmentMapper.selectMajorsHasHistoryAdjust(triplets, currentYear);
+            for (BizMajorKeyDTO hit : hits) {
+                hasHistory.add(key(hit.getSchoolId(), hit.getCollegeId(), hit.getMajorId(), null));
+            }
+        }
+        for (AppAdjustmentSearchRespVO item : list) {
+            if (item == null || item.getYear() == null) {
+                continue;
+            }
+            if (item.getYear() != currentYear) {
+                item.setHighAdjustChance(false);
+                continue;
+            }
+            String k = key(item.getSchoolId(), item.getCollegeId(), item.getMajorId(), null);
+            item.setHighAdjustChance(k != null && hasHistory.contains(k));
+        }
     }
 
     private void fillRecruitNumberAndHighAdjustChance(List<AppAdjustmentSearchRespVO> list) {

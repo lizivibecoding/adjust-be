@@ -22,11 +22,17 @@ public class AppAdjustmentSearchRespVO {
     @Schema(description = "学校名称")
     private String schoolName;
 
+    @Schema(description = "学院名称")
+    private String collegeName;
+
     @Schema(description = "专业代码")
     private String majorCode;
 
     @Schema(description = "专业名称")
     private String majorName;
+
+    @Schema(description = "学位类型(0=未知/不区分,1=专硕,2=学硕)")
+    private Integer degreeType;
 
     @Schema(description = "调剂年份")
     private Integer year;
