@@ -278,6 +278,12 @@
         FROM biz_adjustment a
         WHERE a.school_id = #{schoolId}
           AND a.major_id = #{majorId}
+          <if test="collegeId != null">
+              AND a.college_id = #{collegeId}
+          </if>
+          <if test="studyMode != null and studyMode != ''">
+              AND a.study_mode = #{studyMode}
+          </if>
         ORDER BY a.year DESC
     </select>
 

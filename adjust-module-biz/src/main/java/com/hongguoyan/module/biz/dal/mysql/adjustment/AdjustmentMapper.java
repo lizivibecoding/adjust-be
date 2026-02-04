@@ -125,7 +125,9 @@ public interface AdjustmentMapper extends BaseMapperX<AdjustmentDO> {
                                                       @Param("currentYear") Integer currentYear);
 
     List<Integer> selectOptionYears(@Param("schoolId") Long schoolId,
-                                    @Param("majorId") Long majorId);
+                                    @Param("collegeId") Long collegeId,
+                                    @Param("majorId") Long majorId,
+                                    @Param("studyMode") String studyMode);
 
     List<AppAdjustmentCollegeOptionRespVO> selectOptionColleges(@Param("schoolId") Long schoolId,
                                                                 @Param("majorId") Long majorId);

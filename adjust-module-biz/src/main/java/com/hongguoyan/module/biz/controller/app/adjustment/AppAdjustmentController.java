@@ -77,7 +77,7 @@ public class AppAdjustmentController {
     }
 
     @GetMapping("/options")
-    @Operation(summary = "调剂详情切换选项(年份/学院)")
+    @Operation(summary = "调剂详情切换选项(年份)")
     public CommonResult<AppAdjustmentOptionsRespVO> getAdjustmentOptions(@Valid AppAdjustmentOptionsReqVO reqVO) {
         return success(adjustmentService.getAdjustmentOptions(reqVO));
     }

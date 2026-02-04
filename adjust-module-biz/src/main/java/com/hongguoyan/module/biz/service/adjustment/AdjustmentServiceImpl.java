@@ -345,16 +345,9 @@ public class AdjustmentServiceImpl implements AdjustmentService {
     @Override
     public AppAdjustmentOptionsRespVO getAdjustmentOptions(AppAdjustmentOptionsReqVO reqVO) {
         AppAdjustmentOptionsRespVO respVO = new AppAdjustmentOptionsRespVO();
-        List<Integer> years = adjustmentMapper.selectOptionYears(reqVO.getSchoolId(), reqVO.getMajorId());
-        List<AppAdjustmentCollegeOptionRespVO> colleges = adjustmentMapper.selectOptionColleges(reqVO.getSchoolId(), reqVO.getMajorId());
+        List<Integer> years = adjustmentMapper.selectOptionYears(reqVO.getSchoolId(), reqVO.getCollegeId(),
+                reqVO.getMajorId(), reqVO.getStudyMode());
         respVO.setYearList(years != null ? years : Collections.emptyList());
-        respVO.setCollegeList(colleges != null ? colleges : Collections.emptyList());
-        if (reqVO.getCollegeId() != null) {
-            List<String> studyModes = adjustmentMapper.selectOptionStudyModes(reqVO.getSchoolId(), reqVO.getCollegeId(), reqVO.getMajorId());
-            respVO.setStudyModeList(studyModes != null ? studyModes : Collections.emptyList());
-        } else {
-            respVO.setStudyModeList(Collections.emptyList());
-        }
         return respVO;
     }
 

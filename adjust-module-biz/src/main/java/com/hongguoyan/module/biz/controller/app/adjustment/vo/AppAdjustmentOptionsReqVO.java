@@ -2,6 +2,7 @@ package com.hongguoyan.module.biz.controller.app.adjustment.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Schema(description = "用户 APP - 调剂详情切换选项 Request VO")
@@ -14,6 +15,10 @@ public class AppAdjustmentOptionsReqVO {
 
     @Schema(description = "学院ID(用于学习方式联动)", example = "6746")
     private Long collegeId;
+
+    @Schema(description = "学习方式(用于年份联动过滤；全日制/非全日制)", example = "全日制")
+    @Size(max = 16, message = "学习方式长度不能超过16")
+    private String studyMode;
 
     @Schema(description = "专业ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "15937")
     @NotNull(message = "专业ID不能为空")

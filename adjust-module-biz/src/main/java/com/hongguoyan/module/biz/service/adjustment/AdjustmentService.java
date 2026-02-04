@@ -86,7 +86,7 @@ public interface AdjustmentService {
     AppAdjustmentFilterConfigRespVO getAdjustmentFilterConfig(String majorCode);
 
     /**
-     * 调剂详情切换选项(年份/学院)
+     * 调剂详情切换选项(年份)
      *
      * @param reqVO 条件
      * @return 选项
