@@ -62,4 +62,7 @@ public interface ErrorCodeConstants {
     ErrorCode VIP_PAY_NOTIFY_MERCHANT_ORDER_ID_NOT_MATCH = new ErrorCode(51, "支付回调失败：商户订单号不匹配");
     ErrorCode NO_MATCHING_SCHOOLS = new ErrorCode(52, "没有匹配的学校");
     ErrorCode NO_MATCHING_SCHOOLS_ADJUSTS = new ErrorCode(53, "没有匹配的调剂专业");
+
+    ErrorCode VIP_BENEFIT_LOG_NOT_EXISTS = new ErrorCode(54, "用户权益消耗明细不存在");
+    ErrorCode VIP_BENEFIT_USAGE_NOT_EXISTS = new ErrorCode(55, "用户权益用量汇总不存在");
 }
