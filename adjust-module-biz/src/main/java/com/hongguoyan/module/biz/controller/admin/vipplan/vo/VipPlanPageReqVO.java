@@ -14,16 +14,16 @@ import static com.hongguoyan.framework.common.util.date.DateUtils.FORMAT_YEAR_MO
 public class VipPlanPageReqVO extends PageParam {
 
     @Schema(description = "套餐编码：VIP / SVIP")
-    private String code;
+    private String planCode;
 
     @Schema(description = "套餐名称", example = "王五")
-    private String name;
+    private String planName;
 
     @Schema(description = "价格（单位：分）", example = "20441")
-    private Integer price;
+    private Integer planPrice;
 
     @Schema(description = "增加时长（单位：天）")
-    private Integer duration;
+    private Integer durationDays;
 
     @Schema(description = "状态：0 禁用，1 启用", example = "1")
     private Integer status;

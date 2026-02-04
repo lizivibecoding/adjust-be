@@ -30,19 +30,19 @@ public class VipPlanDO extends BaseDO {
     /**
      * 套餐编码：VIP / SVIP
      */
-    private String code;
+    private String planCode;
     /**
      * 套餐名称
      */
-    private String name;
+    private String planName;
     /**
      * 价格（单位：分）
      */
-    private Integer price;
+    private Integer planPrice;
     /**
      * 增加时长（单位：天）
      */
-    private Integer duration;
+    private Integer durationDays;
     /**
      * 状态：0 禁用，1 启用
      */

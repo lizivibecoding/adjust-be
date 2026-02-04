@@ -19,10 +19,10 @@ public interface VipPlanMapper extends BaseMapperX<VipPlanDO> {
 
     default PageResult<VipPlanDO> selectPage(VipPlanPageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<VipPlanDO>()
-                .eqIfPresent(VipPlanDO::getCode, reqVO.getCode())
-                .likeIfPresent(VipPlanDO::getName, reqVO.getName())
-                .eqIfPresent(VipPlanDO::getPrice, reqVO.getPrice())
-                .eqIfPresent(VipPlanDO::getDuration, reqVO.getDuration())
+                .eqIfPresent(VipPlanDO::getPlanCode, reqVO.getPlanCode())
+                .likeIfPresent(VipPlanDO::getPlanName, reqVO.getPlanName())
+                .eqIfPresent(VipPlanDO::getPlanPrice, reqVO.getPlanPrice())
+                .eqIfPresent(VipPlanDO::getDurationDays, reqVO.getDurationDays())
                 .eqIfPresent(VipPlanDO::getStatus, reqVO.getStatus())
                 .eqIfPresent(VipPlanDO::getSort, reqVO.getSort())
                 .eqIfPresent(VipPlanDO::getRemark, reqVO.getRemark())

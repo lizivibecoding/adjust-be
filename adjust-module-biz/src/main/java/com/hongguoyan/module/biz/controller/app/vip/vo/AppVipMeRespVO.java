@@ -26,7 +26,7 @@ public class AppVipMeRespVO {
     private LocalDateTime maxEndTime;
 
     @Schema(description = "当前可用功能 key 列表（并集）")
-    private List<String> enabledFeatures;
+    private List<String> enabledBenefits;
 
 }
 

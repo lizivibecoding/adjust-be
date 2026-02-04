@@ -12,22 +12,22 @@ import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderCreateReqVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderCreateRespVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderPageReqVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderRespVO;
-import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipPlanFeatureRespVO;
+import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipPlanBenefitRespVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipPlanRespVO;
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.module.biz.dal.dataobject.vipcouponbatch.VipCouponBatchDO;
 import com.hongguoyan.module.biz.dal.dataobject.vipcouponcode.VipCouponCodeDO;
-import com.hongguoyan.module.biz.dal.dataobject.vipcouponlog.VipCouponLogDO;
+import com.hongguoyan.module.biz.dal.dataobject.vipsubscriptionlog.VipSubscriptionLogDO;
 import com.hongguoyan.module.biz.dal.dataobject.viporder.VipOrderDO;
 import com.hongguoyan.module.biz.dal.dataobject.vipplan.VipPlanDO;
-import com.hongguoyan.module.biz.dal.dataobject.vipplanfeature.VipPlanFeatureDO;
+import com.hongguoyan.module.biz.dal.dataobject.vipplanbenefit.VipPlanBenefitDO;
 import com.hongguoyan.module.biz.dal.dataobject.vipsubscription.VipSubscriptionDO;
 import com.hongguoyan.module.biz.dal.mysql.vipcouponbatch.VipCouponBatchMapper;
 import com.hongguoyan.module.biz.dal.mysql.vipcouponcode.VipCouponCodeMapper;
-import com.hongguoyan.module.biz.dal.mysql.vipcouponlog.VipCouponLogMapper;
+import com.hongguoyan.module.biz.dal.mysql.vipsubscriptionlog.VipSubscriptionLogMapper;
 import com.hongguoyan.module.biz.dal.mysql.viporder.VipOrderMapper;
 import com.hongguoyan.module.biz.dal.mysql.vipplan.VipPlanMapper;
-import com.hongguoyan.module.biz.dal.mysql.vipplanfeature.VipPlanFeatureMapper;
+import com.hongguoyan.module.biz.dal.mysql.vipplanbenefit.VipPlanBenefitMapper;
 import com.hongguoyan.module.biz.dal.mysql.vipsubscription.VipSubscriptionMapper;
 import com.hongguoyan.module.pay.api.notify.dto.PayOrderNotifyReqDTO;
 import com.hongguoyan.module.pay.api.order.PayOrderApi;
@@ -83,7 +83,7 @@ public class VipAppServiceImpl implements VipAppService {
     @Resource
     private VipPlanMapper vipPlanMapper;
     @Resource
-    private VipPlanFeatureMapper vipPlanFeatureMapper;
+    private VipPlanBenefitMapper vipPlanBenefitMapper;
     @Resource
     private VipSubscriptionMapper vipSubscriptionMapper;
     @Resource
@@ -91,7 +91,7 @@ public class VipAppServiceImpl implements VipAppService {
     @Resource
     private VipCouponBatchMapper vipCouponBatchMapper;
     @Resource
-    private VipCouponLogMapper vipCouponLogMapper;
+    private VipSubscriptionLogMapper vipSubscriptionLogMapper;
     @Resource
     private VipOrderMapper vipOrderMapper;
     @Resource
@@ -107,33 +107,37 @@ public class VipAppServiceImpl implements VipAppService {
             return List.of();
         }
 
-        List<String> planCodes = convertList(plans, VipPlanDO::getCode);
-        List<VipPlanFeatureDO> features = vipPlanFeatureMapper.selectList(new LambdaQueryWrapperX<VipPlanFeatureDO>()
-                .in(VipPlanFeatureDO::getPlanCode, planCodes)
-                .eq(VipPlanFeatureDO::getStatus, COMMON_STATUS_ENABLE)
-                .orderByAsc(VipPlanFeatureDO::getSort)
-                .orderByAsc(VipPlanFeatureDO::getId));
-        Map<String, List<VipPlanFeatureDO>> featureMap = features.stream()
-                .collect(Collectors.groupingBy(VipPlanFeatureDO::getPlanCode));
+        List<String> planCodes = convertList(plans, VipPlanDO::getPlanCode);
+        List<VipPlanBenefitDO> benefits = vipPlanBenefitMapper.selectList(new LambdaQueryWrapperX<VipPlanBenefitDO>()
+                .in(VipPlanBenefitDO::getPlanCode, planCodes)
+                .eq(VipPlanBenefitDO::getDisplayStatus, COMMON_STATUS_ENABLE)
+                .orderByAsc(VipPlanBenefitDO::getSort)
+                .orderByAsc(VipPlanBenefitDO::getId));
+        Map<String, List<VipPlanBenefitDO>> benefitMap = benefits.stream()
+                .collect(Collectors.groupingBy(VipPlanBenefitDO::getPlanCode));
 
         List<AppVipPlanRespVO> result = new ArrayList<>(plans.size());
         for (VipPlanDO plan : plans) {
             AppVipPlanRespVO respVO = new AppVipPlanRespVO();
-            respVO.setCode(plan.getCode());
-            respVO.setName(plan.getName());
-            respVO.setPrice(plan.getPrice());
-            respVO.setDuration(plan.getDuration());
+            respVO.setPlanCode(plan.getPlanCode());
+            respVO.setPlanName(plan.getPlanName());
+            respVO.setPlanPrice(plan.getPlanPrice());
+            respVO.setDurationDays(plan.getDurationDays());
             respVO.setSort(plan.getSort());
 
-            List<VipPlanFeatureDO> planFeatures = featureMap.getOrDefault(plan.getCode(), List.of());
-            respVO.setFeatures(convertList(planFeatures, feature -> {
-                AppVipPlanFeatureRespVO f = new AppVipPlanFeatureRespVO();
-                f.setFeatureKey(feature.getFeatureKey());
-                f.setName(feature.getName());
-                f.setDescription(feature.getDescription());
-                f.setSort(feature.getSort());
-                f.setEnabled(feature.getEnabled());
-                return f;
+            List<VipPlanBenefitDO> planBenefits = benefitMap.getOrDefault(plan.getPlanCode(), List.of());
+            respVO.setBenefits(convertList(planBenefits, benefit -> {
+                AppVipPlanBenefitRespVO b = new AppVipPlanBenefitRespVO();
+                b.setBenefitKey(benefit.getBenefitKey());
+                b.setBenefitName(benefit.getBenefitName());
+                b.setBenefitDesc(benefit.getBenefitDesc());
+                b.setBenefitType(benefit.getBenefitType());
+                b.setBenefitValue(benefit.getBenefitValue());
+                b.setPeriodType(benefit.getPeriodType());
+                b.setConsumePolicy(benefit.getConsumePolicy());
+                b.setSort(benefit.getSort());
+                b.setEnabled(benefit.getEnabled());
+                return b;
             }));
             result.add(respVO);
         }
@@ -145,7 +149,7 @@ public class VipAppServiceImpl implements VipAppService {
         AppVipMeRespVO respVO = new AppVipMeRespVO();
         respVO.setVipValid(Boolean.FALSE);
         respVO.setSvipValid(Boolean.FALSE);
-        respVO.setEnabledFeatures(List.of());
+        respVO.setEnabledBenefits(List.of());
 
         if (userId == null) {
             return respVO;
@@ -175,12 +179,12 @@ public class VipAppServiceImpl implements VipAppService {
         respVO.setMaxEndTime(subs.stream().map(VipSubscriptionDO::getEndTime)
                 .filter(Objects::nonNull).max(Comparator.naturalOrder()).orElse(null));
 
-        // enabledFeatures（并集）
+        // enabledBenefits（并集）
         List<String> planCodes = convertList(subs, VipSubscriptionDO::getPlanCode);
-        List<VipPlanFeatureDO> enabledFeatures = vipPlanFeatureMapper.selectList(new LambdaQueryWrapperX<VipPlanFeatureDO>()
-                .in(VipPlanFeatureDO::getPlanCode, planCodes)
-                .eq(VipPlanFeatureDO::getEnabled, COMMON_STATUS_ENABLE));
-        respVO.setEnabledFeatures(new ArrayList<>(convertSet(enabledFeatures, VipPlanFeatureDO::getFeatureKey)));
+        List<VipPlanBenefitDO> enabledBenefits = vipPlanBenefitMapper.selectList(new LambdaQueryWrapperX<VipPlanBenefitDO>()
+                .in(VipPlanBenefitDO::getPlanCode, planCodes)
+                .eq(VipPlanBenefitDO::getEnabled, COMMON_STATUS_ENABLE));
+        respVO.setEnabledBenefits(new ArrayList<>(convertSet(enabledBenefits, VipPlanBenefitDO::getBenefitKey)));
 
         return respVO;
     }
@@ -194,7 +198,7 @@ public class VipAppServiceImpl implements VipAppService {
 
         String planCode = StrUtil.trim(reqVO.getPlanCode());
         VipPlanDO plan = vipPlanMapper.selectOne(new LambdaQueryWrapperX<VipPlanDO>()
-                .eq(VipPlanDO::getCode, planCode));
+                .eq(VipPlanDO::getPlanCode, planCode));
         if (plan == null) {
             throw exception(VIP_PLAN_NOT_EXISTS);
         }
@@ -206,8 +210,8 @@ public class VipAppServiceImpl implements VipAppService {
         VipOrderDO order = new VipOrderDO();
         order.setOrderNo(IdUtil.getSnowflakeNextIdStr());
         order.setUserId(userId);
-        order.setPlanCode(plan.getCode());
-        order.setAmount(plan.getPrice());
+        order.setPlanCode(plan.getPlanCode());
+        order.setAmount(plan.getPlanPrice());
         order.setStatus(VIP_ORDER_STATUS_WAIT_PAY);
         order.setExpireTime(now.plusMinutes(30));
         vipOrderMapper.insert(order);
@@ -282,14 +286,14 @@ public class VipAppServiceImpl implements VipAppService {
     private void applySubscriptionByPay(VipOrderDO order, PayOrderRespDTO payOrder) {
         // 套餐校验
         VipPlanDO plan = vipPlanMapper.selectOne(new LambdaQueryWrapperX<VipPlanDO>()
-                .eq(VipPlanDO::getCode, order.getPlanCode()));
+                .eq(VipPlanDO::getPlanCode, order.getPlanCode()));
         if (plan == null) {
             throw exception(VIP_PLAN_NOT_EXISTS);
         }
         if (!Objects.equals(plan.getStatus(), COMMON_STATUS_ENABLE)) {
             throw exception(VIP_PLAN_DISABLED);
         }
-        Integer grantDays = plan.getDuration();
+        Integer grantDays = plan.getDurationDays();
         if (grantDays == null || grantDays <= 0) {
             throw exception(VIP_PLAN_DURATION_INVALID);
         }
@@ -327,7 +331,7 @@ public class VipAppServiceImpl implements VipAppService {
             vipSubscriptionMapper.updateById(sub);
         }
 
-        VipCouponLogDO log = new VipCouponLogDO();
+        VipSubscriptionLogDO log = new VipSubscriptionLogDO();
         log.setUserId(order.getUserId());
         log.setPlanCode(order.getPlanCode());
         log.setAction(action);
@@ -338,7 +342,7 @@ public class VipAppServiceImpl implements VipAppService {
         log.setAfterEndTime(afterEndTime);
         log.setGrantDays(grantDays);
         log.setRemark("支付开通/续期");
-        vipCouponLogMapper.insert(log);
+        vipSubscriptionLogMapper.insert(log);
     }
 
     private PayOrderRespDTO validatePayOrderPaid(VipOrderDO order, Long payOrderId) {
@@ -360,7 +364,7 @@ public class VipAppServiceImpl implements VipAppService {
 
     private String buildPaySubject(VipPlanDO plan) {
         // pay 侧限制：<= 32
-        String planCode = plan != null ? StrUtil.upperFirst(StrUtil.trimToEmpty(plan.getCode())).toUpperCase() : "VIP";
+        String planCode = plan != null ? StrUtil.upperFirst(StrUtil.trimToEmpty(plan.getPlanCode())).toUpperCase() : "VIP";
         return planCode + " 会员";
     }
 
@@ -415,14 +419,14 @@ public class VipAppServiceImpl implements VipAppService {
 
         // 套餐校验
         VipPlanDO plan = vipPlanMapper.selectOne(new LambdaQueryWrapperX<VipPlanDO>()
-                .eq(VipPlanDO::getCode, coupon.getPlanCode()));
+                .eq(VipPlanDO::getPlanCode, coupon.getPlanCode()));
         if (plan == null) {
             throw exception(VIP_PLAN_NOT_EXISTS);
         }
         if (!Objects.equals(plan.getStatus(), COMMON_STATUS_ENABLE)) {
             throw exception(VIP_PLAN_DISABLED);
         }
-        Integer grantDays = plan.getDuration();
+        Integer grantDays = plan.getDurationDays();
         if (grantDays == null || grantDays <= 0) {
             throw exception(VIP_PLAN_DURATION_INVALID);
         }
@@ -430,7 +434,7 @@ public class VipAppServiceImpl implements VipAppService {
         // 续期规则：未过期从 end_time 往后加；已过期/不存在从 now() 起算
         VipSubscriptionDO sub = vipSubscriptionMapper.selectOne(new LambdaQueryWrapperX<VipSubscriptionDO>()
                 .eq(VipSubscriptionDO::getUserId, userId)
-                .eq(VipSubscriptionDO::getPlanCode, plan.getCode()));
+                .eq(VipSubscriptionDO::getPlanCode, plan.getPlanCode()));
 
         LocalDateTime beforeEndTime = sub != null ? sub.getEndTime() : null;
         LocalDateTime afterEndTime;
@@ -440,7 +444,7 @@ public class VipAppServiceImpl implements VipAppService {
             afterEndTime = now.plusDays(grantDays);
             VipSubscriptionDO toCreate = new VipSubscriptionDO();
             toCreate.setUserId(userId);
-            toCreate.setPlanCode(plan.getCode());
+            toCreate.setPlanCode(plan.getPlanCode());
             toCreate.setStartTime(now);
             toCreate.setEndTime(afterEndTime);
             toCreate.setSource(VIP_SUBSCRIPTION_SOURCE_COUPON);
@@ -461,9 +465,9 @@ public class VipAppServiceImpl implements VipAppService {
         }
 
         // 写流水
-        VipCouponLogDO log = new VipCouponLogDO();
+        VipSubscriptionLogDO log = new VipSubscriptionLogDO();
         log.setUserId(userId);
-        log.setPlanCode(plan.getCode());
+        log.setPlanCode(plan.getPlanCode());
         log.setAction(action);
         log.setSource(VIP_COUPON_LOG_SOURCE_COUPON);
         log.setRefType(VIP_COUPON_LOG_REF_TYPE_COUPON);
@@ -472,7 +476,7 @@ public class VipAppServiceImpl implements VipAppService {
         log.setAfterEndTime(afterEndTime);
         log.setGrantDays(grantDays);
         log.setRemark("券码兑换");
-        vipCouponLogMapper.insert(log);
+        vipSubscriptionLogMapper.insert(log);
 
         // 批次 used_count + 1（冗余字段）
         vipCouponBatchMapper.update(null, new LambdaUpdateWrapper<VipCouponBatchDO>()
@@ -497,11 +501,11 @@ public class VipAppServiceImpl implements VipAppService {
         // plan map
         List<String> planCodes = convertList(orders, VipOrderDO::getPlanCode);
         List<VipPlanDO> plans = vipPlanMapper.selectList(new LambdaQueryWrapperX<VipPlanDO>()
-                .in(VipPlanDO::getCode, planCodes));
+                .in(VipPlanDO::getPlanCode, planCodes));
         Map<String, VipPlanDO> planMap = new HashMap<>();
         for (VipPlanDO plan : plans) {
-            if (plan != null && StrUtil.isNotBlank(plan.getCode())) {
-                planMap.put(plan.getCode(), plan);
+            if (plan != null && StrUtil.isNotBlank(plan.getPlanCode())) {
+                planMap.put(plan.getPlanCode(), plan);
             }
         }
 
@@ -514,14 +518,14 @@ public class VipAppServiceImpl implements VipAppService {
             resp.setStatus(order.getStatus());
 
             VipPlanDO plan = planMap.get(order.getPlanCode());
-            resp.setPlanName(plan != null ? plan.getName() : order.getPlanCode());
+            resp.setPlanName(plan != null ? plan.getPlanName() : order.getPlanCode());
 
             LocalDateTime buyTime = order.getPayTime() != null ? order.getPayTime() : order.getCreateTime();
             resp.setBuyTime(buyTime);
 
             LocalDateTime endTime = null;
-            if (order.getPayTime() != null && plan != null && plan.getDuration() != null) {
-                endTime = order.getPayTime().plusDays(plan.getDuration());
+            if (order.getPayTime() != null && plan != null && plan.getDurationDays() != null) {
+                endTime = order.getPayTime().plusDays(plan.getDurationDays());
             }
             resp.setEndTime(endTime);
             resp.setDisplayStatus(buildDisplayStatus(order.getStatus(), endTime, now));

@@ -18,19 +18,19 @@ public class VipPlanRespVO {
 
     @Schema(description = "套餐编码：VIP / SVIP", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("套餐编码：VIP / SVIP")
-    private String code;
+    private String planCode;
 
     @Schema(description = "套餐名称", requiredMode = Schema.RequiredMode.REQUIRED, example = "王五")
     @ExcelProperty("套餐名称")
-    private String name;
+    private String planName;
 
     @Schema(description = "价格（单位：分）", requiredMode = Schema.RequiredMode.REQUIRED, example = "20441")
     @ExcelProperty("价格（单位：分）")
-    private Integer price;
+    private Integer planPrice;
 
     @Schema(description = "增加时长（单位：天）", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("增加时长（单位：天）")
-    private Integer duration;
+    private Integer durationDays;
 
     @Schema(description = "状态：0 禁用，1 启用", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
     @ExcelProperty("状态：0 禁用，1 启用")

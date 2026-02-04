@@ -1,16 +1,16 @@
-package com.hongguoyan.module.biz.controller.admin.vipcouponlog.vo;
+package com.hongguoyan.module.biz.controller.admin.vipsubscriptionlog.vo;
 
+import cn.idev.excel.annotation.ExcelIgnoreUnannotated;
+import cn.idev.excel.annotation.ExcelProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
-import java.util.*;
-import org.springframework.format.annotation.DateTimeFormat;
+import lombok.Data;
+
 import java.time.LocalDateTime;
-import cn.idev.excel.annotation.*;
 
 @Schema(description = "管理后台 - 会员订阅变更流水 Response VO")
 @Data
 @ExcelIgnoreUnannotated
-public class VipCouponLogRespVO {
+public class VipSubscriptionLogRespVO {
 
     @Schema(description = "主键", requiredMode = Schema.RequiredMode.REQUIRED, example = "13137")
     @ExcelProperty("主键")
@@ -25,11 +25,11 @@ public class VipCouponLogRespVO {
     private String planCode;
 
     @Schema(description = "动作：1开通,2续期,3撤销,4补偿", requiredMode = Schema.RequiredMode.REQUIRED)
-    @ExcelProperty("动作：1开通,2续期,3撤销,4补偿")
+    @ExcelProperty("动作")
     private Integer action;
 
     @Schema(description = "来源：1支付,2券码,3后台", requiredMode = Schema.RequiredMode.REQUIRED)
-    @ExcelProperty("来源：1支付,2券码,3后台")
+    @ExcelProperty("来源")
     private Integer source;
 
     @Schema(description = "关联类型", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
@@ -61,3 +61,4 @@ public class VipCouponLogRespVO {
     private LocalDateTime createTime;
 
 }
+
