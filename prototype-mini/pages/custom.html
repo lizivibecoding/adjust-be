@@ -11,6 +11,38 @@
     .grid-item { padding: 16px; }
     .grid-title { font-size: 14px; font-weight: 600; display: block; margin-bottom: 6px; }
     .grid-desc { font-size: 12px; color: var(--muted); }
+    .carousel-wrap { margin-top: 12px; margin-bottom: 24px; }
+    .carousel-track { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; -webkit-overflow-scrolling: touch; }
+    
+    /* Hot Ranking Styles */
+    .rank-card { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    .rank-item { padding: 14px; border-radius: 16px; background: #ffffff; display: block; }
+    .rank-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .rank-title { font-size: 16px; font-weight: 700; }
+    .heat { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #ff6b4a; }
+    .major-row { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #3a4352; }
+    .major-row .location { display: inline-flex; align-items: center; gap: 4px; color: #8a94a6; }
+    .major-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 16px; font-size: 12px; color: #6b7382; margin-top: 10px; }
+    .major-update { border-top: 1px solid #f0f3f8; margin-top: 10px; padding-top: 8px; font-size: 12px; color: #8a94a6; display: flex; justify-content: space-between; }
+    .rank-badge { width: 28px; height: 28px; border-radius: 999px; background: #f2f4f9; color: #6b7382; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; }
+    .rank-badge.top { background: rgba(47, 107, 255, 0.12); color: var(--primary); }
+    .filter-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+    .filter-select { appearance: none; -webkit-appearance: none; -moz-appearance: none; background: #f0f3f8; border: none; border-radius: 999px; padding: 6px 28px 6px 12px; font-size: 12px; color: #566070; width: 100%; position: relative; }
+    .filter-wrap { position: relative; }
+    .filter-wrap::after { content: ""; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid #b3bccb; pointer-events: none; }
+    .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .section-title { font-size: 16px; font-weight: 600; }
+    .carousel-track::-webkit-scrollbar { display: none; }
+    .carousel-item { min-width: 100%; height: 160px; border-radius: 16px; scroll-snap-align: start; color: #fff; padding: 20px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 10px 24px rgba(47, 107, 255, 0.2); }
+    .carousel-item.primary { background: linear-gradient(135deg, #3a73ff, #5b92ff); }
+    .carousel-item.mint { background: linear-gradient(135deg, #39c0b6, #48d1c8); }
+    .carousel-item.orange { background: linear-gradient(135deg, #ff9f43, #ffb36b); }
+    .carousel-item.purple { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+    .carousel-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    .carousel-desc { font-size: 13px; opacity: 0.95; line-height: 1.5; }
+    .carousel-dots { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
+    .carousel-dot { width: 6px; height: 6px; border-radius: 50%; background: #d1d5db; transition: all 0.3s; }
+    .carousel-dot.active { background: var(--primary); width: 20px; border-radius: 3px; }
   </style>
 </head>
 <body data-tab="custom">
@@ -37,10 +69,6 @@
           <span class="grid-title">我的定制报告</span>
           <span class="grid-desc">待生成</span>
         </a>
-        <a class="card grid-item" href="hot-ranking.html">
-          <span class="grid-title">热门调剂排名</span>
-          <span class="grid-desc">各学科调剂捡漏</span>
-        </a>
         <a class="card grid-item" href="same-score.html">
           <span class="grid-title">同分调剂去向</span>
           <span class="grid-desc">根据分数找调剂</span>
@@ -49,6 +77,173 @@
           <span class="grid-title">调剂定制筛选</span>
           <span class="grid-desc">最低分推荐调剂</span>
         </a>
+      </div>
+
+      <div class="carousel-wrap">
+        <div class="carousel-track" id="carouselTrack">
+          <div class="carousel-item primary">
+            <div class="carousel-title">VIP专属服务</div>
+            <div class="carousel-desc">享受一对一专业指导，助您成功调剂</div>
+          </div>
+          <div class="carousel-item mint">
+            <div class="carousel-title">精准匹配推荐</div>
+            <div class="carousel-desc">基于大数据分析，为您推荐最适合的调剂院校</div>
+          </div>
+          <div class="carousel-item orange">
+            <div class="carousel-title">实时信息更新</div>
+            <div class="carousel-desc">第一时间获取最新调剂信息，不错过任何机会</div>
+          </div>
+          <div class="carousel-item purple">
+            <div class="carousel-title">专业团队支持</div>
+            <div class="carousel-desc">经验丰富的导师团队，全程陪伴您的调剂之路</div>
+          </div>
+        </div>
+        <div class="carousel-dots" id="carouselDots"></div>
+      </div>
+
+      <div style="margin-top: 24px;">
+        <div class="section-head">
+          <div class="section-title">热门调剂专业排名</div>
+        </div>
+
+        <div class="filter-row">
+          <div class="filter-wrap">
+            <select class="filter-select">
+              <option>年份</option>
+              <option>2025</option>
+              <option>2024</option>
+              <option>2023</option>
+            </select>
+          </div>
+          <div class="filter-wrap">
+            <select class="filter-select">
+              <option>院校位置</option>
+              <option>辽宁</option>
+              <option>北京</option>
+              <option>上海</option>
+              <option>广东</option>
+            </select>
+          </div>
+          <div class="filter-wrap">
+            <select class="filter-select">
+              <option>院校层次</option>
+              <option>985</option>
+              <option>211</option>
+              <option>双一流</option>
+              <option>普通院校</option>
+            </select>
+          </div>
+          <div class="filter-wrap">
+            <select class="filter-select">
+              <option>学习方式</option>
+              <option>全日制</option>
+              <option>非全日制</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="rank-card">
+          <a class="card rank-item" href="info-detail.html">
+            <div class="rank-head">
+              <div class="rank-title">080550-机械</div>
+              <span class="rank-badge top">1</span>
+            </div>
+            <div class="major-row">
+              <span class="bold">上海交通大学</span>
+              <span class="location">• 上海</span>
+            </div>
+            <div class="major-grid">
+              <span>年份：2023</span>
+              <span>学习方式：全日制</span>
+              <span>统考招生：45人</span>
+              <span>调剂招生：19人</span>
+            </div>
+            <div class="major-update">
+              <span>更新：2023-03-21 00:00</span>
+              <span class="heat">🔥 92</span>
+            </div>
+          </a>
+          <a class="card rank-item" href="info-detail.html">
+            <div class="rank-head">
+              <div class="rank-title">081200-计算机</div>
+              <span class="rank-badge top">2</span>
+            </div>
+            <div class="major-row">
+              <span class="bold">华东理工大学</span>
+              <span class="location">• 上海</span>
+            </div>
+            <div class="major-grid">
+              <span>年份：2024</span>
+              <span>学习方式：全日制</span>
+              <span>统考招生：40人</span>
+              <span>调剂招生：12人</span>
+            </div>
+            <div class="major-update">
+              <span>更新：2024-03-18 10:30</span>
+              <span class="heat">🔥 88</span>
+            </div>
+          </a>
+          <a class="card rank-item" href="info-detail.html">
+            <div class="rank-head">
+              <div class="rank-title">083500-软件工程</div>
+              <span class="rank-badge top">3</span>
+            </div>
+            <div class="major-row">
+              <span class="bold">武汉理工大学</span>
+              <span class="location">• 湖北</span>
+            </div>
+            <div class="major-grid">
+              <span>年份：2025</span>
+              <span>学习方式：全日制</span>
+              <span>统考招生：36人</span>
+              <span>调剂招生：10人</span>
+            </div>
+            <div class="major-update">
+              <span>更新：2025-03-09 09:20</span>
+              <span class="heat">🔥 85</span>
+            </div>
+          </a>
+          <a class="card rank-item" href="info-detail.html">
+            <div class="rank-head">
+              <div class="rank-title">085400-电子信息</div>
+              <span class="rank-badge">4</span>
+            </div>
+            <div class="major-row">
+              <span class="bold">山东大学</span>
+              <span class="location">• 山东</span>
+            </div>
+            <div class="major-grid">
+              <span>年份：2024</span>
+              <span>学习方式：全日制</span>
+              <span>统考招生：42人</span>
+              <span>调剂招生：13人</span>
+            </div>
+            <div class="major-update">
+              <span>更新：2024-03-12 14:10</span>
+              <span class="heat">🔥 82</span>
+            </div>
+          </a>
+          <a class="card rank-item" href="info-detail.html">
+            <div class="rank-head">
+              <div class="rank-title">085404-计算机技术</div>
+              <span class="rank-badge">5</span>
+            </div>
+            <div class="major-row">
+              <span class="bold">北京工业大学</span>
+              <span class="location">• 北京</span>
+            </div>
+            <div class="major-grid">
+              <span>年份：2025</span>
+              <span>学习方式：全日制</span>
+              <span>统考招生：38人</span>
+              <span>调剂招生：9人</span>
+            </div>
+            <div class="major-update">
+              <span>更新：2025-03-05 11:45</span>
+              <span class="heat">🔥 79</span>
+            </div>
+          </a>
+        </div>
       </div>
 
     </div>
@@ -61,5 +256,73 @@
     <a href="profile.html" data-tab="profile">我的</a>
   </nav>
   <script src="../assets/app.js"></script>
+  <script>
+    (function() {
+      const track = document.getElementById('carouselTrack');
+      const dotsContainer = document.getElementById('carouselDots');
+      const items = track.querySelectorAll('.carousel-item');
+      let currentIndex = 0;
+      let autoPlayTimer = null;
+
+      // 创建指示点
+      items.forEach((_, index) => {
+        const dot = document.createElement('div');
+        dot.className = 'carousel-dot' + (index === 0 ? ' active' : '');
+        dot.addEventListener('click', () => goToSlide(index));
+        dotsContainer.appendChild(dot);
+      });
+
+      function updateDots() {
+        const dots = dotsContainer.querySelectorAll('.carousel-dot');
+        dots.forEach((dot, index) => {
+          dot.classList.toggle('active', index === currentIndex);
+        });
+      }
+
+      function goToSlide(index) {
+        currentIndex = index;
+        track.scrollTo({
+          left: track.offsetWidth * index,
+          behavior: 'smooth'
+        });
+        updateDots();
+      }
+
+      function nextSlide() {
+        currentIndex = (currentIndex + 1) % items.length;
+        goToSlide(currentIndex);
+      }
+
+      // 监听滚动事件，更新指示点
+      track.addEventListener('scroll', () => {
+        const scrollLeft = track.scrollLeft;
+        const itemWidth = track.offsetWidth;
+        const newIndex = Math.round(scrollLeft / itemWidth);
+        if (newIndex !== currentIndex) {
+          currentIndex = newIndex;
+          updateDots();
+        }
+      });
+
+      // 自动播放
+      function startAutoPlay() {
+        autoPlayTimer = setInterval(nextSlide, 3000);
+      }
+
+      function stopAutoPlay() {
+        if (autoPlayTimer) {
+          clearInterval(autoPlayTimer);
+          autoPlayTimer = null;
+        }
+      }
+
+      // 鼠标悬停时暂停自动播放
+      track.addEventListener('mouseenter', stopAutoPlay);
+      track.addEventListener('mouseleave', startAutoPlay);
+
+      // 开始自动播放
+      startAutoPlay();
+    })();
+  </script>
 </body>
 </html>

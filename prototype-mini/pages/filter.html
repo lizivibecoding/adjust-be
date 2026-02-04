@@ -100,9 +100,16 @@
 
       <div style="margin-top:20px;">
         <div class="section-title">学术类型</div>
-        <div class="pill-row">
-          <div class="pill">学硕</div>
-          <div class="pill">专硕</div>
+        <div class="pill-row" id="academic-type-row">
+          <div class="pill active" data-type="学硕">学硕</div>
+          <div class="pill" data-type="专硕">专硕</div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;">
+        <div class="section-title">一级学科</div>
+        <div class="pill-row" id="discipline-row">
+          <!-- 动态加载 -->
         </div>
       </div>
 
@@ -117,27 +124,12 @@
       </div>
 
       <div style="margin-top:20px;">
-        <div class="section-title">调剂类型</div>
-        <div class="pill-row">
-          <div class="pill">校内调剂</div>
-          <div class="pill">校外调剂</div>
-        </div>
-      </div>
-
-      <div style="margin-top:20px;">
         <div class="section-title">专项计划</div>
         <div class="pill-row">
           <div class="pill">只看专项计划</div>
         </div>
       </div>
 
-      <div style="margin-top:20px;">
-        <div class="section-title">招生状态</div>
-        <div class="pill-row">
-          <div class="pill">已经停招</div>
-          <div class="pill">正常招生</div>
-        </div>
-      </div>
 
       <div style="margin-top:20px;">
         <div class="section-title">数学科目</div>
@@ -145,13 +137,6 @@
           <div class="pill">数一</div>
           <div class="pill">数二</div>
           <div class="pill">数三</div>
-          <div class="pill">306</div>
-          <div class="pill">307</div>
-          <div class="pill">314</div>
-          <div class="pill">315</div>
-          <div class="pill">396</div>
-          <div class="pill">611</div>
-          <div class="pill">817</div>
           <div class="pill">不考数学</div>
         </div>
       </div>
@@ -175,5 +160,72 @@
     </div>
   </div>
   <script src="../assets/app.js"></script>
+  <script>
+    (function() {
+      // 模拟工学下的一级学科数据
+      const disciplines = {
+        '学硕': [
+          '力学', '机械工程', '光学工程', '仪器科学与技术', 
+          '材料科学与工程', '动力工程及工程热物理', '电气工程', 
+          '电子科学与技术', '信息与通信工程', '控制科学与工程', 
+          '计算机科学与技术', '土木工程', '化学工程与技术', 
+          '环境科学与工程'
+        ],
+        '专硕': [
+          '建筑学', '城市规划', '电子信息', '机械', 
+          '材料与化工', '资源与环境', '能源动力', 
+          '土木水利', '生物与医药', '交通运输'
+        ]
+      };
+
+      const academicRow = document.getElementById('academic-type-row');
+      const disciplineRow = document.getElementById('discipline-row');
+      
+      // 渲染一级学科
+      function renderDisciplines(type) {
+        const list = disciplines[type] || [];
+        disciplineRow.innerHTML = list.map(function(item) {
+          return '<div class="pill">' + item + '</div>';
+        }).join('');
+        
+        // 绑定新生成的 pill 点击事件
+        disciplineRow.querySelectorAll('.pill').forEach(function(pill) {
+          pill.addEventListener('click', function() {
+            // 这里是一级学科的单选逻辑，如果需要多选请去掉移除 active 的逻辑
+            if (this.classList.contains('active')) {
+              this.classList.remove('active');
+            } else {
+              // 如果是单选：
+              // disciplineRow.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+              this.classList.add('active');
+            }
+          });
+        });
+      }
+
+      // 绑定学术类型点击事件
+      if (academicRow) {
+        const typePills = academicRow.querySelectorAll('.pill');
+        typePills.forEach(function(pill) {
+          pill.addEventListener('click', function() {
+            // 学术类型单选逻辑
+            typePills.forEach(function(p) {
+              p.classList.remove('active');
+            });
+            this.classList.add('active');
+            
+            const type = this.getAttribute('data-type');
+            renderDisciplines(type);
+          });
+        });
+
+        // 初始化显示（默认选中第一个 active 的，或者默认学硕）
+        const activePill = academicRow.querySelector('.pill.active');
+        if (activePill) {
+          renderDisciplines(activePill.getAttribute('data-type'));
+        }
+      }
+    })();
+  </script>
 </body>
 </html>

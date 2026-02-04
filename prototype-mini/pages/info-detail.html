@@ -13,18 +13,29 @@
     .school-name { font-size: 16px; font-weight: 600; }
     .school-meta { font-size: 12px; color: var(--muted); margin-top: 4px; }
     .btn-mini { font-size: 12px; padding: 6px 12px; border-radius: 999px; border: none; background: #eaf1ff; color: var(--primary); cursor: pointer; white-space: nowrap; text-decoration: none; display: inline-block; }
-    .major-card { padding: 16px; }
-    .major-title { font-size: 18px; font-weight: 700; }
+    .major-card { padding: 16px; margin-bottom: 12px; position: relative; }
+    .major-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .major-info { flex: 1; }
+    .major-title { font-size: 18px; font-weight: 700; line-height: 1.4; }
     .major-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
+    .major-actions { display: flex; gap: 12px; }
+    .icon-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #f4f6fb; cursor: pointer; transition: all 0.2s; border: none; padding: 0; color: #6b7382; }
+    .icon-btn:active { background: #eef2f9; transform: scale(0.95); }
+    .icon-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .icon-btn.active { color: var(--primary); background: rgba(47, 107, 255, 0.1); }
+    .icon-btn.active svg { fill: rgba(47, 107, 255, 0.1); }
+    .section-block { margin-bottom: 24px; }
+    .section-head { font-size: 16px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; }
+    .section-head::before { content: ""; display: inline-block; width: 4px; height: 16px; background: var(--primary); border-radius: 2px; margin-right: 8px; }
+    .direction-tabs { display: flex; gap: 10px; margin-bottom: 16px; overflow-x: auto; padding: 2px 2px 10px 2px; -webkit-overflow-scrolling: touch; }
+    .direction-tabs::-webkit-scrollbar { display: none; }
+    .direction-tab { flex: 0 0 auto; padding: 8px 16px; background: #ffffff; border: 1px solid #f0f3f8; border-radius: 10px; font-size: 13px; color: #566070; cursor: pointer; white-space: nowrap; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+    .direction-tab:active { transform: scale(0.98); }
+    .direction-tab.active { background: var(--primary); color: #ffffff; border-color: var(--primary); font-weight: 600; box-shadow: 0 4px 10px rgba(47, 107, 255, 0.25); }
     .tip-box { background: #f4f6fb; border-radius: 12px; padding: 12px; font-size: 12px; color: #6b7382; line-height: 1.6; margin-top: 12px; }
-    .detail-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 16px 0 10px; }
-    .detail-tab { text-align: center; font-size: 12px; padding: 8px 0; border-radius: 999px; background: #f2f4f9; color: #6b7382; cursor: pointer; }
-    .detail-tab.active { background: rgba(47, 107, 255, 0.12); color: var(--primary); font-weight: 600; }
-    .selection-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: #6b7382; margin-bottom: 12px; }
-    .switch-link { color: var(--primary); font-weight: 600; cursor: pointer; }
-    .panel { display: none; }
-    .panel.active { display: grid; grid-template-columns: 1fr; gap: 12px; }
-    .block { padding: 16px; }
+    .block { padding: 16px; margin-bottom: 12px; }
+    .dir-content { display: none; }
+    .dir-content.active { display: block; }
     .block-title { font-size: 14px; font-weight: 600; margin-bottom: 10px; }
     .info-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px; color: #3a4352; }
     .label { color: var(--muted); }
@@ -48,21 +59,29 @@
     .stats-list { border: 1px solid #eef2f8; border-radius: 12px; overflow: hidden; margin-top: 10px; }
     .stats-row { display: flex; justify-content: space-between; padding: 10px 12px; font-size: 12px; color: #6b7382; border-bottom: 1px solid #f0f3f8; }
     .stats-row:last-child { border-bottom: none; }
-    .candidate-card { padding: 14px; }
-    .candidate-name { font-size: 14px; font-weight: 600; }
-    .candidate-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
-    .score-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; text-align: center; font-size: 12px; }
-    .score-grid span { display: block; }
-    .notice-item { font-size: 12px; color: #6b7382; padding: 10px 0; border-bottom: 1px solid #f0f3f8; }
-    .notice-item:last-child { border-bottom: none; }
-    .action-buttons { display: flex; gap: 12px; margin-top: 20px; padding-bottom: 20px; }
-    .action-btn { flex: 1; padding: 12px 16px; border-radius: 999px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s; }
-    .action-btn.share { background: #eaf1ff; color: var(--primary); }
-    .action-btn.share:hover { background: rgba(47, 107, 255, 0.15); }
-    .action-btn.subscribe { background: linear-gradient(135deg, #2f6bff, #4d8dff); color: #ffffff; }
-    .action-btn.subscribe:hover { background: linear-gradient(135deg, #1f5ae0, #2f6bff); }
-    .action-icon { width: 16px; height: 16px; flex-shrink: 0; }
-    .action-icon svg { width: 100%; height: 100%; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .admission-list { display: flex; flex-direction: column; gap: 8px; }
+    .admission-item { display: flex; align-items: center; justify-content: space-between; padding: 16px; background: #ffffff; border-radius: 12px; border: 1px solid #f0f3f8; }
+    .admission-left { display: flex; flex-direction: column; gap: 4px; }
+    .admission-name { font-size: 15px; font-weight: 600; color: #3a4352; display: flex; align-items: center; gap: 8px; }
+    .admission-school { font-size: 12px; color: #8a94a6; }
+    .admission-score { text-align: right; }
+    .score-num { font-size: 18px; font-weight: 700; color: #ff6b4a; font-family: 'DIN Alternate', 'Roboto', sans-serif; line-height: 1; }
+    .score-label { font-size: 11px; color: #9aa3b2; margin-top: 2px; }
+    .name-badge { width: 20px; height: 20px; background: #f0f3f8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #6b7382; }
+    .action-buttons { display: none; }
+    .history-card { padding: 16px; margin-bottom: 24px; }
+    .history-title { text-align: center; font-size: 16px; font-weight: 600; color: #1f2a3d; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .history-title span { color: var(--accent); font-size: 12px; }
+    .history-table { border: 1px solid #eef2f8; border-radius: 12px; overflow: hidden; }
+    .history-row { display: flex; border-bottom: 1px solid #eef2f8; font-size: 13px; color: #3a4352; transition: background 0.2s; cursor: pointer; }
+    .history-row:last-child { border-bottom: none; }
+    .history-row.header { background: #f9fafc; font-weight: 600; color: #1f2a3d; cursor: default; }
+    .history-cell { flex: 1; padding: 12px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .history-row:not(.header):active { background: #f4f6fb; }
+    .history-row.active { background: rgba(47, 107, 255, 0.08); color: var(--primary); font-weight: 600; }
+    .history-row.predict { color: var(--primary); font-weight: 600; background: rgba(47, 107, 255, 0.04); }
+    .lock-icon { font-size: 12px; }
+    .vip-badge { font-size: 10px; background: linear-gradient(135deg, #FFD700, #FDB931); color: #fff; padding: 1px 4px; border-radius: 4px; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -80,71 +99,128 @@
           </div>
           <a class="btn-mini" href="school-detail.html">查看院校</a>
         </div>
+        
+        <div class="school-overview" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.05);">
+          <div class="overview-title" style="font-size: 13px; font-weight: 600; margin-bottom: 6px;">院校简介</div>
+          <div class="overview-text" style="font-size: 12px; color: #6b7382; line-height: 1.5;">
+            大连海洋大学是我国北方地区唯一的以海洋和水产学科为特色的多科性高等院校，是辽宁省人民政府与国家海洋局共建高校、辽宁省"双一流"建设高校。
+          </div>
+          <div class="contact-info" style="margin-top: 10px; font-size: 12px; color: #6b7382;">
+            <div style="margin-bottom: 4px;">📍 黄海校区：辽宁省大连市沙河口区黑石礁街52号</div>
+            <div>📧 liuxian900@dlfu.edu.cn</div>
+          </div>
+        </div>
       </div>
 
       <div class="card major-card">
-        <div class="major-title">085404-计算机技术</div>
-        <div class="major-sub">专硕 · 非全日制 · 信息工程学院</div>
-
-      </div>
-
-      <div class="detail-tabs" data-tab-group>
-        <div class="detail-tab active" data-tab-item data-target="info">调剂信息</div>
-        <div class="detail-tab" data-tab-item data-target="analysis">调剂分析</div>
-        <div class="detail-tab" data-tab-item data-target="list">录取名单</div>
-      </div>
-
-      <div class="selection-row">
-        <span>当前选择：2025，信息工程学院，非全日制</span>
-        <span class="switch-link">切换</span>
-      </div>
-
-      <div class="panel active" data-panel="info">
-        <div class="card block">
-          <div class="block-title">招生详情</div>
-          <div class="info-row"><span class="label">拟调剂招生人数</span><span>1人</span></div>
-          <div class="info-row"><span class="label">研究方向</span><span>不区分研究方向</span></div>
-          <div class="info-row"><span class="label">备注</span><span>以研招网公布为准</span></div>
-        </div>
-
-        <div class="card block">
-          <div class="block-title">调剂说明</div>
-          <div class="tip-box">
-            科目要求：第一单元 101 思想政治理论；第二单元 204 英语（二）；
-            第三单元 301 数学一/302 数学二；第四单元 不限。
+        <div class="major-header">
+          <div class="major-info">
+            <div class="major-title">085404-计算机技术</div>
+            <div class="major-sub">专硕 · 非全日制 · 信息工程学院</div>
+          </div>
+          <div class="major-actions">
+            <button class="icon-btn" onclick="showToast('分享功能')">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                <polyline points="16 6 12 2 8 6"></polyline>
+                <line x1="12" y1="2" x2="12" y2="15"></line>
+              </svg>
+            </button>
+            <button class="icon-btn" onclick="toggleSubscribe(this)">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+            </button>
           </div>
         </div>
+      </div>
 
-        <div class="card block">
-          <div class="block-title">复试参考书目</div>
-          <div class="pill">《数据结构（C语言版第2版）》</div>
-          <div class="pill">《数字电子技术基础（第三版）》</div>
-          <div class="pill">《操作系统》</div>
+      <div class="card history-card">
+        <div class="history-title"><span>■</span> 历年调剂情况总览 <span>■</span></div>
+        <div class="history-table" id="historyTable">
+          <div class="history-row header">
+            <div class="history-cell">年份</div>
+            <div class="history-cell">调剂情况</div>
+          </div>
+          <div class="history-row predict" onclick="switchYear(2026)">
+            <div class="history-cell">2026</div>
+            <div class="history-cell">预测今年招调剂</div>
+          </div>
+          <div class="history-row active" onclick="switchYear(2025)">
+            <div class="history-cell">2025</div>
+            <div class="history-cell">官方发布调剂</div>
+          </div>
+          <div class="history-row" onclick="switchYear(2024)">
+            <div class="history-cell">2024</div>
+            <div class="history-cell">官方发布调剂 <span class="lock-icon">🔒</span></div>
+          </div>
+          <div class="history-row" onclick="switchYear(2023)">
+            <div class="history-cell">2023</div>
+            <div class="history-cell">官方发布调剂 <span class="lock-icon">🔒</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 调剂信息区块 -->
+      <div class="section-block">
+        <div class="section-head">调剂信息</div>
+        
+        <div class="direction-tabs" id="directionTabs">
+          <div class="direction-tab active" data-dir="1">方向一</div>
+          <div class="direction-tab" data-dir="2">方向二</div>
+          <div class="direction-tab" data-dir="3">方向三</div>
+          <div class="direction-tab" data-dir="4">方向四</div>
         </div>
 
-        <div class="card block">
-          <div class="block-title">初试科目</div>
-          <div class="table">
-            <div class="table-row">
-              <span class="cell">101 思想政治理论</span>
-              <span class="cell">204 英语（二）</span>
+        <div id="directionContent">
+          <!-- 默认显示方向一的内容 -->
+          <div class="dir-content active" data-content="1">
+            <div class="card block">
+              <div class="block-title">招生详情 (方向一)</div>
+              <div class="info-row"><span class="label">拟调剂招生人数</span><span>1人</span></div>
+              <div class="info-row"><span class="label">研究方向</span><span>01 计算机应用技术</span></div>
+              <div class="info-row"><span class="label">备注</span><span>以研招网公布为准</span></div>
             </div>
-            <div class="table-row">
-              <span class="cell">301 数学一</span>
-              <span class="cell">819 高级语言程序设计（C语言）</span>
+            <div class="card block">
+              <div class="block-title">调剂说明</div>
+              <div class="tip-box">
+                科目要求：第一单元 101 思想政治理论；第二单元 204 英语（二）；
+                第三单元 301 数学一/302 数学二；第四单元 不限。
+              </div>
             </div>
-          </div>
-        </div>
-
-        <div class="card block">
-          <div class="block-title">注意事项</div>
-          <div class="tip-box">
-            本站收录招生人数部分来自院校官网通知，部分来自网络；详情请以研招网调剂系统查询。
+            <div class="card block">
+              <div class="block-title">复试参考书目</div>
+              <div class="pill">《数据结构（C语言版第2版）》</div>
+              <div class="pill">《数字电子技术基础（第三版）》</div>
+              <div class="pill">《操作系统》</div>
+            </div>
+            <div class="card block">
+              <div class="block-title">初试科目</div>
+              <div class="table">
+                <div class="table-row">
+                  <span class="cell">101 思想政治理论</span>
+                  <span class="cell">204 英语（二）</span>
+                </div>
+                <div class="table-row">
+                  <span class="cell">301 数学一</span>
+                  <span class="cell">819 高级语言程序设计（C语言）</span>
+                </div>
+              </div>
+            </div>
+            <div class="card block">
+              <div class="block-title">注意事项</div>
+              <div class="tip-box">
+                本站收录招生人数部分来自院校官网通知，部分来自网络；详情请以研招网调剂系统查询。
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="panel" data-panel="analysis">
+      <!-- 调剂分析区块 -->
+      <div class="section-block">
+        <div class="section-head">调剂分析</div>
         <div class="card chart-card">
           <div class="chart-title">调剂录取初试分数分布</div>
           <div class="bar-chart">
@@ -163,7 +239,7 @@
           </div>
         </div>
 
-        <div class="card chart-card">
+        <div class="card chart-card" style="margin-top: 12px;">
           <div class="chart-title">调剂录取一志愿院校层次占比</div>
           <div class="pie-row">
             <div class="pie"></div>
@@ -175,7 +251,7 @@
           </div>
         </div>
 
-        <div class="card chart-card">
+        <div class="card chart-card" style="margin-top: 12px;">
           <div class="chart-title">录取名单数据概览</div>
           <div class="stats-list">
             <div class="stats-row"><span>一志愿拟录取人数</span><span>2</span></div>
@@ -189,60 +265,213 @@
         </div>
       </div>
 
-      <div class="panel" data-panel="list">
-        <div class="card candidate-card">
-          <div class="candidate-name">李**</div>
-          <div class="candidate-sub">一志愿报考：清华大学</div>
-          <div class="score-grid">
-            <div><span class="label">初试成绩</span><span>276</span></div>
-            <div><span class="label">复试分数</span><span>162</span></div>
-            <div><span class="label">总成绩</span><span>438</span></div>
+      <!-- 录取名单区块 -->
+      <div class="section-block">
+        <div class="section-head">录取名单</div>
+        <div class="admission-list">
+          <div class="admission-item">
+            <div class="admission-left">
+              <div class="admission-name">
+                李**
+                <div class="name-badge">1</div>
+              </div>
+              <div class="admission-school">一志愿：清华大学</div>
+            </div>
+            <div class="admission-score">
+              <div class="score-num">276</div>
+              <div class="score-label">初试总分</div>
+            </div>
           </div>
-        </div>
-        <div class="card candidate-card">
-          <div class="candidate-name">卓**</div>
-          <div class="candidate-sub">一志愿报考：南京航空航天大学</div>
-          <div class="score-grid">
-            <div><span class="label">初试成绩</span><span>261</span></div>
-            <div><span class="label">复试分数</span><span>178.67</span></div>
-            <div><span class="label">总成绩</span><span>439.67</span></div>
+          <div class="admission-item">
+            <div class="admission-left">
+              <div class="admission-name">
+                卓**
+                <div class="name-badge">2</div>
+              </div>
+              <div class="admission-school">一志愿：南京航空航天大学</div>
+            </div>
+            <div class="admission-score">
+              <div class="score-num">261</div>
+              <div class="score-label">初试总分</div>
+            </div>
           </div>
-        </div>
-        <div class="card candidate-card">
-          <div class="candidate-name">成**</div>
-          <div class="candidate-sub">一志愿报考：辽宁工业大学</div>
-          <div class="score-grid">
-            <div><span class="label">初试成绩</span><span>266</span></div>
-            <div><span class="label">复试分数</span><span>154.67</span></div>
-            <div><span class="label">总成绩</span><span>420.67</span></div>
+          <div class="admission-item">
+            <div class="admission-left">
+              <div class="admission-name">
+                成**
+                <div class="name-badge">3</div>
+              </div>
+              <div class="admission-school">一志愿：辽宁工业大学</div>
+            </div>
+            <div class="admission-score">
+              <div class="score-num">266</div>
+              <div class="score-label">初试总分</div>
+            </div>
+          </div>
+          <div class="admission-item">
+            <div class="admission-left">
+              <div class="admission-name">
+                王**
+                <div class="name-badge">4</div>
+              </div>
+              <div class="admission-school">一志愿：大连理工大学</div>
+            </div>
+            <div class="admission-score">
+              <div class="score-num">288</div>
+              <div class="score-label">初试总分</div>
+            </div>
+          </div>
+          <div class="admission-item">
+            <div class="admission-left">
+              <div class="admission-name">
+                张**
+                <div class="name-badge">5</div>
+              </div>
+              <div class="admission-school">一志愿：吉林大学</div>
+            </div>
+            <div class="admission-score">
+              <div class="score-num">295</div>
+              <div class="score-label">初试总分</div>
+            </div>
           </div>
         </div>
       </div>
 
       <div class="action-buttons">
-        <button class="action-btn share" onclick="showToast('分享功能')">
-          <span class="action-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
-              <polyline points="16 6 12 2 8 6"></polyline>
-              <line x1="12" y1="2" x2="12" y2="15"></line>
-            </svg>
-          </span>
-          <span>分享</span>
-        </button>
-        <button class="action-btn subscribe" onclick="showToast('已订阅')">
-          <span class="action-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
-              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-            </svg>
-          </span>
-          <span>订阅</span>
-        </button>
       </div>
 
     </div>
   </div>
   <script src="../assets/app.js"></script>
+  <script>
+    (function() {
+      // 模拟各方向数据
+      const directionData = {
+        '1': {
+          recruit: { num: '1人', dir: '01 计算机应用技术', note: '以研招网公布为准' },
+          desc: '科目要求：第一单元 101 思想政治理论；第二单元 204 英语（二）；第三单元 301 数学一/302 数学二；第四单元 不限。',
+          books: ['《数据结构（C语言版第2版）》', '《数字电子技术基础（第三版）》', '《操作系统》'],
+          subjects: [
+            ['101 思想政治理论', '204 英语（二）'],
+            ['301 数学一', '819 高级语言程序设计（C语言）']
+          ]
+        },
+        '2': {
+          recruit: { num: '2人', dir: '02 软件工程', note: '包含全日制与非全日制' },
+          desc: '科目要求：第一单元 101 思想政治理论；第二单元 204 英语（二）；第三单元 302 数学二；第四单元 408 计算机学科专业基础。',
+          books: ['《软件工程导论》', '《Java编程思想》'],
+          subjects: [
+            ['101 思想政治理论', '204 英语（二）'],
+            ['302 数学二', '408 计算机学科专业基础']
+          ]
+        },
+        '3': {
+          recruit: { num: '1人', dir: '03 大数据技术', note: '不接受同等学力' },
+          desc: '科目要求：同方向一。',
+          books: ['《大数据导论》', '《Python数据分析》'],
+          subjects: [
+            ['101 思想政治理论', '204 英语（二）'],
+            ['301 数学一', '820 数据结构与算法']
+          ]
+        },
+        '4': {
+          recruit: { num: '3人', dir: '04 人工智能', note: '优先调剂' },
+          desc: '科目要求：第一单元 101 思想政治理论；第二单元 201 英语（一）；第三单元 301 数学一；第四单元 408。',
+          books: ['《人工智能：一种现代的方法》', '《机器学习》'],
+          subjects: [
+            ['101 思想政治理论', '201 英语（一）'],
+            ['301 数学一', '408 计算机学科专业基础']
+          ]
+        }
+      };
+
+      const tabs = document.querySelectorAll('.direction-tab');
+      const container = document.getElementById('directionContent');
+      
+      // 渲染方向内容
+      function renderContent(dirId) {
+        const data = directionData[dirId];
+        if (!data) return;
+
+        const booksHtml = data.books.map(b => `<div class="pill">${b}</div>`).join('');
+        const subjectsHtml = data.subjects.map(row => 
+          `<div class="table-row"><span class="cell">${row[0]}</span><span class="cell">${row[1]}</span></div>`
+        ).join('');
+
+        const html = `
+          <div class="card block">
+            <div class="block-title">招生详情 (方向${['一','二','三','四'][dirId-1]})</div>
+            <div class="info-row"><span class="label">拟调剂招生人数</span><span>${data.recruit.num}</span></div>
+            <div class="info-row"><span class="label">研究方向</span><span>${data.recruit.dir}</span></div>
+            <div class="info-row"><span class="label">备注</span><span>${data.recruit.note}</span></div>
+          </div>
+          <div class="card block">
+            <div class="block-title">调剂说明</div>
+            <div class="tip-box">${data.desc}</div>
+          </div>
+          <div class="card block">
+            <div class="block-title">复试参考书目</div>
+            ${booksHtml}
+          </div>
+          <div class="card block">
+            <div class="block-title">初试科目</div>
+            <div class="table">
+              ${subjectsHtml}
+            </div>
+          </div>
+          <div class="card block">
+            <div class="block-title">注意事项</div>
+            <div class="tip-box">
+              本站收录招生人数部分来自院校官网通知，部分来自网络；详情请以研招网调剂系统查询。
+            </div>
+          </div>
+        `;
+        
+        container.innerHTML = `<div class="dir-content active">${html}</div>`;
+      }
+
+      window.switchYear = function(year) {
+        const rows = document.querySelectorAll('.history-row');
+        // 简单模拟会员判断，除了2025和2026，其他年份需要会员
+        if (year < 2025) {
+          showToast('该年份数据需开通会员查看');
+          return;
+        }
+
+        // 移除所有 active 状态 (除了 header)
+        rows.forEach(row => {
+          if (!row.classList.contains('header')) {
+            row.classList.remove('active');
+            // 如果是当前点击的年份，添加 active
+            if (row.querySelector('.history-cell').textContent.trim() == year) {
+              row.classList.add('active');
+            }
+          }
+        });
+
+        showToast(`已切换至 ${year} 年调剂数据`);
+        // 这里可以添加逻辑去刷新下方 content 的数据
+        // renderContent(currentDir, year);
+      };
+
+      tabs.forEach(function(tab) {
+        tab.addEventListener('click', function() {
+          tabs.forEach(function(t) { t.classList.remove('active'); });
+          this.classList.add('active');
+          const dir = this.getAttribute('data-dir');
+          renderContent(dir);
+        });
+      });
+
+      window.toggleSubscribe = function(btn) {
+        btn.classList.toggle('active');
+        if (btn.classList.contains('active')) {
+          showToast('已开启订阅提醒');
+        } else {
+          showToast('已取消订阅');
+        }
+      };
+    })();
+  </script>
 </body>
 </html>

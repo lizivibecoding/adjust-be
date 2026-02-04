@@ -22,12 +22,13 @@
     .btn-edit { background: #eaf1ff; color: var(--primary); border: none; border-radius: 12px; padding: 8px 16px; font-size: 12px; cursor: pointer; flex: 1; }
     .btn-clear { background: #fff2e3; color: #ff9f43; border: none; border-radius: 12px; padding: 8px 16px; font-size: 12px; cursor: pointer; flex: 1; }
     .btn-add { background: linear-gradient(135deg, #2f6bff, #4d8dff); color: #ffffff; border: none; border-radius: 12px; padding: 8px 16px; font-size: 12px; cursor: pointer; width: 100%; }
+    .btn-export { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); width: calc(var(--page-width) - 32px); background: #20ac6b; color: #fff; text-align: center; padding: 14px; border-radius: 999px; font-size: 16px; font-weight: 600; text-decoration: none; box-shadow: 0 8px 24px rgba(32, 172, 107, 0.3); border: none; cursor: pointer; z-index: 100; }
   </style>
 </head>
 <body>
   <div class="toast"></div>
   <div class="page">
-    <div class="container">
+    <div class="container" style="padding-bottom: 80px;">
       <div class="page-title">我的志愿表</div>
 
       <div class="card wish-card">
@@ -104,7 +105,17 @@
       </div>
 
     </div>
+    
+    <button class="btn-export" onclick="exportExcel()">导出志愿表 (Excel)</button>
   </div>
   <script src="../assets/app.js"></script>
+  <script>
+    function exportExcel() {
+      showToast('正在导出志愿表 Excel...');
+      setTimeout(function() {
+        showToast('导出成功！已保存到本地');
+      }, 1500);
+    }
+  </script>
 </body>
 </html>

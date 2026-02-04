@@ -32,6 +32,9 @@
     .jump-btn { text-align: center; margin-top: 14px; }
     .link-btn { display: inline-flex; align-items: center; gap: 6px; color: #2f6bff; font-size: 13px; font-weight: 600; text-decoration: none; }
     .link-btn::after { content: ">"; font-weight: 600; }
+    .report-select-wrap { display: flex; align-items: center; gap: 8px; }
+    .report-select { font-size: 15px; font-weight: 600; color: #1f2a3d; border: none; background: transparent; padding-right: 20px; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231f2a3d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right center; background-size: 16px; min-width: 160px; }
+    .edit-icon { color: #9aa3b2; font-size: 14px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -41,9 +44,14 @@
         <div class="user-row">
           <div class="avatar"></div>
           <div class="user-info">
-            <span class="user-name">微信用户 4vlg</span>
-            <div class="user-sub">（10007）北京理工大学</div>
-            <div class="user-sub">（085401）新一代电子信息技术</div>
+            <div class="report-select-wrap">
+              <select id="reportSelect" class="report-select">
+                <option value="1">我的调剂报告 - 方案A</option>
+                <option value="2">我的调剂报告 - 方案B</option>
+              </select>
+              <span class="edit-icon" onclick="showToast('修改报告名称')">✎</span>
+            </div>
+            <div class="user-sub" id="reportTime">生成时间：2025-02-23 14:30</div>
           </div>
         </div>
         <div class="notice">
@@ -54,18 +62,20 @@
 
       <div class="card radar-card">
         <div class="radar-wrap">
-          <svg width="220" height="200" viewBox="0 0 220 200">
+          <svg width="220" height="200" viewBox="0 0 220 200" id="radarSvg">
             <polygon points="110,12 180,52 200,120 110,180 20,120 40,52" fill="none" stroke="#d9e3f2" stroke-width="1"/>
             <polygon points="110,32 165,64 182,120 110,168 38,120 55,64" fill="none" stroke="#e5ecf6" stroke-width="1"/>
             <polygon points="110,52 150,76 164,120 110,156 56,120 70,76" fill="none" stroke="#e5ecf6" stroke-width="1"/>
             <polygon points="110,72 135,88 146,120 110,144 74,120 85,88" fill="none" stroke="#e5ecf6" stroke-width="1"/>
-            <polygon points="110,40 170,70 160,130 110,150 60,130 50,70" fill="rgba(125,163,255,0.25)" stroke="#7da3ff" stroke-width="1.2"/>
-            <circle cx="110" cy="40" r="3" fill="#7da3ff"/>
-            <circle cx="170" cy="70" r="3" fill="#7da3ff"/>
-            <circle cx="160" cy="130" r="3" fill="#7da3ff"/>
-            <circle cx="110" cy="150" r="3" fill="#7da3ff"/>
-            <circle cx="60" cy="130" r="3" fill="#7da3ff"/>
-            <circle cx="50" cy="70" r="3" fill="#7da3ff"/>
+            <g id="radarData">
+              <polygon points="110,40 170,70 160,130 110,150 60,130 50,70" fill="rgba(125,163,255,0.25)" stroke="#7da3ff" stroke-width="1.2"/>
+              <circle cx="110" cy="40" r="3" fill="#7da3ff"/>
+              <circle cx="170" cy="70" r="3" fill="#7da3ff"/>
+              <circle cx="160" cy="130" r="3" fill="#7da3ff"/>
+              <circle cx="110" cy="150" r="3" fill="#7da3ff"/>
+              <circle cx="60" cy="130" r="3" fill="#7da3ff"/>
+              <circle cx="50" cy="70" r="3" fill="#7da3ff"/>
+            </g>
           </svg>
           <div class="radar-label top">背景</div>
           <div class="radar-label right">地区</div>
@@ -75,7 +85,7 @@
         </div>
       </div>
 
-      <div class="card report-card analysis-box">
+      <div class="card report-card analysis-box" id="analysisBox">
         <div class="analysis-item"><span class="analysis-key">背景：</span><span>你的院校背景尚可，属于调剂生中的主流水平。若想脱颖而出，需要在复试中展现出色的专业素养和潜力。</span></div>
         <div class="analysis-item"><span class="analysis-key">总分：</span><span>你的分数已过线，建议精准定位，重点关注与分数匹配的院校和专业。</span></div>
         <div class="analysis-item"><span class="analysis-key">类型：</span><span>学硕/专硕两则皆可，意味着能同时检索两大名额库，机会更多，但需高效权衡取舍。</span></div>
@@ -88,5 +98,68 @@
       </div>
     </div>
   </div>
+  <script src="../assets/app.js"></script>
+  <script>
+    const reportData = {
+      '1': {
+        time: '生成时间：2025-02-23 14:30',
+        radarPoints: '110,40 170,70 160,130 110,150 60,130 50,70',
+        radarDots: [
+          {cx: 110, cy: 40}, {cx: 170, cy: 70}, {cx: 160, cy: 130},
+          {cx: 110, cy: 150}, {cx: 60, cy: 130}, {cx: 50, cy: 70}
+        ],
+        analysis: [
+          {k: '背景', v: '你的院校背景尚可，属于调剂生中的主流水平。若想脱颖而出，需要在复试中展现出色的专业素养和潜力。'},
+          {k: '总分', v: '你的分数已过线，建议精准定位，重点关注与分数匹配的院校和专业。'},
+          {k: '类型', v: '学硕/专硕两则皆可，意味着能同时检索两大名额库，机会更多，但需高效权衡取舍。'},
+          {k: '英语', v: '良好的英语水平能为你的复试表现提供有力支持，请保持信心。'},
+          {k: '地区', v: '你的目标范围内可选院校很多，这是巨大优势，请做好分类。'}
+        ]
+      },
+      '2': {
+        time: '生成时间：2025-02-22 09:15',
+        radarPoints: '110,60 150,80 170,110 110,140 50,110 70,80',
+        radarDots: [
+          {cx: 110, cy: 60}, {cx: 150, cy: 80}, {cx: 170, cy: 110},
+          {cx: 110, cy: 140}, {cx: 50, cy: 110}, {cx: 70, cy: 80}
+        ],
+        analysis: [
+          {k: '背景', v: '双一流院校背景是你的显著优势，建议重点关注科研实力较强的院校。'},
+          {k: '总分', v: '分数具有一定竞争力，可以尝试冲刺更好的学校。'},
+          {k: '类型', v: '专硕方向更适合你的职业规划，建议集中精力。'},
+          {k: '英语', v: '英语成绩优秀，可作为复试中的亮点。'},
+          {k: '地区', v: '建议优先考虑一线城市，就业机会更多。'}
+        ]
+      }
+    };
+
+    const reportSelect = document.getElementById('reportSelect');
+    const reportTime = document.getElementById('reportTime');
+    const radarDataGroup = document.getElementById('radarData');
+    const analysisBox = document.getElementById('analysisBox');
+
+    reportSelect.addEventListener('change', function() {
+      const data = reportData[this.value];
+      if (data) {
+        // 更新时间
+        reportTime.textContent = data.time;
+        
+        // 更新雷达图
+        let dotsHtml = '';
+        data.radarDots.forEach(dot => {
+          dotsHtml += `<circle cx="${dot.cx}" cy="${dot.cy}" r="3" fill="#7da3ff"/>`;
+        });
+        radarDataGroup.innerHTML = `
+          <polygon points="${data.radarPoints}" fill="rgba(125,163,255,0.25)" stroke="#7da3ff" stroke-width="1.2"/>
+          ${dotsHtml}
+        `;
+        
+        // 更新分析文本
+        analysisBox.innerHTML = data.analysis.map(item => 
+          `<div class="analysis-item"><span class="analysis-key">${item.k}：</span><span>${item.v}</span></div>`
+        ).join('');
+      }
+    });
+  </script>
 </body>
 </html>

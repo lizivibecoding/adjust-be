@@ -16,7 +16,7 @@
     .list-wrap { display: grid; grid-template-columns: 1fr; gap: 12px; }
     .tab-panel { display: none; }
     .tab-panel.active { display: grid; }
-    .match-card { padding: 14px; }
+    .match-card { padding: 14px; cursor: pointer; }
     .match-head { display: flex; align-items: center; justify-content: space-between; }
     .match-title { font-size: 15px; font-weight: 700; color: #1f2a3d; }
     .badge { padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; }
@@ -44,6 +44,19 @@
     .wish-options { display: flex; flex-direction: column; gap: 12px; }
     .wish-option { padding: 14px 16px; background: #f4f6fb; border-radius: 12px; font-size: 14px; color: #3a4352; cursor: pointer; border: none; text-align: left; }
     .wish-option:hover { background: rgba(47, 107, 255, 0.12); color: var(--primary); }
+    .degree-badge { display: inline-block; font-size: 10px; padding: 1px 5px; border-radius: 4px; margin-left: 6px; font-weight: normal; vertical-align: middle; border: 1px solid transparent; transform: translateY(-1px); }
+    .degree-badge.pro { background: #f0f9ff; color: var(--primary); border-color: rgba(47, 107, 255, 0.2); }
+    .degree-badge.aca { background: #f0fdf4; color: var(--success); border-color: rgba(18, 183, 106, 0.2); }
+    .fab-cart { position: fixed; right: calc(50% - var(--page-width) / 2 + 20px); bottom: 92px; width: 56px; height: 56px; background: linear-gradient(135deg, #2f6bff, #4d8dff); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(47, 107, 255, 0.3); cursor: pointer; z-index: 900; transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    @media (max-width: 480px) {
+      .fab-cart { right: 20px; }
+    }
+    .fab-cart:active { transform: scale(0.9); }
+    .fab-icon { font-size: 24px; color: #fff; }
+    .fab-badge { position: absolute; top: -4px; right: -4px; background: #ff6b4a; color: #fff; font-size: 11px; font-weight: 700; height: 20px; min-width: 20px; padding: 0 6px; border-radius: 999px; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(255, 107, 74, 0.3); transform: scale(0); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .fab-badge.visible { transform: scale(1); }
+    @keyframes bounce { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+    .fab-cart.animating { animation: bounce 0.3s ease; }
   </style>
 </head>
 <body>
@@ -59,36 +72,36 @@
       <div class="filter-row">
         <div class="filter-wrap">
           <select class="filter-select">
-            <option>院校位置</option>
-            <option>辽宁</option>
-            <option>北京</option>
-            <option>上海</option>
-            <option>广东</option>
+            <option>外国语</option>
+            <option>英语一</option>
+            <option>英语二</option>
+            <option>日语</option>
+            <option>俄语</option>
           </select>
         </div>
         <div class="filter-wrap">
           <select class="filter-select">
-            <option>院校层次</option>
-            <option>985</option>
-            <option>211</option>
-            <option>双一流</option>
-            <option>普通院校</option>
+            <option>数学</option>
+            <option>数学一</option>
+            <option>数学二</option>
+            <option>数学三</option>
+            <option>不考数学</option>
           </select>
         </div>
         <div class="filter-wrap">
           <select class="filter-select">
-            <option>学习方式</option>
-            <option>全日制</option>
-            <option>非全日制</option>
-            <option>无要求</option>
+            <option>专业课</option>
+            <option>408</option>
+            <option>自命题</option>
+            <option>统考</option>
           </select>
         </div>
       </div>
 
       <div class="list-wrap tab-panel active" data-panel="all">
-        <div class="card match-card">
+        <div class="card match-card" onclick="location.href='info-detail.html'">
           <div class="match-head">
-            <div class="match-title">085404-计算机技术</div>
+            <div class="match-title">085404-计算机技术<span class="degree-badge pro">专硕</span></div>
             <span class="badge mid">中</span>
           </div>
           <div class="school-line">
@@ -125,9 +138,9 @@
           </div>
         </div>
 
-        <div class="card match-card">
+        <div class="card match-card" onclick="location.href='info-detail.html'">
           <div class="match-head">
-            <div class="match-title">085404-计算机技术</div>
+            <div class="match-title">085404-计算机技术<span class="degree-badge pro">专硕</span></div>
             <span class="badge hard">难</span>
           </div>
           <div class="school-line">
@@ -166,9 +179,9 @@
       </div>
 
       <div class="list-wrap tab-panel" data-panel="rush">
-        <div class="card match-card">
+        <div class="card match-card" onclick="location.href='info-detail.html'">
           <div class="match-head">
-            <div class="match-title">085404-计算机技术</div>
+            <div class="match-title">085404-计算机技术<span class="degree-badge pro">专硕</span></div>
             <span class="badge hard">难</span>
           </div>
           <div class="school-line">
@@ -207,9 +220,9 @@
       </div>
 
       <div class="list-wrap tab-panel" data-panel="steady">
-        <div class="card match-card">
+        <div class="card match-card" onclick="location.href='info-detail.html'">
           <div class="match-head">
-            <div class="match-title">085404-计算机技术</div>
+            <div class="match-title">085404-计算机技术<span class="degree-badge pro">专硕</span></div>
             <span class="badge mid">中</span>
           </div>
           <div class="school-line">
@@ -248,9 +261,9 @@
       </div>
 
       <div class="list-wrap tab-panel" data-panel="safe">
-        <div class="card match-card">
+        <div class="card match-card" onclick="location.href='info-detail.html'">
           <div class="match-head">
-            <div class="match-title">085404-计算机技术</div>
+            <div class="match-title">085404-计算机技术<span class="degree-badge pro">专硕</span></div>
             <span class="badge easy">易</span>
           </div>
           <div class="school-line">
@@ -301,8 +314,25 @@
     </div>
   </div>
 
+  <div class="fab-cart" id="wishlistFab" onclick="location.href='wishlist.html'">
+    <span class="fab-icon">📋</span>
+    <div class="fab-badge" id="wishlistBadge">0</div>
+  </div>
+
   <script src="../assets/app.js"></script>
   <script>
+    // 检查是否从引导流程跳转过来
+    (function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const onboardingParam = urlParams.get('onboarding');
+      
+      if (onboardingParam === '1') {
+        showToast('系统已根据您的一级学科为您推荐院校');
+        // 移除URL参数
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    })();
+
     function showWishlistModal(event) {
       if (event) {
         event.stopPropagation();
@@ -317,9 +347,31 @@
       document.getElementById('wishlistModal').classList.remove('active');
     }
 
+    let wishlistCount = 0;
+
     function selectWish(wish, element) {
+      // 增加计数
+      wishlistCount++;
+      updateFabBadge();
+      
+      // 添加按钮动画
+      const fab = document.getElementById('wishlistFab');
+      fab.classList.remove('animating');
+      void fab.offsetWidth; // 触发重绘
+      fab.classList.add('animating');
+
       showToast('已添加到' + wish);
       closeWishlistModal();
+    }
+
+    function updateFabBadge() {
+      const badge = document.getElementById('wishlistBadge');
+      badge.textContent = wishlistCount;
+      if (wishlistCount > 0) {
+        badge.classList.add('visible');
+      } else {
+        badge.classList.remove('visible');
+      }
     }
   </script>
 </body>

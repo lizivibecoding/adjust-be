@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>首次登录引导</title>
+  <link rel="stylesheet" href="../assets/base.css" />
+  <style>
+    .step-indicator { display: flex; justify-content: center; gap: 8px; margin-bottom: 24px; padding-top: 20px; }
+    .step-dot { width: 8px; height: 8px; border-radius: 50%; background: #e0e4e9; transition: all 0.3s; }
+    .step-dot.active { background: var(--primary); width: 24px; border-radius: 4px; }
+    .step-content { background: var(--card); border-radius: 16px; padding: 32px 24px; margin-bottom: 20px; box-shadow: 0 8px 24px rgba(31, 42, 58, 0.06); min-height: 400px; display: flex; flex-direction: column; justify-content: center; }
+    .step-icon { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #3a73ff, #5b92ff); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 36px; }
+    .step-title { font-size: 22px; font-weight: 700; text-align: center; margin-bottom: 12px; color: var(--text); }
+    .step-desc { font-size: 15px; color: var(--muted); text-align: center; margin-bottom: 32px; line-height: 1.6; }
+    .step-features { background: #f4f6fb; border-radius: 12px; padding: 16px; margin-bottom: 24px; }
+    .feature-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 14px; color: #3a4352; }
+    .feature-item::before { content: "✓"; width: 20px; height: 20px; border-radius: 50%; background: var(--primary); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+    .btn-group { display: flex; gap: 12px; margin-top: 20px; }
+    .btn-prev { flex: 1; padding: 16px; border-radius: 999px; background: #f2f4f9; color: #6b7382; font-size: 16px; font-weight: 600; border: none; cursor: pointer; display: none; }
+    .btn-prev.active { display: block; }
+    .btn-next { flex: 1; padding: 16px; border-radius: 999px; background: linear-gradient(135deg, #2f6bff, #4d8dff); color: #ffffff; font-size: 16px; font-weight: 600; border: none; cursor: pointer; }
+    .btn-skip { width: 100%; padding: 12px; border-radius: 999px; background: transparent; color: var(--muted); font-size: 14px; border: none; cursor: pointer; margin-top: 12px; }
+    .nav-arrows { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .nav-arrow { width: 40px; height: 40px; border-radius: 50%; background: rgba(47, 107, 255, 0.1); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--primary); font-size: 18px; transition: all 0.3s; }
+    .nav-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
+    .nav-arrow:not(:disabled):active { background: rgba(47, 107, 255, 0.2); transform: scale(0.95); }
+    .step-content-wrapper { position: relative; overflow: hidden; }
+    .step-content { transition: transform 0.3s ease, opacity 0.3s ease; }
+    .step-content.slide-left { transform: translateX(-100%); opacity: 0; }
+    .step-content.slide-right { transform: translateX(100%); opacity: 0; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="container">
+    <div class="step-indicator">
+      <div class="step-dot active" data-step="1"></div>
+      <div class="step-dot" data-step="2"></div>
+      <div class="step-dot" data-step="3"></div>
+      <div class="step-dot" data-step="4"></div>
+      <div class="step-dot" data-step="5"></div>
+      <div class="step-dot" data-step="6"></div>
+      <div class="step-dot" data-step="7"></div>
+    </div>
+
+    <div class="step-content-wrapper">
+      <!-- <div class="nav-arrows">
+        <button class="nav-arrow" id="prevArrow" onclick="goToPrevStep()" disabled>‹</button>
+        <button class="nav-arrow" id="nextArrow" onclick="goToNextStep()">›</button>
+      </div> -->
+      <div class="step-content" id="stepContent">
+        <!-- 内容由JavaScript动态加载 -->
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn-prev" id="prevBtn" onclick="goToPrevStep()">上一步</button>
+      <button class="btn-next" id="nextBtn" onclick="goToNextStep()">下一步</button>
+    </div>
+    <button class="btn-skip" onclick="skipOnboarding()">跳过引导</button>
+    </div>
+  </div>
+
+  <script src="../assets/app.js"></script>
+  <script>
+    const steps = [
+      {
+        icon: "👤",
+        title: "填写基本信息",
+        desc: "请先完善您的基本信息和初试成绩，系统将为您提供个性化的调剂服务",
+        features: [
+          "填写本科学校与专业",
+          "填写一志愿报考信息",
+          "填写初试各科成绩"
+        ],
+        action: "前往填写",
+        url: "custom-form.html?onboarding=1"
+      },
+      {
+        icon: "📊",
+        title: "成绩评估",
+        desc: "根据您的一志愿报考院校和专业，结合历年录取分数线，系统已为您分析出调剂建议",
+        features: [
+          "自动分析成绩与录取线差距",
+          "智能判断是否需要调剂",
+          "成绩信息已自动带入系统"
+        ],
+        action: "继续",
+        url: "onboarding.html?step=3"
+      },
+      {
+        icon: "⚙️",
+        title: "填写调剂偏好",
+        desc: "请填写您的调剂偏好，帮助我们为您推荐更合适的院校和专业",
+        features: [
+          "选择期望地区",
+          "选择院校层次",
+          "选择学习方式"
+        ],
+        action: "前往填写",
+        url: "custom-form.html?onboarding=1&tab=intent"
+      },
+      {
+        icon: "📱",
+        title: "关注公众号",
+        desc: "关注我们的公众号，获取最新的调剂信息、政策解读和择校指导",
+        features: [
+          "最新调剂信息推送",
+          "政策解读与择校策略",
+          "调剂经验分享",
+          "一对一咨询服务"
+        ],
+        action: "我知道了",
+        url: "onboarding.html?step=5"
+      },
+      {
+        icon: "🎯",
+        title: "智能推荐系统",
+        desc: "系统将根据您的一级学科，结合您的成绩和偏好，为您推荐最匹配的调剂院校",
+        features: [
+          "按一级学科智能匹配",
+          "专业匹配度分析",
+          "历年录取分数线对比",
+          "调剂成功率评估"
+        ],
+        action: "查看推荐",
+        url: "custom-report.html?onboarding=1"
+      },
+      {
+        icon: "📚",
+        title: "查看调剂信息",
+        desc: "现在您可以浏览往年和当年的调剂信息，找到最适合您的调剂机会",
+        features: [
+          "查看历年调剂数据",
+          "浏览当年最新调剂信息",
+          "使用筛选功能精准查找",
+          "订阅感兴趣的调剂信息"
+        ],
+        action: "开始浏览",
+        url: "home.html?onboarding=1"
+      },
+      {
+        icon: "🎉",
+        title: "引导完成",
+        desc: "恭喜您完成引导！现在可以开始使用系统的各项功能了",
+        features: [
+          "调剂信息浏览",
+          "智能推荐匹配",
+          "志愿表管理",
+          "订阅提醒功能"
+        ],
+        action: "开始使用",
+        url: "home.html"
+      }
+    ];
+
+    let currentStep = 1;
+
+    // 从URL参数获取当前步骤
+    const urlParams = new URLSearchParams(window.location.search);
+    const stepParam = urlParams.get('step');
+    if (stepParam) {
+      currentStep = parseInt(stepParam);
+    }
+
+    function init() {
+      updateStepIndicator();
+      loadStepContent();
+      updateNavigationButtons();
+      initSwipe();
+    }
+
+    function updateStepIndicator() {
+      document.querySelectorAll('.step-dot').forEach((dot, index) => {
+        if (index + 1 <= currentStep) {
+          dot.classList.add('active');
+        } else {
+          dot.classList.remove('active');
+        }
+      });
+    }
+
+    function updateNavigationButtons() {
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const prevArrow = document.getElementById('prevArrow');
+      const nextArrow = document.getElementById('nextArrow');
+      
+      // 上一步按钮
+      if (currentStep > 1) {
+        prevBtn.classList.add('active');
+        prevArrow.disabled = false;
+      } else {
+        prevBtn.classList.remove('active');
+        prevArrow.disabled = true;
+      }
+      
+      // 下一步按钮
+      const step = steps[currentStep - 1];
+      nextBtn.textContent = step.action;
+      
+      // 箭头按钮
+      if (currentStep >= steps.length) {
+        nextArrow.disabled = true;
+      } else {
+        nextArrow.disabled = false;
+      }
+    }
+
+    function loadStepContent(animate = false) {
+      const step = steps[currentStep - 1];
+      const content = document.getElementById('stepContent');
+      
+      if (animate) {
+        content.classList.add('slide-left');
+        setTimeout(() => {
+          content.innerHTML = `
+            <div class="step-icon">${step.icon}</div>
+            <div class="step-title">${step.title}</div>
+            <div class="step-desc">${step.desc}</div>
+            <div class="step-features">
+              ${step.features.map(feature => `<div class="feature-item">${feature}</div>`).join('')}
+            </div>
+          `;
+          content.classList.remove('slide-left');
+          content.classList.add('slide-right');
+          setTimeout(() => {
+            content.classList.remove('slide-right');
+          }, 10);
+        }, 150);
+      } else {
+        content.innerHTML = `
+          <div class="step-icon">${step.icon}</div>
+          <div class="step-title">${step.title}</div>
+          <div class="step-desc">${step.desc}</div>
+          <div class="step-features">
+            ${step.features.map(feature => `<div class="feature-item">${feature}</div>`).join('')}
+          </div>
+        `;
+      }
+    }
+
+    function goToNextStep() {
+      const step = steps[currentStep - 1];
+      
+      if (currentStep < steps.length) {
+        // 跳转到下一步的URL
+        if (step.url && (step.url.startsWith('http') || step.url.includes('.html'))) {
+          window.location.href = step.url;
+        } else {
+          currentStep++;
+          updateStepIndicator();
+          loadStepContent(true);
+          updateNavigationButtons();
+        }
+      } else {
+        // 完成引导
+        localStorage.setItem('onboarding_completed', 'true');
+        window.location.href = 'home.html';
+      }
+    }
+
+    function goToPrevStep() {
+      if (currentStep > 1) {
+        currentStep--;
+        updateStepIndicator();
+        loadStepContent(true);
+        updateNavigationButtons();
+      }
+    }
+
+    // 触摸滑动支持
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    function initSwipe() {
+      const content = document.getElementById('stepContent');
+      
+      content.addEventListener('touchstart', function(e) {
+        touchStartX = e.changedTouches[0].screenX;
+      }, { passive: true });
+
+      content.addEventListener('touchend', function(e) {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+      }, { passive: true });
+    }
+
+    function handleSwipe() {
+      const swipeThreshold = 50;
+      const diff = touchStartX - touchEndX;
+      
+      if (Math.abs(diff) > swipeThreshold) {
+        if (diff > 0 && currentStep < steps.length) {
+          // 向左滑动，下一步
+          goToNextStep();
+        } else if (diff < 0 && currentStep > 1) {
+          // 向右滑动，上一步
+          goToPrevStep();
+        }
+      }
+    }
+
+    function skipOnboarding() {
+      if (confirm('确定要跳过引导吗？您可以稍后在个人中心查看帮助信息。')) {
+        localStorage.setItem('onboarding_completed', 'true');
+        window.location.href = 'home.html';
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
