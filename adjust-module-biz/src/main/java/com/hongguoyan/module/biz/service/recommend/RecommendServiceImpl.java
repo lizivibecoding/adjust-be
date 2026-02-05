@@ -245,20 +245,18 @@ public class RecommendServiceImpl implements RecommendService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long generateAssessmentReport(Long userId) {
-        // TODO VIP-BYPASS: restore quota precheck + consume (user_report)
-        /*
-        // 0. Quick quota check (no consume yet). Consume after success to avoid charging on failure.
+        // 0) Quick quota check (no consume yet). Consume after success to avoid charging on failure.
+        vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_REPORT);
         VipResolvedBenefit quota = vipBenefitService.resolveBenefit(userId, BENEFIT_KEY_USER_REPORT);
         if (quota.getBenefitType() != null && quota.getBenefitType() != BENEFIT_TYPE_QUOTA) {
             // unexpected config type, let downstream throw consistent error
-        } else if (Boolean.TRUE.equals(quota.getEnabled())) {
+        } else {
             Integer v = quota.getBenefitValue();
             int used = quota.getUsedCount() != null ? quota.getUsedCount() : 0;
             if (v != null && v != -1 && used >= v) {
                 throw ServiceExceptionUtil.exception(VIP_BENEFIT_QUOTA_EXCEEDED);
             }
         }
-         */
 
         // 1. Load user profile + intention
         UserProfileDO userProfile = userProfileMapper.selectOne(new LambdaQueryWrapper<UserProfileDO>()
@@ -365,10 +363,9 @@ public class RecommendServiceImpl implements RecommendService {
 
         userCustomReportMapper.updateById(toUpdate);
 
-        // TODO VIP-BYPASS: restore quota consume after success (user_report)
         // 6. Consume quota after success
-        // vipBenefitService.consumeQuotaOrThrow(userId, BENEFIT_KEY_USER_REPORT, 1,
-        //         REF_TYPE_CUSTOM_REPORT, String.valueOf(reportId), null);
+        vipBenefitService.consumeQuotaOrThrow(userId, BENEFIT_KEY_USER_REPORT, 1,
+                REF_TYPE_CUSTOM_REPORT, String.valueOf(reportId), null);
         return reportId;
     }
 

@@ -18,11 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import jakarta.annotation.Resource;
-import java.time.DayOfWeek;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
@@ -299,7 +295,7 @@ public class VipBenefitServiceImpl implements VipBenefitService {
         if (StrUtil.isBlank(key) || StrUtil.isBlank(uKey)) {
             throw exception(VIP_BENEFIT_UNIQUE_KEY_REQUIRED);
         }
-        PeriodWindow window = calcPeriodWindow(PERIOD_TYPE_LIFETIME, LocalDateTime.now());
+        PeriodWindow window = calcPeriodWindow(PERIOD_TYPE_NONE, LocalDateTime.now());
         try {
             vipBenefitLogMapper.insert(buildLog(userId, key, window, 1, refType, refId, uKey, "default-major-category"));
         } catch (DuplicateKeyException ignore) {
@@ -361,34 +357,7 @@ public class VipBenefitServiceImpl implements VipBenefitService {
     }
 
     private PeriodWindow calcPeriodWindow(Integer periodType, LocalDateTime now) {
-        int p = periodType != null ? periodType : PERIOD_TYPE_NONE;
-        // Treat NONE as LIFETIME
-        if (p == PERIOD_TYPE_NONE || p == PERIOD_TYPE_LIFETIME) {
-            return new PeriodWindow(LocalDateTime.of(1970, 1, 1, 0, 0),
-                    LocalDateTime.of(9999, 12, 31, 23, 59, 59));
-        }
-
-        LocalDate date = now.toLocalDate();
-        if (p == PERIOD_TYPE_DAY) {
-            LocalDateTime start = LocalDateTime.of(date, LocalTime.MIN);
-            return new PeriodWindow(start, start.plusDays(1));
-        }
-        if (p == PERIOD_TYPE_WEEK) {
-            LocalDate weekStartDate = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-            LocalDateTime start = LocalDateTime.of(weekStartDate, LocalTime.MIN);
-            return new PeriodWindow(start, start.plusWeeks(1));
-        }
-        if (p == PERIOD_TYPE_MONTH) {
-            LocalDate monthStartDate = date.with(TemporalAdjusters.firstDayOfMonth());
-            LocalDateTime start = LocalDateTime.of(monthStartDate, LocalTime.MIN);
-            return new PeriodWindow(start, start.plusMonths(1));
-        }
-        if (p == PERIOD_TYPE_YEAR) {
-            LocalDate yearStartDate = date.with(TemporalAdjusters.firstDayOfYear());
-            LocalDateTime start = LocalDateTime.of(yearStartDate, LocalTime.MIN);
-            return new PeriodWindow(start, start.plusYears(1));
-        }
-        // unknown period: fallback to lifetime
+        // Only PERIOD_TYPE_NONE (0) is supported now. Treat all as lifetime window.
         return new PeriodWindow(LocalDateTime.of(1970, 1, 1, 0, 0),
                 LocalDateTime.of(9999, 12, 31, 23, 59, 59));
     }

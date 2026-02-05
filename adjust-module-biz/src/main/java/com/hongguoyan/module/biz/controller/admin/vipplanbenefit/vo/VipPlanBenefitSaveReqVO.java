@@ -27,14 +27,14 @@ public class VipPlanBenefitSaveReqVO {
     @Schema(description = "权益描述（展示）")
     private String benefitDesc;
 
-    @Schema(description = "权益类型：1=BOOLEAN 2=QUOTA(次数) 3=LIMIT(阈值) 4=RESOURCE(资源类)", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+    @Schema(description = "权益类型：1=BOOLEAN 2=QUOTA(次数) 3=LIMIT(阈值)", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
     @NotNull(message = "权益类型不能为空")
     private Integer benefitType;
 
     @Schema(description = "数值（如 1/3/8；-1=不限）", example = "3")
     private Integer benefitValue;
 
-    @Schema(description = "周期：0=NONE 1=DAY 2=WEEK 3=MONTH 4=YEAR 9=LIFETIME", requiredMode = Schema.RequiredMode.REQUIRED, example = "0")
+    @Schema(description = "周期：0=NONE", requiredMode = Schema.RequiredMode.REQUIRED, example = "0")
     @NotNull(message = "周期不能为空")
     private Integer periodType;
 

@@ -169,9 +169,6 @@ public class AdjustmentServiceImpl implements AdjustmentService {
     }
 
     private void validateMajorCategoryAccess(Long userId, String majorCode) {
-        // TODO VIP-BYPASS: restore major category access check (major_category_open)
-        return;
-        /*
         if (userId == null) {
             // allow anonymous access for now (no place to persist defaults)
             return;
@@ -185,7 +182,6 @@ public class AdjustmentServiceImpl implements AdjustmentService {
             return;
         }
         throw exception(VIP_MAJOR_CATEGORY_NOT_OPENED);
-         */
     }
 
     private String resolveDefaultMajorCategoryCode(Long userId) {

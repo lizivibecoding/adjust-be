@@ -216,15 +216,13 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
 
     @Override
     public PageResult<AppSameScoreItemRespVO> getSameScorePage(Long userId, AppSameScorePageReqVO reqVO) {
-        // TODO VIP-BYPASS: restore benefit check (view_same_score)
-        // vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_VIEW_SAME_SCORE);
+        vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_VIEW_SAME_SCORE);
         return adjustmentAdmitMapper.selectSameScorePage(reqVO);
     }
 
     @Override
     public AppSameScoreAxisRespVO getSameScoreAxis(Long userId) {
-        // TODO VIP-BYPASS: restore benefit check (view_same_score)
-        // vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_VIEW_SAME_SCORE);
+        vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_VIEW_SAME_SCORE);
         UserProfileDO profile = userProfileService.getUserProfileByUserId(userId);
         if (profile == null) {
             throw exception(CANDIDATE_PROFILES_NOT_EXISTS);
@@ -249,8 +247,7 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
 
     @Override
     public List<AppSameScoreStatItemRespVO> getSameScoreStat(Long userId, AppSameScoreStatReqVO reqVO) {
-        // TODO VIP-BYPASS: restore benefit check (view_same_score)
-        // vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_VIEW_SAME_SCORE);
+        vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_VIEW_SAME_SCORE);
         List<AppSameScoreStatItemRespVO> list = adjustmentAdmitMapper.selectSameScoreStat(reqVO);
         return list != null ? list : Collections.emptyList();
     }

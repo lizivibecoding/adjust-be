@@ -35,7 +35,7 @@ public class VipPlanBenefitDO extends BaseDO {
      */
     private String benefitKey;
     /**
-     * 权益类型：1=BOOLEAN 2=QUOTA(次数) 3=LIMIT(阈值) 4=RESOURCE(资源类)
+     * 权益类型：1=BOOLEAN 2=QUOTA(次数) 3=LIMIT(阈值)
      */
     private Integer benefitType;
     /**
@@ -43,7 +43,7 @@ public class VipPlanBenefitDO extends BaseDO {
      */
     private Integer benefitValue;
     /**
-     * 周期：0=NONE 1=DAY 2=WEEK 3=MONTH 4=YEAR 9=LIFETIME
+     * 周期：0=NONE
      */
     private Integer periodType;
     /**

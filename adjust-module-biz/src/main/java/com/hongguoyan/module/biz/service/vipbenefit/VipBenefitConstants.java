@@ -16,15 +16,9 @@ public interface VipBenefitConstants {
     int BENEFIT_TYPE_BOOLEAN = 1;
     int BENEFIT_TYPE_QUOTA = 2;
     int BENEFIT_TYPE_LIMIT = 3;
-    int BENEFIT_TYPE_RESOURCE = 4;
 
     // ========== Period Types ==========
     int PERIOD_TYPE_NONE = 0;
-    int PERIOD_TYPE_DAY = 1;
-    int PERIOD_TYPE_WEEK = 2;
-    int PERIOD_TYPE_MONTH = 3;
-    int PERIOD_TYPE_YEAR = 4;
-    int PERIOD_TYPE_LIFETIME = 9;
 
     // ========== Consume Policies ==========
     int CONSUME_POLICY_COUNT = 1;
@@ -50,13 +44,8 @@ public interface VipBenefitConstants {
      */
     String BENEFIT_KEY_MAJOR_CATEGORY_OPEN = "major_category_open";
 
-    // Person center
-    String BENEFIT_KEY_USE_PERSON_CENTER_VIP = "use_person_center_vip";
-
     // ========== Ref Types ==========
     String REF_TYPE_CUSTOM_REPORT = "CUSTOM_REPORT";
-    String REF_TYPE_CUSTOM_DEMAND_SUBMIT = "CUSTOM_DEMAND_SUBMIT";
-    String REF_TYPE_VOLUNTEER_EXPORT = "VOLUNTEER_EXPORT";
     String REF_TYPE_MAJOR_CATEGORY_OPEN = "MAJOR_CATEGORY_OPEN";
 }
 

@@ -19,7 +19,7 @@ public class VipResolvedBenefit {
     private String benefitKey;
 
     /**
-     * benefit_type: 1=BOOLEAN 2=QUOTA 3=LIMIT 4=RESOURCE
+     * benefit_type: 1=BOOLEAN 2=QUOTA 3=LIMIT
      */
     private Integer benefitType;
 
@@ -29,7 +29,7 @@ public class VipResolvedBenefit {
     private Integer benefitValue;
 
     /**
-     * period_type: 0=NONE 1=DAY 2=WEEK 3=MONTH 4=YEAR 9=LIFETIME
+     * period_type: 0=NONE
      */
     private Integer periodType;
 

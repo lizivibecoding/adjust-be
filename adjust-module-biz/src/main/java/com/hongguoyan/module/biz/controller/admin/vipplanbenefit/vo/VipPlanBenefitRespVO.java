@@ -32,7 +32,7 @@ public class VipPlanBenefitRespVO {
     @ExcelProperty("权益描述")
     private String benefitDesc;
 
-    @Schema(description = "权益类型：1=BOOLEAN 2=QUOTA 3=LIMIT 4=RESOURCE", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+    @Schema(description = "权益类型：1=BOOLEAN 2=QUOTA 3=LIMIT", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
     @ExcelProperty("权益类型")
     private Integer benefitType;
 
@@ -40,7 +40,7 @@ public class VipPlanBenefitRespVO {
     @ExcelProperty("数值")
     private Integer benefitValue;
 
-    @Schema(description = "周期：0=NONE 1=DAY 2=WEEK 3=MONTH 4=YEAR 9=LIFETIME", requiredMode = Schema.RequiredMode.REQUIRED, example = "0")
+    @Schema(description = "周期：0=NONE", requiredMode = Schema.RequiredMode.REQUIRED, example = "0")
     @ExcelProperty("周期")
     private Integer periodType;
 

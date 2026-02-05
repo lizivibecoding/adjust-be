@@ -22,7 +22,7 @@ public class VipPlanBenefitPageReqVO extends PageParam {
     @Schema(description = "权益名称（展示）")
     private String benefitName;
 
-    @Schema(description = "权益类型：1=BOOLEAN 2=QUOTA 3=LIMIT 4=RESOURCE")
+    @Schema(description = "权益类型：1=BOOLEAN 2=QUOTA 3=LIMIT")
     private Integer benefitType;
 
     @Schema(description = "展示开关：0 隐藏，1 展示")

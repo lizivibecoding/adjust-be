@@ -47,8 +47,7 @@ public class AppVipBenefitController {
                 BENEFIT_KEY_VIEW_SAME_SCORE,
                 BENEFIT_KEY_VIEW_ADMIT_LIST,
                 BENEFIT_KEY_VIEW_ANALYSIS,
-                BENEFIT_KEY_USER_PREFERENCE,
-                BENEFIT_KEY_USE_PERSON_CENTER_VIP
+                BENEFIT_KEY_USER_PREFERENCE
         );
 
         List<AppVipBenefitMeItemRespVO> items = new ArrayList<>(keys.size());
