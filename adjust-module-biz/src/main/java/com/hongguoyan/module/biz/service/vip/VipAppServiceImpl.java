@@ -79,6 +79,12 @@ public class VipAppServiceImpl implements VipAppService {
     private static final int VIP_COUPON_LOG_REF_TYPE_ORDER = 1;
     private static final int VIP_COUPON_LOG_REF_TYPE_COUPON = 2;
 
+    /**
+     * Default opened major category code for new users with no opened codes.
+     * "01" => 哲学
+     */
+    private static final String DEFAULT_MAJOR_CATEGORY_CODE = "01";
+
     @Resource
     private VipPlanMapper vipPlanMapper;
     @Resource
@@ -199,8 +205,14 @@ public class VipAppServiceImpl implements VipAppService {
         majorQuota.setUsed(major.getUsedCount() != null ? major.getUsedCount() : 0);
         majorQuota.setRemain(calcQuotaRemain(major.getBenefitValue(), majorQuota.getUsed()));
         Set<String> opened = vipBenefitService.getConsumedUniqueKeys(userId, BENEFIT_KEY_MAJOR_CATEGORY_OPEN);
-        List<String> openedCodes = opened == null ? Collections.emptyList() : opened.stream().filter(Objects::nonNull)
-                .map(String::trim).filter(s -> !s.isEmpty()).sorted().toList();
+        List<String> openedCodes;
+        if (opened == null || opened.isEmpty()) {
+            // New user: do NOT persist. Just return a hardcoded default category for UI.
+            openedCodes = List.of(DEFAULT_MAJOR_CATEGORY_CODE);
+        } else {
+            openedCodes = opened.stream().filter(Objects::nonNull)
+                    .map(String::trim).filter(s -> !s.isEmpty()).sorted().toList();
+        }
         majorQuota.setOpenedCodes(openedCodes);
         respVO.setMajor(majorQuota);
 

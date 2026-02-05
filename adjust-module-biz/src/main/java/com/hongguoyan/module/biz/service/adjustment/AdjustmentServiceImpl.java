@@ -69,12 +69,22 @@ public class AdjustmentServiceImpl implements AdjustmentService {
 
     private static final Pattern SPLIT_PATTERN = Pattern.compile("[\\n;,，；]+");
     private static final int DEFAULT_STATS_YEAR = 2025;
+    /**
+     * Default opened major category code for new users with no opened codes.
+     * "01" => 哲学
+     */
+    private static final String DEFAULT_MAJOR_CATEGORY_CODE = "01";
 
     private static final int HEAT_MAX = 98;
     /**
      * Exponential saturation factor (tau). Smaller => faster to reach cap.
      */
     private static final double HEAT_TAU = 150D;
+
+    /**
+     * Preview limit for users with no opened major categories.
+     */
+    private static final int DEFAULT_MAJOR_CATEGORY_PREVIEW_LIMIT = 10;
 
     private static int calcHeat(Long hotScore) {
         long score = hotScore != null ? hotScore : 0L;
@@ -142,6 +152,29 @@ public class AdjustmentServiceImpl implements AdjustmentService {
 
     @Override
     public AppAdjustmentSearchTabRespVO getAdjustmentSearchPage(Long userId, AppAdjustmentSearchReqVO reqVO) {
+        // If user hasn't opened any major category yet, show default category data only (哲学) and preview 10 rows.
+        boolean noOpenedMajorCategory = false;
+        if (userId != null && reqVO != null) {
+            Set<String> opened = vipBenefitService.getConsumedUniqueKeys(userId, BENEFIT_KEY_MAJOR_CATEGORY_OPEN);
+            noOpenedMajorCategory = (opened == null || opened.isEmpty());
+            if (noOpenedMajorCategory) {
+                reqVO.setMajorCode(DEFAULT_MAJOR_CATEGORY_CODE);
+                // enforce preview limit (avoid leaking full total)
+                Integer pageNo = reqVO.getPageNo();
+                if (pageNo != null && pageNo > 1) {
+                    AppAdjustmentSearchTabRespVO resp = new AppAdjustmentSearchTabRespVO();
+                    resp.setTotal((long) DEFAULT_MAJOR_CATEGORY_PREVIEW_LIMIT);
+                    // Always return empty lists for page > 1 to avoid leaking full data.
+                    resp.setMajorList(Collections.emptyList());
+                    resp.setSchoolList(Collections.emptyList());
+                    return resp;
+                }
+                Integer pageSize = reqVO.getPageSize();
+                if (pageSize == null || pageSize > DEFAULT_MAJOR_CATEGORY_PREVIEW_LIMIT) {
+                    reqVO.setPageSize(DEFAULT_MAJOR_CATEGORY_PREVIEW_LIMIT);
+                }
+            }
+        }
         validateMajorCategoryAccess(userId, reqVO != null ? reqVO.getMajorCode() : null);
         if (reqVO != null && StrUtil.isNotBlank(reqVO.getKeyword())) {
             reqVO.setKeyword(buildBooleanKeyword(reqVO.getKeyword()));
@@ -151,8 +184,16 @@ public class AdjustmentServiceImpl implements AdjustmentService {
         AppAdjustmentSearchTabRespVO respVO = new AppAdjustmentSearchTabRespVO();
         if (schoolTab) {
             PageResult<AppAdjustmentSearchSchoolRespVO> pageResult = adjustmentMapper.selectSearchSchoolPage(reqVO);
-            respVO.setTotal(pageResult.getTotal());
-            respVO.setSchoolList(pageResult.getList());
+            List<AppAdjustmentSearchSchoolRespVO> list = pageResult.getList();
+            long total = pageResult.getTotal();
+            if (noOpenedMajorCategory) {
+                total = Math.min(total, (long) DEFAULT_MAJOR_CATEGORY_PREVIEW_LIMIT);
+                if (list != null && list.size() > DEFAULT_MAJOR_CATEGORY_PREVIEW_LIMIT) {
+                    list = list.subList(0, DEFAULT_MAJOR_CATEGORY_PREVIEW_LIMIT);
+                }
+            }
+            respVO.setTotal(total);
+            respVO.setSchoolList(list != null ? list : Collections.emptyList());
             respVO.setMajorList(Collections.emptyList());
         } else {
             PageResult<AppAdjustmentSearchRespVO> pageResult = adjustmentMapper.selectSearchMajorPage(reqVO);
@@ -161,8 +202,15 @@ public class AdjustmentServiceImpl implements AdjustmentService {
             for (AppAdjustmentSearchRespVO item : majorList) {
                 item.setHeat(calcHeat(item.getHotScore()));
             }
-            respVO.setTotal(pageResult.getTotal());
-            respVO.setMajorList(majorList);
+            long total = pageResult.getTotal();
+            if (noOpenedMajorCategory) {
+                total = Math.min(total, (long) DEFAULT_MAJOR_CATEGORY_PREVIEW_LIMIT);
+                if (majorList != null && majorList.size() > DEFAULT_MAJOR_CATEGORY_PREVIEW_LIMIT) {
+                    majorList = majorList.subList(0, DEFAULT_MAJOR_CATEGORY_PREVIEW_LIMIT);
+                }
+            }
+            respVO.setTotal(total);
+            respVO.setMajorList(majorList != null ? majorList : Collections.emptyList());
             respVO.setSchoolList(Collections.emptyList());
         }
         return respVO;
@@ -178,6 +226,13 @@ public class AdjustmentServiceImpl implements AdjustmentService {
         }
         String code = majorCode.trim();
         Set<String> opened = vipBenefitService.getConsumedUniqueKeys(userId, BENEFIT_KEY_MAJOR_CATEGORY_OPEN);
+        if (opened == null || opened.isEmpty()) {
+            // New user: do NOT persist. Allow accessing hardcoded default category only.
+            if (DEFAULT_MAJOR_CATEGORY_CODE.equals(code)) {
+                return;
+            }
+            throw exception(VIP_MAJOR_CATEGORY_NOT_OPENED);
+        }
         if (opened.contains(code)) {
             return;
         }
