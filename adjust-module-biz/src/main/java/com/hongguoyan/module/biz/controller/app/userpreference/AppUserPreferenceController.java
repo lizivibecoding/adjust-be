@@ -12,21 +12,16 @@ import jakarta.validation.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import jakarta.servlet.http.HttpServletResponse;
 import java.util.*;
 import com.hongguoyan.framework.common.pojo.CommonResult;
 import static com.hongguoyan.framework.common.pojo.CommonResult.success;
 
 import com.hongguoyan.module.biz.controller.app.userpreference.vo.*;
-import com.hongguoyan.framework.excel.core.util.ExcelUtils;
 import com.hongguoyan.module.biz.service.userpreference.UserPreferenceService;
 import com.hongguoyan.framework.security.core.util.SecurityFrameworkUtils;
 import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
-import java.io.IOException;
 
-import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_VOLUNTEER_EXPORT;
-import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.REF_TYPE_VOLUNTEER_EXPORT;
-import cn.hutool.core.util.IdUtil;
+import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_USER_PREFERENCE_EXPORT;
 
 @Tag(name = "用户 APP - 用户志愿")
 @RestController
@@ -63,18 +58,25 @@ public class AppUserPreferenceController {
         return success(true);
     }
 
-    @GetMapping("/export-excel")
-    @Operation(summary = "导出我的志愿（Excel）")
-    public void exportMyPreferencesExcel(HttpServletResponse response) throws IOException {
+    @GetMapping("/export")
+    @Operation(summary = "导出已选志愿（JSON）")
+    public CommonResult<List<AppUserPreferenceExportRespVO>> exportMyPreferences(@Valid AppUserPreferenceExportReqVO reqVO) {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
-        String exportId = IdUtil.getSnowflakeNextIdStr();
-        // TODO VIP-BYPASS: restore quota consume (volunteer_export)
-        // consume before writing response (avoid bypass)
-        // vipBenefitService.consumeQuotaOrThrow(userId, BENEFIT_KEY_VOLUNTEER_EXPORT, 1,
-        //         REF_TYPE_VOLUNTEER_EXPORT, exportId, null);
+        vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_PREFERENCE_EXPORT);
         List<AppUserPreferenceRespVO> list = userPreferenceService.getMyList(userId);
+        Set<Integer> allowed = resolveAllowedPreferenceNos(reqVO);
         List<AppUserPreferenceExportRespVO> exportList = new ArrayList<>(list.size());
         for (AppUserPreferenceRespVO item : list) {
+            if (item == null || item.getPreferenceNo() == null) {
+                continue;
+            }
+            if (allowed != null && !allowed.contains(item.getPreferenceNo())) {
+                continue;
+            }
+            // only export selected (filled) preferences
+            if (isBlank(item.getSchoolName()) && isBlank(item.getMajorName()) && isBlank(item.getMajorCode())) {
+                continue;
+            }
             AppUserPreferenceExportRespVO vo = new AppUserPreferenceExportRespVO();
             vo.setPreferenceNo(item.getPreferenceNo());
             vo.setSchoolName(item.getSchoolName());
@@ -85,7 +87,24 @@ public class AppUserPreferenceController {
             vo.setStudyMode(item.getStudyMode());
             exportList.add(vo);
         }
-        ExcelUtils.write(response, "我的志愿.xls", "数据", AppUserPreferenceExportRespVO.class, exportList);
+        return success(exportList);
+    }
+
+    private static boolean isBlank(String s) {
+        return s == null || s.trim().isEmpty();
+    }
+
+    private static Set<Integer> resolveAllowedPreferenceNos(AppUserPreferenceExportReqVO reqVO) {
+        if (reqVO == null || reqVO.getPreferenceNos() == null || reqVO.getPreferenceNos().isEmpty()) {
+            return null;
+        }
+        Set<Integer> set = new LinkedHashSet<>();
+        for (Integer no : reqVO.getPreferenceNos()) {
+            if (no != null) {
+                set.add(no);
+            }
+        }
+        return set.isEmpty() ? null : set;
     }
 
 }

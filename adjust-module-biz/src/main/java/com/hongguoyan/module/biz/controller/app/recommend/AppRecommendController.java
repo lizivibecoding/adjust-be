@@ -9,6 +9,7 @@ import com.hongguoyan.module.biz.controller.app.recommend.vo.AppUserCustomReport
 import com.hongguoyan.module.biz.dal.dataobject.usercustomreport.UserCustomReportDO;
 import com.hongguoyan.module.biz.service.recommend.RecommendService;
 import com.hongguoyan.module.biz.service.usercustomreport.UserCustomReportService;
+import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 import static com.hongguoyan.framework.common.pojo.CommonResult.success;
+import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_SCHOOL_RECOMMEND;
 
 @Tag(name = "用户 APP - 智能推荐")
 @RestController
@@ -34,11 +36,14 @@ public class AppRecommendController {
 
     @Resource
     private UserCustomReportService userCustomReportService;
+    @Resource
+    private VipBenefitService vipBenefitService;
 
     @GetMapping("/school-list")
     @Operation(summary = "获取智能推荐院校列表")
     public CommonResult<List<AppRecommendSchoolRespVO>> getRecommendSchoolList(@Valid AppRecommendSchoolListReqVO reqVO) {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
+        vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_SCHOOL_RECOMMEND);
         return success(recommendService.recommendSchools(userId, reqVO));
     }
 

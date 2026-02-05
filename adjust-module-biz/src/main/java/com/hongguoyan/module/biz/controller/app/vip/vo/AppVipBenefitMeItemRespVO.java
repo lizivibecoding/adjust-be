@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Data
 public class AppVipBenefitMeItemRespVO {
 
-    @Schema(description = "权益 key", example = "custom_report")
+    @Schema(description = "权益 key", example = "user_report")
     private String benefitKey;
 
     @Schema(description = "权益类型：1=BOOLEAN 2=QUOTA 3=LIMIT 4=RESOURCE", example = "2")

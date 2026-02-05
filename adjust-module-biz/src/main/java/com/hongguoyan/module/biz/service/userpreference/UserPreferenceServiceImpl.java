@@ -23,7 +23,7 @@ import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.*;
-import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_USE_VOLUNTEER_LIST;
+import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_USER_PREFERENCE;
 
 /**
  * 用户志愿 Service 实现类
@@ -43,8 +43,7 @@ public class UserPreferenceServiceImpl implements UserPreferenceService {
 
     @Override
     public List<AppUserPreferenceRespVO> getMyList(Long userId) {
-        // TODO VIP-BYPASS: restore benefit check (use_volunteer_list)
-        // vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USE_VOLUNTEER_LIST);
+        // NOTE: my-list is allowed without VIP check (business requirement)
         List<UserPreferenceDO> list = userPreferenceMapper.selectListByUserId(userId);
         Map<Integer, UserPreferenceDO> map = new HashMap<>();
         for (UserPreferenceDO item : list) {
@@ -67,8 +66,7 @@ public class UserPreferenceServiceImpl implements UserPreferenceService {
 
     @Override
     public void save(Long userId, AppUserPreferenceSaveReqVO reqVO) {
-        // TODO VIP-BYPASS: restore benefit check (use_volunteer_list)
-        // vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USE_VOLUNTEER_LIST);
+        vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_PREFERENCE);
         validatePreferenceNo(reqVO.getPreferenceNo());
 
         SchoolDirectionDO direction = schoolDirectionMapper.selectById(reqVO.getDirectionId());
@@ -122,8 +120,7 @@ public class UserPreferenceServiceImpl implements UserPreferenceService {
 
     @Override
     public void clear(Long userId, Integer preferenceNo) {
-        // TODO VIP-BYPASS: restore benefit check (use_volunteer_list)
-        // vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USE_VOLUNTEER_LIST);
+        vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_PREFERENCE);
         validatePreferenceNo(preferenceNo);
 
         UserPreferenceDO existing = userPreferenceMapper.selectByUserIdAndPreferenceNo(userId, preferenceNo);

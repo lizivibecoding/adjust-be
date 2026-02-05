@@ -47,7 +47,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_CUSTOM_REPORT;
+import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_USER_REPORT;
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_TYPE_QUOTA;
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.REF_TYPE_CUSTOM_REPORT;
 import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.VIP_BENEFIT_QUOTA_EXCEEDED;
@@ -245,10 +245,10 @@ public class RecommendServiceImpl implements RecommendService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long generateAssessmentReport(Long userId) {
-        // TODO VIP-BYPASS: restore quota precheck + consume (custom_report)
+        // TODO VIP-BYPASS: restore quota precheck + consume (user_report)
         /*
         // 0. Quick quota check (no consume yet). Consume after success to avoid charging on failure.
-        VipResolvedBenefit quota = vipBenefitService.resolveBenefit(userId, BENEFIT_KEY_CUSTOM_REPORT);
+        VipResolvedBenefit quota = vipBenefitService.resolveBenefit(userId, BENEFIT_KEY_USER_REPORT);
         if (quota.getBenefitType() != null && quota.getBenefitType() != BENEFIT_TYPE_QUOTA) {
             // unexpected config type, let downstream throw consistent error
         } else if (Boolean.TRUE.equals(quota.getEnabled())) {
@@ -365,9 +365,9 @@ public class RecommendServiceImpl implements RecommendService {
 
         userCustomReportMapper.updateById(toUpdate);
 
-        // TODO VIP-BYPASS: restore quota consume after success (custom_report)
+        // TODO VIP-BYPASS: restore quota consume after success (user_report)
         // 6. Consume quota after success
-        // vipBenefitService.consumeQuotaOrThrow(userId, BENEFIT_KEY_CUSTOM_REPORT, 1,
+        // vipBenefitService.consumeQuotaOrThrow(userId, BENEFIT_KEY_USER_REPORT, 1,
         //         REF_TYPE_CUSTOM_REPORT, String.valueOf(reportId), null);
         return reportId;
     }

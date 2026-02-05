@@ -34,14 +34,15 @@ public interface VipBenefitConstants {
     String BENEFIT_KEY_VIEW_ADMIT_LIST = "view_admit_list";
     String BENEFIT_KEY_VIEW_ANALYSIS = "view_analysis";
     String BENEFIT_KEY_VIEW_SAME_SCORE = "view_same_score";
-    String BENEFIT_KEY_USE_VOLUNTEER_LIST = "use_volunteer_list";
+    String BENEFIT_KEY_USER_PREFERENCE = "user_preference";
 
-    String BENEFIT_KEY_CUSTOM_REPORT = "custom_report";
+    String BENEFIT_KEY_USER_REPORT = "user_report";
     String BENEFIT_KEY_PUBLISH_LIST_PREVIEW_LIMIT = "publish_list_preview_limit";
 
     // Stage 2 (pending business integration, config-only)
-    String BENEFIT_KEY_CUSTOM_DEMAND_SUBMIT = "custom_demand_submit";
-    String BENEFIT_KEY_VOLUNTEER_EXPORT = "volunteer_export";
+    String BENEFIT_KEY_USER_INTENTION = "user_intention";
+    String BENEFIT_KEY_USER_PREFERENCE_EXPORT = "user_preference_export";
+    String BENEFIT_KEY_SCHOOL_RECOMMEND = "school_recommend";
     /**
      * Open major category by paying once per majorCode (idempotent by unique_key).
      */

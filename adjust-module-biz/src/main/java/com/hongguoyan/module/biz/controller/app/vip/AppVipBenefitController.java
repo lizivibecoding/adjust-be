@@ -36,15 +36,16 @@ public class AppVipBenefitController {
 
         List<String> planCodes = vipBenefitService.resolvePlanCodes(userId);
         List<String> keys = List.of(
-                BENEFIT_KEY_CUSTOM_REPORT,
+                BENEFIT_KEY_USER_REPORT,
                 BENEFIT_KEY_PUBLISH_LIST_PREVIEW_LIMIT,
-                BENEFIT_KEY_CUSTOM_DEMAND_SUBMIT,
-                BENEFIT_KEY_VOLUNTEER_EXPORT,
+                BENEFIT_KEY_USER_INTENTION,
+                BENEFIT_KEY_USER_PREFERENCE_EXPORT,
+                BENEFIT_KEY_SCHOOL_RECOMMEND,
                 BENEFIT_KEY_MAJOR_CATEGORY_OPEN,
                 BENEFIT_KEY_VIEW_SAME_SCORE,
                 BENEFIT_KEY_VIEW_ADMIT_LIST,
                 BENEFIT_KEY_VIEW_ANALYSIS,
-                BENEFIT_KEY_USE_VOLUNTEER_LIST,
+                BENEFIT_KEY_USER_PREFERENCE,
                 BENEFIT_KEY_USE_PERSON_CENTER_VIP
         );
 

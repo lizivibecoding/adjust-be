@@ -18,8 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
-import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_CUSTOM_DEMAND_SUBMIT;
-import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.REF_TYPE_CUSTOM_DEMAND_SUBMIT;
+import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_USER_INTENTION;
 
 /**
  * 用户调剂意向与偏好设置 Service 实现类
@@ -43,6 +42,7 @@ public class UserIntentionServiceImpl implements UserIntentionService {
 
     @Override
     public AppUserIntentionRespVO getMyUserIntention(Long userId) {
+        vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_INTENTION);
         UserIntentionDO userIntention = getUserIntentionByUserId(userId);
         if (userIntention == null) {
             return null;
@@ -68,6 +68,7 @@ public class UserIntentionServiceImpl implements UserIntentionService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long saveUserIntentionByUserId(Long userId, AppUserIntentionSaveReqVO reqVO) {
+        vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_INTENTION);
         UserIntentionDO existing = getUserIntentionByUserId(userId);
         UserIntentionDO toSave = new UserIntentionDO();
         toSave.setUserId(userId);
@@ -86,10 +87,6 @@ public class UserIntentionServiceImpl implements UserIntentionService {
         if (existing == null) {
             toSave.setId(null);
             userIntentionMapper.insert(toSave);
-            // TODO VIP-BYPASS: restore quota consume on first submit (custom_demand_submit)
-            // consume on first submit only
-            // vipBenefitService.consumeQuotaOrThrow(userId, BENEFIT_KEY_CUSTOM_DEMAND_SUBMIT, 1,
-            //         REF_TYPE_CUSTOM_DEMAND_SUBMIT, String.valueOf(toSave.getId()), null);
             return toSave.getId();
         }
 
