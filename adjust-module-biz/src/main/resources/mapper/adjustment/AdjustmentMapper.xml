@@ -9,6 +9,15 @@
         文档可见：https://www.iocoder.cn/MyBatis/x-plugins/
      -->
 
+    <sql id="SchoolLevelExpr">
+        CASE
+            WHEN IFNULL(s.is_985, 0) = 1 THEN 1
+            WHEN IFNULL(s.is_211, 0) = 1 THEN 2
+            WHEN IFNULL(s.is_syl, 0) = 1 THEN 3
+            ELSE 4
+        END
+    </sql>
+
     <sql id="SearchWhere">
         <where>
             <if test="reqVO.keyword != null and reqVO.keyword != ''">
@@ -121,6 +130,9 @@
             <if test="reqVO.provinceCode != null and reqVO.provinceCode != ''">
                 AND s.province_code = #{reqVO.provinceCode}
             </if>
+            <if test="reqVO.schoolLevel != null">
+                AND (<include refid="SchoolLevelExpr" />) = #{reqVO.schoolLevel}
+            </if>
         </where>
     </sql>
 
@@ -155,29 +167,35 @@
     <select id="selectHotRankingPage"
             resultType="com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentSearchRespVO">
         SELECT
-            a.school_id AS schoolId,
-            a.college_id AS collegeId,
-            a.major_id AS majorId,
-            MAX(a.school_name) AS schoolName,
-            MAX(a.college_name) AS collegeName,
-            MAX(a.major_code) AS majorCode,
-            MAX(a.major_name) AS majorName,
-            MAX(a.degree_type) AS degreeType,
-            a.year,
-            a.study_mode AS studyMode,
-            SUM(IFNULL(a.adjust_count, 0)) AS adjustCount,
-            MAX(a.publish_time) AS updateTime,
-            MAX(COALESCE(sm.view_count, 0)) AS viewCount,
-            MAX(COALESCE(sm.hot_score, 0)) AS hotScore,
-            MAX(s.province_name) AS provinceName
-        FROM biz_adjustment a
-        LEFT JOIN biz_school s ON s.id = a.school_id
-        LEFT JOIN biz_school_major sm ON sm.school_id = a.school_id
-            AND sm.college_id = a.college_id
-            AND sm.major_id = a.major_id
-        <include refid="HotRankingWhere" />
-        GROUP BY a.school_id, a.college_id, a.major_id, a.year, a.study_mode
-        ORDER BY hotScore DESC, updateTime DESC
+            t.*
+        FROM (
+            SELECT
+                a.school_id AS schoolId,
+                a.college_id AS collegeId,
+                a.major_id AS majorId,
+                MAX(a.school_name) AS schoolName,
+                MAX(a.college_name) AS collegeName,
+                MAX(a.major_code) AS majorCode,
+                MAX(a.major_name) AS majorName,
+                MAX(a.degree_type) AS degreeType,
+                a.year,
+                a.study_mode AS studyMode,
+                SUM(IFNULL(a.adjust_count, 0)) AS adjustCount,
+                MAX(a.publish_time) AS updateTime,
+                MAX(COALESCE(sm.view_count, 0)) AS viewCount,
+                MAX(COALESCE(sm.hot_score, 0)) AS hotScore,
+                MAX(s.province_name) AS provinceName
+            FROM biz_adjustment a
+            LEFT JOIN biz_school s ON s.id = a.school_id
+            LEFT JOIN biz_school_major sm ON sm.school_id = a.school_id
+                AND sm.college_id = a.college_id
+                AND sm.major_id = a.major_id
+            <include refid="HotRankingWhere" />
+            GROUP BY a.school_id, a.college_id, a.major_id, a.year, a.study_mode
+            ORDER BY hotScore DESC, updateTime DESC
+            LIMIT 100
+        ) t
+        ORDER BY t.hotScore DESC, t.updateTime DESC
     </select>
 
     <select id="selectSearchSchoolPage"
