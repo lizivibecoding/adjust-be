@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-@Schema(description = "用户 APP - 用户发布调剂更新 Request VO（精简）")
+@Schema(description = "用户发布调剂-更新-请求")
 @Data
 public class AppUserAdjustmentUpdateReqVO {
 
@@ -13,7 +13,7 @@ public class AppUserAdjustmentUpdateReqVO {
     @NotNull(message = "id不能为空")
     private Long id;
 
-    @Schema(description = "方向ID(biz_school_direction.id)", requiredMode = Schema.RequiredMode.REQUIRED, example = "28566")
+    @Schema(description = "方向ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "755")
     @NotNull(message = "directionId不能为空")
     private Long directionId;
 

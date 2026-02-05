@@ -5,7 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
-@Schema(description = "用户 APP - 调剂详情 Response VO")
+@Schema(description = "调剂详情-响应")
 @Data
 public class AppUserAdjustmentDetailRespVO {
 
@@ -33,7 +33,7 @@ public class AppUserAdjustmentDetailRespVO {
     @Schema(description = "方向名称")
     private String directionName;
 
-    @Schema(description = "学习方式(1全日制 2非全日制)")
+    @Schema(description = "学习方式：1-全日制 2-非全日制")
     private Integer studyMode;
 
     @Schema(description = "调剂缺额人数")

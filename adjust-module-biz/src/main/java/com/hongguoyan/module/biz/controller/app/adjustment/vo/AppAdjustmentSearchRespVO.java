@@ -6,17 +6,17 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
-@Schema(description = "用户 APP - 调剂搜索(专业 Tab) Response VO")
+@Schema(description = "调剂搜索-专业-响应")
 @Data
 public class AppAdjustmentSearchRespVO {
 
-    @Schema(description = "学校ID", example = "9101")
+    @Schema(description = "学校ID", example = "5")
     private Long schoolId;
 
-    @Schema(description = "学院ID", example = "6746")
+    @Schema(description = "学院ID", example = "95")
     private Long collegeId;
 
-    @Schema(description = "专业ID", example = "15937")
+    @Schema(description = "专业ID", example = "2810")
     private Long majorId;
 
     @Schema(description = "学校名称")
@@ -31,13 +31,13 @@ public class AppAdjustmentSearchRespVO {
     @Schema(description = "专业名称")
     private String majorName;
 
-    @Schema(description = "学位类型(0=未知/不区分,1=专硕,2=学硕)")
+    @Schema(description = "学位类型（0-不区分 1-学硕 2-专硕）")
     private Integer degreeType;
 
     @Schema(description = "调剂年份")
     private Integer year;
 
-    @Schema(description = "学习方式(全日制/非全日制)")
+    @Schema(description = "学习方式：全日制/非全日制")
     private String studyMode;
 
     @Schema(description = "统考招生人数")

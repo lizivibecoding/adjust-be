@@ -31,8 +31,8 @@ public class SchoolMajorSaveReqVO {
     @NotEmpty(message = "专业名称不能为空")
     private String name;
 
-    @Schema(description = "学位类型(0=未知/不区分,1=专硕,2=学硕)", requiredMode = Schema.RequiredMode.REQUIRED, example = "2")
-    @NotNull(message = "学位类型(0=未知/不区分,1=专硕,2=学硕)不能为空")
+    @Schema(description = "学位类型（0-不区分 1-学硕 2-专硕）", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+    @NotNull(message = "学位类型（0-不区分 1-学硕 2-专硕）不能为空")
     private Integer degreeType;
 
     @Schema(description = "热度值", requiredMode = Schema.RequiredMode.REQUIRED, example = "30516")

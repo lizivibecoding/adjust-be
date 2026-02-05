@@ -7,7 +7,7 @@ import jakarta.validation.constraints.*;
 import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDateTime;
 
-@Schema(description = "用户 APP - 用户发布调剂新增/修改 Request VO")
+@Schema(description = "用户发布调剂-保存-请求")
 @Data
 public class AppUserAdjustmentSaveReqVO {
 
@@ -50,11 +50,11 @@ public class AppUserAdjustmentSaveReqVO {
     @NotEmpty(message = "专业名称不能为空")
     private String majorName;
 
-    @Schema(description = "学位类型(0未知/不区分 1专硕 2学硕)", requiredMode = Schema.RequiredMode.REQUIRED, example = "2")
-    @NotNull(message = "学位类型(0未知/不区分 1专硕 2学硕)不能为空")
+    @Schema(description = "学位类型（0-不区分 1-学硕 2-专硕）", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+    @NotNull(message = "学位类型（0-不区分 1-学硕 2-专硕）不能为空")
     private Integer degreeType;
 
-    @Schema(description = "方向ID(biz_school_direction.id)", requiredMode = Schema.RequiredMode.REQUIRED, example = "28566")
+    @Schema(description = "方向ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "755")
     @NotNull(message = "方向ID(biz_school_direction.id)不能为空")
     private Long directionId;
 

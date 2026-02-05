@@ -7,7 +7,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDateTime;
 import cn.idev.excel.annotation.*;
 
-@Schema(description = "用户 APP - 院校 Response VO")
+@Schema(description = "院校-响应")
 @Data
 @ExcelIgnoreUnannotated
 public class AppSchoolRespVO {
@@ -40,8 +40,8 @@ public class AppSchoolRespVO {
     @ExcelProperty("考研分区：A区/B区")
     private String provinceArea;
 
-    @Schema(description = "学校类别 (综合类/理工类等)", example = "2")
-    @ExcelProperty("学校类别 (综合类/理工类等)")
+    @Schema(description = "学校类别", example = "综合类")
+    @ExcelProperty("学校类别")
     private String schoolType;
 
     @Schema(description = "特性标签数组")

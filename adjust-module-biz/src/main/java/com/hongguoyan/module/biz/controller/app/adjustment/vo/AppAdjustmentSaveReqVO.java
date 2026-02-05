@@ -6,7 +6,7 @@ import java.util.*;
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 
-@Schema(description = "用户 APP - 调剂新增/修改 Request VO")
+@Schema(description = "调剂-保存-请求")
 @Data
 public class AppAdjustmentSaveReqVO {
 
@@ -24,20 +24,20 @@ public class AppAdjustmentSaveReqVO {
     @Schema(description = "来源URL/原文链接", example = "https://www.iocoder.cn")
     private String sourceUrl;
 
-    @Schema(description = "学校ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "9101")
+    @Schema(description = "学校ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "5")
     @NotNull(message = "学校ID不能为空")
     private Long schoolId;
 
     @Schema(description = "学校名称", example = "李四")
     private String schoolName;
 
-    @Schema(description = "学院ID", example = "6746")
+    @Schema(description = "学院ID", example = "95")
     private Long collegeId;
 
     @Schema(description = "学院名称", example = "赵六")
     private String collegeName;
 
-    @Schema(description = "专业ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "15937")
+    @Schema(description = "专业ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "2810")
     @NotNull(message = "专业ID不能为空")
     private Long majorId;
 
@@ -49,8 +49,8 @@ public class AppAdjustmentSaveReqVO {
     @NotEmpty(message = "专业名称不能为空")
     private String majorName;
 
-    @Schema(description = "学位类型(0=未知/不区分,1=专硕,2=学硕)", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
-    @NotNull(message = "学位类型(0=未知/不区分,1=专硕,2=学硕)不能为空")
+    @Schema(description = "学位类型（0-不区分 1-学硕 2-专硕）", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+    @NotNull(message = "学位类型（0-不区分 1-学硕 2-专硕）不能为空")
     private Integer degreeType;
 
     @Schema(description = "方向代码")
@@ -59,7 +59,7 @@ public class AppAdjustmentSaveReqVO {
     @Schema(description = "方向名称", example = "王五")
     private String directionName;
 
-    @Schema(description = "学习方式(全日制/非全日制)")
+    @Schema(description = "学习方式：全日制/非全日制")
     private String studyMode;
 
     @Schema(description = "调剂缺额人数", example = "20026")

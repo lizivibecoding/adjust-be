@@ -28,7 +28,7 @@ import java.util.List;
 
 import static com.hongguoyan.framework.common.pojo.CommonResult.success;
 
-@Tag(name = "用户 APP - 会员")
+@Tag(name = "API - 会员")
 @RestController
 @RequestMapping("/biz/vip")
 @Validated
@@ -38,13 +38,13 @@ public class AppVipController {
     private VipAppService vipAppService;
 
     @GetMapping("/plan/list")
-    @Operation(summary = "获取会员套餐列表（含权益点展示）")
+    @Operation(summary = "获取会员套餐列表")
     public CommonResult<List<AppVipPlanRespVO>> getPlanList() {
         return success(vipAppService.getPlanList());
     }
 
     @GetMapping("/me")
-    @Operation(summary = "获取我的会员信息（未登录返回默认值）")
+    @Operation(summary = "获取我的会员信息")
     public CommonResult<AppVipMeRespVO> getMe() {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
         return success(vipAppService.getMyVipInfo(userId));
@@ -58,14 +58,14 @@ public class AppVipController {
     }
 
     @PostMapping("/pay/notify")
-    @Operation(summary = "会员支付成功回调（notify）")
+    @Operation(summary = "会员支付成功回调")
     @PermitAll
     public CommonResult<Boolean> payNotify(@Valid @RequestBody PayOrderNotifyReqDTO notifyReqDTO) {
         return success(vipAppService.payNotify(notifyReqDTO));
     }
 
     @PostMapping("/coupon/redeem")
-    @Operation(summary = "券码兑换（开通/续期）")
+    @Operation(summary = "券码兑换")
     public CommonResult<AppVipMeRespVO> redeemCoupon(@Valid @RequestBody AppVipCouponRedeemReqVO reqVO) {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
         return success(vipAppService.redeemCoupon(userId, reqVO));

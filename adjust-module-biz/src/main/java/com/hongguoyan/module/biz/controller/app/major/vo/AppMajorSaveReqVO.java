@@ -5,7 +5,7 @@ import lombok.*;
 import java.util.*;
 import jakarta.validation.constraints.*;
 
-@Schema(description = "用户 APP - 专业新增/修改 Request VO")
+@Schema(description = "专业-保存-请求")
 @Data
 public class AppMajorSaveReqVO {
 
@@ -35,8 +35,8 @@ public class AppMajorSaveReqVO {
     @NotEmpty(message = "名称不能为空")
     private String name;
 
-    @Schema(description = "学位类型(0=两者/不适用,1=专硕,2=学硕)", requiredMode = Schema.RequiredMode.REQUIRED, example = "2")
-    @NotNull(message = "学位类型(0=两者/不适用,1=专硕,2=学硕)不能为空")
+    @Schema(description = "学位类型（0-两者/不适用 1-学硕 2-专硕）", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+    @NotNull(message = "学位类型（0-两者/不适用 1-学硕 2-专硕）不能为空")
     private Integer degreeType;
 
 }

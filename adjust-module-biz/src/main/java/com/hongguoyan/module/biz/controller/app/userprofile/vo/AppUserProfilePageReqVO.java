@@ -9,7 +9,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import static com.hongguoyan.framework.common.util.date.DateUtils.FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND;
 
-@Schema(description = "用户 APP - 用户基础档案表(含成绩与软背景)分页 Request VO")
+@Schema(description = "用户基础档案-分页-请求")
 @Data
 public class AppUserProfilePageReqVO extends PageParam {
 
@@ -70,7 +70,7 @@ public class AppUserProfilePageReqVO extends PageParam {
     @Schema(description = "一志愿专业名称(冗余)", example = "张三")
     private String targetMajorName;
 
-    @Schema(description = "一志愿学位类型: 0-未知/不区分 1-专硕 2-学硕", example = "2")
+    @Schema(description = "一志愿学位类型：0-不区分 1-学硕 2-专硕", example = "1")
     private Integer targetDegreeType;
 
     @Schema(description = "一志愿研究方向编码")

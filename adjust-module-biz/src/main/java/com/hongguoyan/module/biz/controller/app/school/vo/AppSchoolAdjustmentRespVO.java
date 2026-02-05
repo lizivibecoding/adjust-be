@@ -3,17 +3,17 @@ package com.hongguoyan.module.biz.controller.app.school.vo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-@Schema(description = "用户 APP - 院校调剂列表(调剂 Tab) Response VO")
+@Schema(description = "院校调剂列表-响应")
 @Data
 public class AppSchoolAdjustmentRespVO {
 
-    @Schema(description = "学校ID", example = "9101")
+    @Schema(description = "学校ID", example = "5")
     private Long schoolId;
 
-    @Schema(description = "学院ID", example = "6746")
+    @Schema(description = "学院ID", example = "95")
     private Long collegeId;
 
-    @Schema(description = "专业ID", example = "15937")
+    @Schema(description = "专业ID", example = "2810")
     private Long majorId;
 
     @Schema(description = "专业代码")
@@ -28,7 +28,7 @@ public class AppSchoolAdjustmentRespVO {
     @Schema(description = "年份", example = "2024")
     private Integer year;
 
-    @Schema(description = "学习方式(全日制/非全日制)")
+    @Schema(description = "学习方式：全日制/非全日制")
     private String studyMode;
 
     @Schema(description = "招生人数(调剂缺额汇总)", example = "8")

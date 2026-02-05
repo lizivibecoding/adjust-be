@@ -8,7 +8,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import static com.hongguoyan.framework.common.util.date.DateUtils.FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND;
 
-@Schema(description = "用户 APP - 用户调剂意向与偏好设置分页 Request VO")
+@Schema(description = "用户调剂意向与偏好设置-分页-请求")
 @Data
 public class AppUserIntentionPageReqVO extends PageParam {
 
@@ -30,7 +30,7 @@ public class AppUserIntentionPageReqVO extends PageParam {
     @Schema(description = "意向学习方式: 0-不限 1-全日制 2-非全日制")
     private Integer studyMode;
 
-    @Schema(description = "意向学位类型: 0-不限 1-专硕 2-学硕", example = "1")
+    @Schema(description = "意向学位类型：0-不限 1-学硕 2-专硕", example = "1")
     private Integer degreeType;
 
     @Schema(description = "是否包含专项计划: 0-否 1-是")

@@ -6,11 +6,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-@Schema(description = "用户 APP - 同分调剂去向分页 Request VO")
+@Schema(description = "同分调剂去向-分页-请求")
 @Data
 public class AppSameScorePageReqVO extends PageParam {
 
-    @Schema(description = "年份(如2025)", requiredMode = Schema.RequiredMode.REQUIRED, example = "2025")
+    @Schema(description = "年份", requiredMode = Schema.RequiredMode.REQUIRED, example = "2025")
     @NotNull(message = "年份不能为空")
     private Integer year;
 
@@ -30,7 +30,7 @@ public class AppSameScorePageReqVO extends PageParam {
     @Schema(description = "省份代码(biz_school.province_code)", example = "110000")
     private String provinceCode;
 
-    @Schema(description = "学习方式(全日制/非全日制)", example = "全日制")
+    @Schema(description = "学习方式：全日制/非全日制", example = "全日制")
     private String studyMode;
 }
 

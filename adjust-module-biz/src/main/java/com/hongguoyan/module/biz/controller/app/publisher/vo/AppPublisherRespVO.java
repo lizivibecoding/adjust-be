@@ -5,7 +5,7 @@ import lombok.*;
 import java.util.*;
 import java.time.LocalDateTime;
 
-@Schema(description = "用户 APP - 发布者资质 Response VO")
+@Schema(description = "发布者资质-响应")
 @Data
 public class AppPublisherRespVO {
 

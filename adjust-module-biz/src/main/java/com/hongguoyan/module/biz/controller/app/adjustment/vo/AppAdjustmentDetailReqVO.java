@@ -5,19 +5,19 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-@Schema(description = "用户 APP - 调剂详情 Request VO")
+@Schema(description = "调剂详情-请求")
 @Data
 public class AppAdjustmentDetailReqVO {
 
-    @Schema(description = "学校ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "9101")
+    @Schema(description = "学校ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "5")
     @NotNull(message = "学校ID不能为空")
     private Long schoolId;
 
-    @Schema(description = "专业ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "15937")
+    @Schema(description = "专业ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "2810")
     @NotNull(message = "专业ID不能为空")
     private Long majorId;
 
-    @Schema(description = "学院ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "6746")
+    @Schema(description = "学院ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "95")
     @NotNull(message = "学院ID不能为空")
     private Long collegeId;
 
@@ -25,7 +25,7 @@ public class AppAdjustmentDetailReqVO {
     @NotNull(message = "调剂年份不能为空")
     private Integer year;
 
-    @Schema(description = "学习方式(全日制/非全日制)", requiredMode = Schema.RequiredMode.REQUIRED, example = "全日制")
+    @Schema(description = "学习方式：全日制/非全日制", requiredMode = Schema.RequiredMode.REQUIRED, example = "全日制")
     @NotBlank(message = "学习方式不能为空")
     private String studyMode;
 }

@@ -5,7 +5,7 @@ import lombok.*;
 import java.util.*;
 import jakarta.validation.constraints.*;
 
-@Schema(description = "用户 APP - 用户调剂订阅新增/修改 Request VO")
+@Schema(description = "用户调剂订阅-保存-请求")
 @Data
 public class AppUserSubscriptionSaveReqVO {
 
@@ -16,7 +16,7 @@ public class AppUserSubscriptionSaveReqVO {
     @NotNull(message = "用户ID不能为空")
     private Long userId;
 
-    @Schema(description = "学校ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "11324")
+    @Schema(description = "学校ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "5")
     @NotNull(message = "学校ID不能为空")
     private Long schoolId;
 
@@ -24,7 +24,7 @@ public class AppUserSubscriptionSaveReqVO {
     @NotNull(message = "学院ID不能为空")
     private Long collegeId;
 
-    @Schema(description = "专业ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "7206")
+    @Schema(description = "专业ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "2810")
     @NotNull(message = "专业ID不能为空")
     private Long majorId;
 

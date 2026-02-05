@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
-@Schema(description = "用户 APP - 创建会员订单 Request VO")
+@Schema(description = "创建会员订单-请求")
 @Data
 public class AppVipOrderCreateReqVO {
 

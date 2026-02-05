@@ -29,7 +29,7 @@ import com.hongguoyan.module.biz.controller.app.recruit.vo.*;
 import com.hongguoyan.module.biz.dal.dataobject.recruit.RecruitDO;
 import com.hongguoyan.module.biz.service.recruit.RecruitService;
 
-@Tag(name = "用户 APP - 招生")
+@Tag(name = "API - 招生")
 @RestController
 @RequestMapping("/biz/recruit")
 @Validated

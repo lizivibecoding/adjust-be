@@ -7,7 +7,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
-@Schema(description = "用户 APP - 用户AI调剂定制报告列表项 Response VO")
+@Schema(description = "用户AI调剂定制报告列表项-响应")
 @Data
 @ExcelIgnoreUnannotated
 public class AppUserCustomReportListItemRespVO {

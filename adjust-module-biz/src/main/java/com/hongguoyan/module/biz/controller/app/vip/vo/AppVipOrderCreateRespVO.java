@@ -5,7 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
-@Schema(description = "用户 APP - 创建会员订单 Response VO")
+@Schema(description = "创建会员订单-响应")
 @Data
 public class AppVipOrderCreateRespVO {
 

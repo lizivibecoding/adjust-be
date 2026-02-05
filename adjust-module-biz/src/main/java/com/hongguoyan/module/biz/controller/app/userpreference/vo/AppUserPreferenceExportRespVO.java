@@ -5,7 +5,7 @@ import cn.idev.excel.annotation.ExcelProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-@Schema(description = "用户 APP - 志愿导出 Response VO")
+@Schema(description = "志愿导出-响应")
 @Data
 @ExcelIgnoreUnannotated
 public class AppUserPreferenceExportRespVO {
@@ -28,7 +28,7 @@ public class AppUserPreferenceExportRespVO {
     @ExcelProperty("方向名称")
     private String directionName;
 
-    @ExcelProperty("学习方式(1全日制 2非全日制)")
+    @ExcelProperty("学习方式：1-全日制 2-非全日制")
     private Integer studyMode;
 }
 

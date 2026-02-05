@@ -19,7 +19,7 @@ import com.hongguoyan.module.biz.controller.app.useradjustment.vo.*;
 import com.hongguoyan.module.biz.service.useradjustment.UserAdjustmentService;
 import com.hongguoyan.framework.security.core.util.SecurityFrameworkUtils;
 
-@Tag(name = "用户 APP - 用户发布调剂")
+@Tag(name = "API - 用户发布调剂")
 @RestController
 @RequestMapping("/biz/user-adjustment")
 @Validated
@@ -52,7 +52,7 @@ public class AppUserAdjustmentController {
     }
 
     @GetMapping("/page")
-    @Operation(summary = "发布调剂列表(公开)")
+    @Operation(summary = "发布调剂列表")
     public CommonResult<PageResult<AppUserAdjustmentListRespVO>> getUserAdjustmentPage(@Valid AppUserAdjustmentPublicPageReqVO pageReqVO) {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
         PageResult<AppUserAdjustmentListRespVO> pageResult = userAdjustmentService.getUserAdjustmentPublicPage(userId, pageReqVO);

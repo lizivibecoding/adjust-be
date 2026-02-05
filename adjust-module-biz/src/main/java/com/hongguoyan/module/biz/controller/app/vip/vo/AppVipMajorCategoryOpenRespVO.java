@@ -3,7 +3,7 @@ package com.hongguoyan.module.biz.controller.app.vip.vo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-@Schema(description = "用户 APP - 开放专业门类 Response VO")
+@Schema(description = "开放专业门类-响应")
 @Data
 public class AppVipMajorCategoryOpenRespVO {
 

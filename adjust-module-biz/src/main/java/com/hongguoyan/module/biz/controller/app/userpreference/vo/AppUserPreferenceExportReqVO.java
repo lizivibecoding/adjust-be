@@ -8,7 +8,7 @@ import lombok.Data;
 
 import java.util.List;
 
-@Schema(description = "用户 APP - 志愿导出 Request VO")
+@Schema(description = "志愿导出-请求")
 @Data
 public class AppUserPreferenceExportReqVO {
 

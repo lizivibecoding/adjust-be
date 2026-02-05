@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 import static com.hongguoyan.framework.common.util.date.DateUtils.FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND;
 
-@Schema(description = "用户 APP - 院校分页 Request VO")
+@Schema(description = "院校-分页-请求")
 @Data
 public class AppSchoolPageReqVO extends PageParam {
 
@@ -31,7 +31,7 @@ public class AppSchoolPageReqVO extends PageParam {
     @Schema(description = "考研分区：A区/B区")
     private String provinceArea;
 
-    @Schema(description = "学校类别 (综合类/理工类等)", example = "2")
+    @Schema(description = "学校类别", example = "综合类")
     private String schoolType;
 
     @Schema(description = "特性标签数组")

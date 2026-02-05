@@ -5,7 +5,7 @@ import lombok.Data;
 
 import java.util.List;
 
-@Schema(description = "用户 APP - 会员套餐 Response VO")
+@Schema(description = "会员套餐-响应")
 @Data
 public class AppVipPlanRespVO {
 

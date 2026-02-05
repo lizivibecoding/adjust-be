@@ -3,7 +3,7 @@ package com.hongguoyan.module.biz.controller.app.school.vo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-@Schema(description = "用户 APP - 院校概况 Response VO")
+@Schema(description = "院校概况-响应")
 @Data
 public class AppSchoolOverviewRespVO {
 
@@ -22,7 +22,7 @@ public class AppSchoolOverviewRespVO {
     @Schema(description = "考研分区：A区/B区")
     private String provinceArea;
 
-    @Schema(description = "学校类别 (综合类/理工类等)")
+    @Schema(description = "学校类别")
     private String schoolType;
 
     @Schema(description = "学校简介")

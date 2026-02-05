@@ -6,7 +6,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 import cn.idev.excel.annotation.*;
 
-@Schema(description = "用户 APP - 用户权益消耗明细 Response VO")
+@Schema(description = "用户权益消耗明细-响应")
 @Data
 @ExcelIgnoreUnannotated
 public class AppVipBenefitLogRespVO {

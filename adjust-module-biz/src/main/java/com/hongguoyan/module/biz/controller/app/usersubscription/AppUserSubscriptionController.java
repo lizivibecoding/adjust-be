@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import static com.hongguoyan.framework.common.pojo.CommonResult.success;
 
-@Tag(name = "用户 APP - 用户调剂订阅")
+@Tag(name = "API - 用户调剂订阅")
 @RestController
 @RequestMapping("/biz/user-subscription")
 @Validated
@@ -47,14 +47,14 @@ public class AppUserSubscriptionController {
     }
 
     @PostMapping("/page")
-    @Operation(summary = "我的订阅(按学校分组)")
+    @Operation(summary = "我的订阅")
     public CommonResult<PageResult<AppUserSubscriptionPageRespVO>> page(@Valid @RequestBody AppUserSubscriptionPageReqVO reqVO) {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
         return success(userSubscriptionService.getMyPage(userId, reqVO));
     }
 
     @GetMapping("/unread")
-    @Operation(summary = "订阅未读状态(首页小铃铛红点)")
+    @Operation(summary = "订阅未读状态")
     public CommonResult<AppUserSubscriptionUnreadRespVO> getUnread() {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
         return success(userSubscriptionService.getUnread(userId));

@@ -5,13 +5,13 @@ import lombok.Data;
 
 import java.util.List;
 
-@Schema(description = "用户 APP - 调剂详情(按方向聚合返回) Response VO")
+@Schema(description = "调剂详情-响应")
 @Data
 public class AppAdjustmentDetailRespVO {
 
     // ========== 公共信息(同一 schoolId + majorId + collegeId + year + studyMode 下基本一致) ==========
 
-    @Schema(description = "学校ID", example = "9101")
+    @Schema(description = "学校ID", example = "5")
     private Long schoolId;
 
     @Schema(description = "学校名称")
@@ -38,13 +38,13 @@ public class AppAdjustmentDetailRespVO {
     @Schema(description = "是否普通院校")
     private Boolean isOrdinary;
 
-    @Schema(description = "学院ID", example = "6746")
+    @Schema(description = "学院ID", example = "95")
     private Long collegeId;
 
     @Schema(description = "学院名称")
     private String collegeName;
 
-    @Schema(description = "专业ID", example = "15937")
+    @Schema(description = "专业ID", example = "2810")
     private Long majorId;
 
     @Schema(description = "专业代码")
@@ -53,13 +53,13 @@ public class AppAdjustmentDetailRespVO {
     @Schema(description = "专业名称")
     private String majorName;
 
-    @Schema(description = "学位类型(0=未知/不区分,1=专硕,2=学硕)")
+    @Schema(description = "学位类型（0-不区分 1-学硕 2-专硕）")
     private Integer degreeType;
 
     @Schema(description = "调剂年份")
     private Integer year;
 
-    @Schema(description = "学习方式(全日制/非全日制)")
+    @Schema(description = "学习方式：全日制/非全日制")
     private String studyMode;
 
     // ========== 方向列表(按 directionCode 从小到大排序) ==========

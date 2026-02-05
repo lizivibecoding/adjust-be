@@ -17,7 +17,7 @@ import java.util.List;
 
 import static com.hongguoyan.framework.common.pojo.CommonResult.success;
 
-@Tag(name = "用户 APP - 轮播图")
+@Tag(name = "API - 轮播图")
 @RestController
 @RequestMapping("/biz/banner")
 @Validated

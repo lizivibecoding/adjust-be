@@ -6,11 +6,11 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
-@Schema(description = "用户 APP - 调剂搜索(院校 Tab) Response VO")
+@Schema(description = "调剂搜索-院校-响应")
 @Data
 public class AppAdjustmentSearchSchoolRespVO {
 
-    @Schema(description = "学校ID", example = "9101")
+    @Schema(description = "学校ID", example = "5")
     private Long schoolId;
 
     @Schema(description = "学校名称")

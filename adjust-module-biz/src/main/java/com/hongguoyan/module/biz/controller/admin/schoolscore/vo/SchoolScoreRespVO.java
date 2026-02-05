@@ -41,8 +41,8 @@ public class SchoolScoreRespVO {
     @ExcelProperty("专业名称")
     private String majorName;
 
-    @Schema(description = "学位类型(0=不区分,1=专硕,2=学硕)", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
-    @ExcelProperty("学位类型(0=不区分,1=专硕,2=学硕)")
+    @Schema(description = "学位类型（0-不区分 1-学硕 2-专硕）", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+    @ExcelProperty("学位类型（0-不区分 1-学硕 2-专硕）")
     private Integer degreeType;
 
     @Schema(description = "年份(如2025)", requiredMode = Schema.RequiredMode.REQUIRED)

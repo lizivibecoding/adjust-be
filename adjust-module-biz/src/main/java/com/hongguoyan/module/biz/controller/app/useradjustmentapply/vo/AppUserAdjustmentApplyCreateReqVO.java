@@ -7,7 +7,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 
-@Schema(description = "用户 APP - 用户发布调剂申请创建 Request VO（apply-form）")
+@Schema(description = "用户发布调剂申请-创建-请求")
 @Data
 public class AppUserAdjustmentApplyCreateReqVO {
 

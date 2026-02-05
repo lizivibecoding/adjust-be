@@ -9,11 +9,11 @@ import java.time.LocalDateTime;
 
 import static com.hongguoyan.framework.common.util.date.DateUtils.FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND;
 
-@Schema(description = "用户 APP - 学院分页 Request VO")
+@Schema(description = "学院-分页-请求")
 @Data
 public class AppSchoolCollegePageReqVO extends PageParam {
 
-    @Schema(description = "学校ID(biz_school.id)", example = "1694")
+    @Schema(description = "学校ID", example = "5")
     private Long schoolId;
 
     @Schema(description = "院系代码")

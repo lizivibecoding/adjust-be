@@ -29,7 +29,7 @@ import com.hongguoyan.module.biz.controller.app.major.vo.*;
 import com.hongguoyan.module.biz.dal.dataobject.major.MajorDO;
 import com.hongguoyan.module.biz.service.major.MajorService;
 
-@Tag(name = "用户 APP - 专业")
+@Tag(name = "API - 专业")
 @RestController
 @RequestMapping("/biz/major")
 @Validated
@@ -45,10 +45,10 @@ public class AppMajorController {
     }
 
     @GetMapping("/list")
-    @Operation(summary = "获得学科/专业列表(按层级)")
-    @Parameter(name = "level", description = "层级(1=一级学科,2=二级学科,3=三级学科)", required = true, example = "1")
-    @Parameter(name = "parentCode", description = "父级 code(level>1 时必传；level=2 传一级 code；level=3 传二级 code)", example = "01")
-    @Parameter(name = "degreeType", description = "学位类型筛选(0=不区分,1=专硕,2=学硕；仅对 level=2/3 生效)", example = "1")
+    @Operation(summary = "获得学科/专业列表")
+    @Parameter(name = "level", description = "层级：1-一级学科 2-二级学科 3-三级学科", required = true, example = "1")
+    @Parameter(name = "parentCode", description = "父级 code。level=2 用一级 code，例如 02；level=3 用二级 code，例如 0201", example = "02")
+    @Parameter(name = "degreeType", description = "学位类型：0-不区分 1-学硕 2-专硕。仅对 level=2/3 生效", example = "1")
     public CommonResult<List<AppMajorChildRespVO>> getMajorList(
             @RequestParam("level") @NotNull Integer level,
             @RequestParam(value = "parentCode", required = false) String parentCode,
@@ -57,7 +57,7 @@ public class AppMajorController {
     }
 
     @GetMapping("/tree")
-    @Operation(summary = "获得专业树(仅包含有 code 的节点)")
+    @Operation(summary = "获得专业树")
     public CommonResult<List<AppMajorTreeNodeRespVO>> getMajorTree() {
         return success(majorService.getMajorTree());
     }

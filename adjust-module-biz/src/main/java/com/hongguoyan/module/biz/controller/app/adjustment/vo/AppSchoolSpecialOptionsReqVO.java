@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-@Schema(description = "用户 APP - 学校联动选项 Request VO")
+@Schema(description = "学校联动选项-请求")
 @Data
 public class AppSchoolSpecialOptionsReqVO {
 
@@ -12,19 +12,19 @@ public class AppSchoolSpecialOptionsReqVO {
     @NotNull(message = "类型不能为空")
     private Integer type;
 
-    @Schema(description = "学校ID(type=1/2/3 时需要)", example = "9101")
+    @Schema(description = "学校ID。type=1/2/3 需要", example = "5")
     private Long schoolId;
 
-    @Schema(description = "学院ID(type=2/3 时需要)", example = "6746")
+    @Schema(description = "学院ID。type=2/3 需要", example = "95")
     private Long collegeId;
 
-    @Schema(description = "专业ID(type=3 时需要；type=2 返回专业列表不需要传)", example = "15937")
+    @Schema(description = "专业ID。type=3 需要；type=2 不需要", example = "2810")
     private Long majorId;
 
-    @Schema(description = "学习方式(type=3 可选；不传则返回全部学习方式的方向)", example = "全日制")
+    @Schema(description = "学习方式。type=3 可选；不传则返回全部", example = "全日制")
     private String studyMode;
 
-    @Schema(description = "方向ID(type=4 可传；不传则用 schoolId+majorId)", example = "20106")
+    @Schema(description = "方向ID。type=4 可传；不传则用 schoolId+majorId", example = "755")
     private Long directionId;
 }
 

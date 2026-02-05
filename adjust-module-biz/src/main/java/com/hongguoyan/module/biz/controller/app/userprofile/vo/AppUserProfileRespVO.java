@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.Data;
 
-@Schema(description = "用户 APP - 用户基础档案表(含成绩与软背景) Response VO")
+@Schema(description = "用户基础档案-响应")
 @Data
 @ExcelIgnoreUnannotated
 public class AppUserProfileRespVO {
@@ -88,8 +88,8 @@ public class AppUserProfileRespVO {
     @ExcelProperty("一志愿专业名称(冗余)")
     private String targetMajorName;
 
-    @Schema(description = "一志愿学位类型: 0-未知/不区分 1-专硕 2-学硕", requiredMode = Schema.RequiredMode.REQUIRED, example = "2")
-    @ExcelProperty("一志愿学位类型: 0-未知/不区分 1-专硕 2-学硕")
+    @Schema(description = "一志愿学位类型：0-不区分 1-学硕 2-专硕", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+    @ExcelProperty("一志愿学位类型：0-不区分 1-学硕 2-专硕")
     private Integer targetDegreeType;
 
     @Schema(description = "一志愿研究方向编码", requiredMode = Schema.RequiredMode.REQUIRED)

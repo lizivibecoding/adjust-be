@@ -5,11 +5,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-@Schema(description = "用户 APP - 院校调剂列表(调剂 Tab) Request VO")
+@Schema(description = "院校调剂列表-请求")
 @Data
 public class AppSchoolAdjustmentPageReqVO extends PageParam {
 
-    @Schema(description = "学校ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "1024")
+    @Schema(description = "学校ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "5")
     @NotNull(message = "学校ID不能为空")
     private Long schoolId;
 

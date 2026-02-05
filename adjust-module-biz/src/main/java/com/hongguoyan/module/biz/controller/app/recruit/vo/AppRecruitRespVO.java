@@ -7,7 +7,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDateTime;
 import cn.idev.excel.annotation.*;
 
-@Schema(description = "用户 APP - 招生 Response VO")
+@Schema(description = "招生-响应")
 @Data
 @ExcelIgnoreUnannotated
 public class AppRecruitRespVO {
@@ -20,7 +20,7 @@ public class AppRecruitRespVO {
     @ExcelProperty("招生年份")
     private Integer year;
 
-    @Schema(description = "学校ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "15423")
+    @Schema(description = "学校ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "5")
     @ExcelProperty("学校ID")
     private Long schoolId;
 
@@ -28,7 +28,7 @@ public class AppRecruitRespVO {
     @ExcelProperty("学校名称")
     private String schoolName;
 
-    @Schema(description = "学院ID", example = "23464")
+    @Schema(description = "学院ID", example = "95")
     @ExcelProperty("学院ID")
     private Long collegeId;
 
@@ -36,7 +36,7 @@ public class AppRecruitRespVO {
     @ExcelProperty("学院名称")
     private String collegeName;
 
-    @Schema(description = "专业ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "11344")
+    @Schema(description = "专业ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "2810")
     @ExcelProperty("专业ID")
     private Long majorId;
 
@@ -48,8 +48,8 @@ public class AppRecruitRespVO {
     @ExcelProperty("专业名称")
     private String majorName;
 
-    @Schema(description = "学位类型(0=未知/不区分,1=专硕,2=学硕)", requiredMode = Schema.RequiredMode.REQUIRED, example = "2")
-    @ExcelProperty("学位类型(0=未知/不区分,1=专硕,2=学硕)")
+    @Schema(description = "学位类型（0-不区分 1-学硕 2-专硕）", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+    @ExcelProperty("学位类型（0-不区分 1-学硕 2-专硕）")
     private Integer degreeType;
 
     @Schema(description = "方向代码(来自CSV方向列括号内)")
@@ -60,8 +60,8 @@ public class AppRecruitRespVO {
     @ExcelProperty("方向名称")
     private String directionName;
 
-    @Schema(description = "学习方式(全日制/非全日制)")
-    @ExcelProperty("学习方式(全日制/非全日制)")
+    @Schema(description = "学习方式：全日制/非全日制")
+    @ExcelProperty("学习方式：全日制/非全日制")
     private String studyMode;
 
     @Schema(description = "考试方式")

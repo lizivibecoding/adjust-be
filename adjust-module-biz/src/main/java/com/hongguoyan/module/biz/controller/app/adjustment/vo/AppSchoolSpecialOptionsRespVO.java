@@ -6,7 +6,7 @@ import lombok.Data;
 import java.util.List;
 import java.util.Map;
 
-@Schema(description = "用户 APP - 学校联动选项 Response VO")
+@Schema(description = "学校联动选项-响应")
 @Data
 public class AppSchoolSpecialOptionsRespVO {
 
@@ -41,7 +41,7 @@ public class AppSchoolSpecialOptionsRespVO {
     @Data
     public static class DirectionOption {
 
-        @Schema(description = "方向ID", example = "20106")
+        @Schema(description = "方向ID", example = "755")
         private Long id;
 
         @Schema(description = "方向代码", example = "01")

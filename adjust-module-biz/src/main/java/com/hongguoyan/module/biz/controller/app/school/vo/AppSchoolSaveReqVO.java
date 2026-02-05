@@ -5,7 +5,7 @@ import lombok.*;
 import java.util.*;
 import jakarta.validation.constraints.*;
 
-@Schema(description = "用户 APP - 院校新增/修改 Request VO")
+@Schema(description = "院校-保存-请求")
 @Data
 public class AppSchoolSaveReqVO {
 
@@ -33,7 +33,7 @@ public class AppSchoolSaveReqVO {
     @Schema(description = "考研分区：A区/B区")
     private String provinceArea;
 
-    @Schema(description = "学校类别 (综合类/理工类等)", example = "2")
+    @Schema(description = "学校类别", example = "综合类")
     private String schoolType;
 
     @Schema(description = "特性标签数组")

@@ -6,7 +6,7 @@ import java.util.*;
 import jakarta.validation.constraints.*;
 import java.time.LocalDateTime;
 
-@Schema(description = "用户 APP - 发布者资质新增/修改 Request VO")
+@Schema(description = "发布者资质-保存-请求")
 @Data
 public class AppPublisherSaveReqVO {
 

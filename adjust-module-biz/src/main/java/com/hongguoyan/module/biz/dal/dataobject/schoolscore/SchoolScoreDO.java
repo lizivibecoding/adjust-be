@@ -57,7 +57,7 @@ public class SchoolScoreDO extends BaseDO {
      */
     private String majorName;
     /**
-     * 学位类型(0=不区分,1=专硕,2=学硕)
+     * 学位类型(0=不区分,1=学硕,2=专硕)
      */
     private Integer degreeType;
     /**

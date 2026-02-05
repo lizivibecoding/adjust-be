@@ -35,8 +35,8 @@ public class SchoolMajorRespVO {
     @ExcelProperty("专业名称")
     private String name;
 
-    @Schema(description = "学位类型(0=未知/不区分,1=专硕,2=学硕)", requiredMode = Schema.RequiredMode.REQUIRED, example = "2")
-    @ExcelProperty("学位类型(0=未知/不区分,1=专硕,2=学硕)")
+    @Schema(description = "学位类型（0-不区分 1-学硕 2-专硕）", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+    @ExcelProperty("学位类型（0-不区分 1-学硕 2-专硕）")
     private Integer degreeType;
 
     @Schema(description = "创建时间", requiredMode = Schema.RequiredMode.REQUIRED)

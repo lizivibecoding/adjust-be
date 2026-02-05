@@ -3,7 +3,7 @@ package com.hongguoyan.module.biz.controller.app.banner.vo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-@Schema(description = "用户 APP - 轮播图 Response VO")
+@Schema(description = "轮播图-响应")
 @Data
 public class AppBannerRespVO {
 

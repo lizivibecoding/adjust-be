@@ -23,7 +23,7 @@ import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_USER_PREFERENCE_EXPORT;
 
-@Tag(name = "用户 APP - 用户志愿")
+@Tag(name = "API - 用户志愿")
 @RestController
 @RequestMapping("/biz/user-preference")
 @Validated
@@ -59,7 +59,7 @@ public class AppUserPreferenceController {
     }
 
     @GetMapping("/export")
-    @Operation(summary = "导出已选志愿（JSON）")
+    @Operation(summary = "导出已选志愿")
     public CommonResult<List<AppUserPreferenceExportRespVO>> exportMyPreferences(@Valid AppUserPreferenceExportReqVO reqVO) {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
         vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_PREFERENCE_EXPORT);

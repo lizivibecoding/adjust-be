@@ -5,7 +5,7 @@ import lombok.Data;
 
 import java.util.List;
 
-@Schema(description = "用户 APP - 调剂搜索(按 Tab 返回)")
+@Schema(description = "调剂搜索-按Tab-响应")
 @Data
 public class AppAdjustmentSearchTabRespVO {
 

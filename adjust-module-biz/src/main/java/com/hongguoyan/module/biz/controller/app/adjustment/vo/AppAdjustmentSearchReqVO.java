@@ -11,7 +11,7 @@ import java.util.List;
 
 import static com.hongguoyan.framework.common.util.date.DateUtils.FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND;
 
-@Schema(description = "用户 APP - 调剂全局搜索 Request VO")
+@Schema(description = "调剂全局搜索-请求")
 @Data
 public class AppAdjustmentSearchReqVO extends PageParam {
 
@@ -22,17 +22,17 @@ public class AppAdjustmentSearchReqVO extends PageParam {
     @NotBlank(message = "搜索 Tab 类型不能为空")
     private String tabType;
 
-    @Schema(description = "学科/专业代码前缀", requiredMode = Schema.RequiredMode.REQUIRED, example = "06")
+    @Schema(description = "学科/专业代码前缀", requiredMode = Schema.RequiredMode.REQUIRED, example = "02")
     @NotBlank(message = "学科/专业代码不能为空")
     private String majorCode;
 
     @Schema(description = "调剂年份")
     private Integer year;
 
-    @Schema(description = "学习方式(全日制/非全日制)")
+    @Schema(description = "学习方式：全日制/非全日制")
     private String studyMode;
 
-    @Schema(description = "学位类型(0=未知/不区分,1=专硕,2=学硕)")
+    @Schema(description = "学位类型（0-不区分 1-学硕 2-专硕）")
     private Integer degreeType;
 
     @Schema(description = "省份代码(多选)")

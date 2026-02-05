@@ -4,7 +4,7 @@ import com.hongguoyan.framework.common.pojo.PageParam;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-@Schema(description = "用户 APP - 热门调剂专业排名 Request VO")
+@Schema(description = "热门调剂专业排名-请求")
 @Data
 public class AppAdjustmentHotRankingReqVO extends PageParam {
 
@@ -17,7 +17,7 @@ public class AppAdjustmentHotRankingReqVO extends PageParam {
     @Schema(description = "院校层次(数值：1/2/3...)", example = "2")
     private Integer schoolLevel;
 
-    @Schema(description = "学习方式(全日制/非全日制)", example = "全日制")
+    @Schema(description = "学习方式：全日制/非全日制", example = "全日制")
     private String studyMode;
 }
 

@@ -5,7 +5,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 
-@Schema(description = "用户 APP - 申请人详情 Response VO")
+@Schema(description = "申请人详情-响应")
 @Data
 public class AppUserAdjustmentApplicantDetailRespVO {
 
@@ -18,7 +18,7 @@ public class AppUserAdjustmentApplicantDetailRespVO {
     @Schema(description = "姓名")
     private String candidateName;
 
-    @Schema(description = "联系方式(脱敏展示)")
+    @Schema(description = "联系方式")
     private String contact;
 
     @Schema(description = "一志愿报考学校名称")

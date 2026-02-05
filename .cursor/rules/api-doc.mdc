@@ -1,0 +1,47 @@
+---
+description: Swagger/OpenAPI docs style for app controllers (concise, keep enums)
+globs: adjust-module-biz/src/main/java/com/hongguoyan/module/biz/controller/app/**/*.java
+alwaysApply: false
+---
+
+# API Documentation (Swagger/OpenAPI)
+
+## Tag naming
+- App controllers use `@Tag(name = "API - <模块名>")` (e.g. `API - 调剂`).
+
+## Operation summary
+- Keep `@Operation(summary=...)` **short** (verb + noun).
+- **Do not** add non-business notes in parentheses, such as `（概况 Tab）` / `（默认2025年）` / `（发布者可查看）`.
+- If extra clarification is truly needed, put it in `description`, not in `summary`.
+
+## Schema / Parameter descriptions
+- Prefer concise business meaning.
+- **Avoid** low-value parentheses remarks (e.g. `(冗余)` / `(内部字段)` / `(Tab)` / `(id+name)`).
+- **Enums must be kept** in description, using a compact format.
+
+### Degree type enum (critical)
+- `degreeType` mapping is **fixed**: `0-不区分`, `1-学硕`, `2-专硕`.
+- Never document `1=专硕,2=学硕`.
+
+## Example values (request params)
+- `schoolId`: `5`
+- `collegeId`: `95`
+- `majorId`: `2810`
+- `directionId`: `755`
+- Major code examples: level1=`02`, level2=`0201`, level3=`020100`
+
+## Examples
+
+```java
+// ❌ BAD
+@Operation(summary = "保存我的调剂意向与偏好设置（不存在则新增，存在则覆盖更新）")
+
+// ✅ GOOD
+@Operation(summary = "保存我的调剂意向与偏好设置")
+```
+
+```java
+// ✅ GOOD (keep enums, concise)
+@Schema(description = "学位类型（0-不区分 1-学硕 2-专硕）", example = "1")
+private Integer degreeType;
+```

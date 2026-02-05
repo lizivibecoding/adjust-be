@@ -5,7 +5,7 @@ import lombok.Data;
 
 import java.util.List;
 
-@Schema(description = "用户 APP - 调剂联想词 Response VO")
+@Schema(description = "调剂联想词-响应")
 @Data
 public class AppAdjustmentSuggestRespVO {
 

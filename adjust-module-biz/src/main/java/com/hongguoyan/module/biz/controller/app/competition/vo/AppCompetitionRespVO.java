@@ -3,7 +3,7 @@ package com.hongguoyan.module.biz.controller.app.competition.vo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-@Schema(description = "用户 APP - 竞赛信息 Response VO")
+@Schema(description = "竞赛信息-响应")
 @Data
 public class AppCompetitionRespVO {
 

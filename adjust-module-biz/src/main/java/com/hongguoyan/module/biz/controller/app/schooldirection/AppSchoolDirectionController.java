@@ -29,7 +29,7 @@ import com.hongguoyan.module.biz.controller.app.schooldirection.vo.*;
 import com.hongguoyan.module.biz.dal.dataobject.schooldirection.SchoolDirectionDO;
 import com.hongguoyan.module.biz.service.schooldirection.SchoolDirectionService;
 
-@Tag(name = "用户 APP - 院校研究方向")
+@Tag(name = "API - 院校研究方向")
 @RestController
 @RequestMapping("/biz/school-direction")
 @Validated

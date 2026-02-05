@@ -3,7 +3,7 @@ package com.hongguoyan.module.biz.controller.app.userpreference.vo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
-@Schema(description = "用户 APP - 用户志愿 Response VO")
+@Schema(description = "用户志愿-响应")
 @Data
 public class AppUserPreferenceRespVO {
 
@@ -22,13 +22,13 @@ public class AppUserPreferenceRespVO {
     @Schema(description = "专业名称", example = "计算机技术")
     private String majorName;
 
-    @Schema(description = "方向ID", example = "20106")
+    @Schema(description = "方向ID", example = "755")
     private Long directionId;
 
     @Schema(description = "方向名称", example = "人工智能")
     private String directionName;
 
-    @Schema(description = "学习方式:1全日制 2非全日制")
+    @Schema(description = "学习方式：1-全日制 2-非全日制")
     private Integer studyMode;
 
 }

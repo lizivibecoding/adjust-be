@@ -6,7 +6,7 @@ import jakarta.validation.constraints.*;
 
 import java.time.LocalDateTime;
 
-@Schema(description = "用户 APP - 用户权益消耗明细新增/修改 Request VO")
+@Schema(description = "用户权益消耗明细-保存-请求")
 @Data
 public class AppVipBenefitLogSaveReqVO {
 

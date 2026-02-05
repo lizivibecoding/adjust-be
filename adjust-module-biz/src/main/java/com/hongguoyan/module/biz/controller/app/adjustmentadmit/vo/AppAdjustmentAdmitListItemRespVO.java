@@ -5,11 +5,11 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 
-@Schema(description = "用户 APP - 调剂录取名单列表 Item Response VO")
+@Schema(description = "调剂录取名单列表-响应")
 @Data
 public class AppAdjustmentAdmitListItemRespVO {
 
-    @Schema(description = "考生名称(脱敏)", example = "程*")
+    @Schema(description = "考生名称", example = "程*")
     private String candidateName;
 
     @Schema(description = "一志愿学校名称", example = "贵州大学")

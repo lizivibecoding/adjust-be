@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 import lombok.Data;
 
-@Schema(description = "用户 APP - 用户调剂意向与偏好设置新增/修改 Request VO")
+@Schema(description = "用户调剂意向-保存-请求")
 @Data
 public class AppUserIntentionSaveReqVO {
 
@@ -34,8 +34,8 @@ public class AppUserIntentionSaveReqVO {
     @NotNull(message = "意向学习方式: 0-不限 1-全日制 2-非全日制不能为空")
     private Integer studyMode;
 
-    @Schema(description = "意向学位类型: 0-不限 1-专硕 2-学硕", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
-    @NotNull(message = "意向学位类型: 0-不限 1-专硕 2-学硕不能为空")
+    @Schema(description = "意向学位类型：0-不限 1-学硕 2-专硕", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+    @NotNull(message = "意向学位类型：0-不限 1-学硕 2-专硕不能为空")
     private Integer degreeType;
 
     @Schema(description = "是否包含专项计划: 0-否 1-是", requiredMode = Schema.RequiredMode.REQUIRED)

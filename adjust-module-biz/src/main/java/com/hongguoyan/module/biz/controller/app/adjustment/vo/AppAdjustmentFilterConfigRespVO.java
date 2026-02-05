@@ -5,11 +5,11 @@ import lombok.Data;
 
 import java.util.List;
 
-@Schema(description = "用户 APP - 调剂筛选配置 Response VO")
+@Schema(description = "调剂筛选配置-响应")
 @Data
 public class AppAdjustmentFilterConfigRespVO {
 
-    @Schema(description = "分组列表(顺序与筛选器 UI 保持一致)")
+    @Schema(description = "分组列表")
     private List<Group> groups;
 
     @Schema(description = "筛选分组")

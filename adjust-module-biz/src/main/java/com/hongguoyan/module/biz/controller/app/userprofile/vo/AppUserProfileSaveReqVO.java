@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import lombok.Data;
 
-@Schema(description = "用户 APP - 用户基础档案表(含成绩与软背景)新增/修改 Request VO")
+@Schema(description = "用户基础档案-保存-请求")
 @Data
 public class AppUserProfileSaveReqVO {
 
@@ -36,7 +36,7 @@ public class AppUserProfileSaveReqVO {
     @Schema(description = "本科阶段获奖情况描述")
     private String undergraduateAwards;
 
-    @Schema(description = "一志愿研究方向ID(biz_school_direction.id)", requiredMode = Schema.RequiredMode.REQUIRED, example = "20106")
+    @Schema(description = "一志愿研究方向ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "755")
     @NotNull(message = "一志愿研究方向ID不能为空")
     private Long targetDirectionId;
 

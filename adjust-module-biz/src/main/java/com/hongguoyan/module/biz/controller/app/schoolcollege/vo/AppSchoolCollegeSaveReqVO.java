@@ -5,15 +5,15 @@ import lombok.*;
 import java.util.*;
 import jakarta.validation.constraints.*;
 
-@Schema(description = "用户 APP - 学院新增/修改 Request VO")
+@Schema(description = "学院-保存-请求")
 @Data
 public class AppSchoolCollegeSaveReqVO {
 
     @Schema(description = "主键", requiredMode = Schema.RequiredMode.REQUIRED, example = "3234")
     private Long id;
 
-    @Schema(description = "学校ID(biz_school.id)", requiredMode = Schema.RequiredMode.REQUIRED, example = "1694")
-    @NotNull(message = "学校ID(biz_school.id)不能为空")
+    @Schema(description = "学校ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "5")
+    @NotNull(message = "学校ID不能为空")
     private Long schoolId;
 
     @Schema(description = "院系代码", requiredMode = Schema.RequiredMode.REQUIRED)

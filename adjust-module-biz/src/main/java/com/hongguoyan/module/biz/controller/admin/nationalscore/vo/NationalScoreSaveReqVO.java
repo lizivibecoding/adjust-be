@@ -16,8 +16,8 @@ public class NationalScoreSaveReqVO {
     @NotNull(message = "年份不能为空")
     private Integer year;
 
-    @Schema(description = "学位类型(0=不区分,1=专硕,2=学硕)", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
-    @NotNull(message = "学位类型(0=不区分,1=专硕,2=学硕)不能为空")
+    @Schema(description = "学位类型（0-不区分 1-学硕 2-专硕）", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+    @NotNull(message = "学位类型（0-不区分 1-学硕 2-专硕）不能为空")
     private Integer degreeType;
 
     @Schema(description = "考研分区(A/B)", requiredMode = Schema.RequiredMode.REQUIRED)

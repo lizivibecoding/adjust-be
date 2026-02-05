@@ -3,7 +3,7 @@ package com.hongguoyan.module.biz.controller.app.adjustment.vo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-@Schema(description = "用户 APP - 同分调剂分数区间轴 Response VO")
+@Schema(description = "同分调剂分数区间轴-响应")
 @Data
 public class AppSameScoreAxisRespVO {
 

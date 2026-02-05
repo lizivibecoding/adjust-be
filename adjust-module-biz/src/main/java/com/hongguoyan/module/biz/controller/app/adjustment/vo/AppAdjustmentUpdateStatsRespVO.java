@@ -5,7 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
-@Schema(description = "用户 APP - 调剂更新统计 Response VO")
+@Schema(description = "调剂更新统计-响应")
 @Data
 public class AppAdjustmentUpdateStatsRespVO {
 
@@ -18,13 +18,13 @@ public class AppAdjustmentUpdateStatsRespVO {
     @Schema(description = "今日更新数据量", example = "123")
     private Long todayUpdateCount;
 
-    @Schema(description = "今日更新院校数(去重)", example = "45")
+    @Schema(description = "今日更新院校数", example = "45")
     private Long todayUpdateSchoolCount;
 
     @Schema(description = "累计数据量", example = "26266")
     private Long totalCount;
 
-    @Schema(description = "累计院校数(去重)", example = "791")
+    @Schema(description = "累计院校数", example = "791")
     private Long totalSchoolCount;
 
 }

@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import static com.hongguoyan.framework.common.pojo.CommonResult.success;
 
-@Tag(name = "用户 APP - 用户调剂意向与偏好设置")
+@Tag(name = "API - 用户调剂意向")
 @RestController
 @RequestMapping("/biz/user-intention")
 @Validated
@@ -28,14 +28,14 @@ public class AppUserIntentionController {
     private UserIntentionService userIntentionService;
 
     @GetMapping("/get")
-    @Operation(summary = "获取我的调剂意向与偏好设置")
+    @Operation(summary = "获取我的调剂意向")
     public CommonResult<AppUserIntentionRespVO> getMyUserIntention() {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
         return success(userIntentionService.getMyUserIntention(userId));
     }
 
     @PostMapping("/save")
-    @Operation(summary = "保存我的调剂意向与偏好设置（不存在则新增，存在则覆盖更新）")
+    @Operation(summary = "保存我的调剂意向")
     public CommonResult<Long> saveMyUserIntention(@Valid @RequestBody AppUserIntentionSaveReqVO reqVO) {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
         return success(userIntentionService.saveUserIntentionByUserId(userId, reqVO));

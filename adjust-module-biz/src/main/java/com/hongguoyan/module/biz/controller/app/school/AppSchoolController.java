@@ -31,7 +31,7 @@ import com.hongguoyan.module.biz.service.adjustment.AdjustmentService;
 import com.hongguoyan.module.biz.service.school.SchoolService;
 import com.hongguoyan.framework.security.core.util.SecurityFrameworkUtils;
 
-@Tag(name = "用户 APP - 院校")
+@Tag(name = "API - 院校")
 @RestController
 @RequestMapping("/biz/school")
 @Validated
@@ -43,21 +43,21 @@ public class AppSchoolController {
     private AdjustmentService adjustmentService;
 
     @GetMapping("/overview")
-    @Operation(summary = "获得院校概况(概况 Tab)")
-    @Parameter(name = "schoolId", description = "学校ID", required = true, example = "1024")
+    @Operation(summary = "获得院校概况")
+    @Parameter(name = "schoolId", description = "学校ID", required = true, example = "5")
     public CommonResult<AppSchoolOverviewRespVO> getSchoolOverview(@RequestParam("schoolId") Long schoolId) {
         return success(schoolService.getSchoolOverview(schoolId));
     }
 
     @GetMapping("/adjustment")
-    @Operation(summary = "院校调剂列表(调剂 Tab)")
+    @Operation(summary = "院校调剂列表")
     public CommonResult<PageResult<AppSchoolAdjustmentRespVO>> getSchoolAdjustmentPage(@Valid AppSchoolAdjustmentPageReqVO reqVO) {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
         return success(adjustmentService.getSchoolAdjustmentPage(userId, reqVO));
     }
 
     @GetMapping("/simple-all")
-    @Operation(summary = "获得学校简单列表(id+name)")
+    @Operation(summary = "获得学校简单列表")
     public CommonResult<List<AppSchoolSimpleOptionRespVO>> getSchoolSimpleAll() {
         return success(schoolService.getSchoolSimpleAll());
     }

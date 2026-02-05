@@ -7,11 +7,11 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Schema(description = "用户 APP - 调剂详情(方向维度) Response VO")
+@Schema(description = "调剂详情-方向维度-响应")
 @Data
 public class AppAdjustmentDirectionDetailRespVO {
 
-    @Schema(description = "调剂ID(方向记录ID)", requiredMode = Schema.RequiredMode.REQUIRED, example = "20106")
+    @Schema(description = "调剂ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "20106")
     private Long adjustmentId;
 
     @Schema(description = "方向代码", example = "00")

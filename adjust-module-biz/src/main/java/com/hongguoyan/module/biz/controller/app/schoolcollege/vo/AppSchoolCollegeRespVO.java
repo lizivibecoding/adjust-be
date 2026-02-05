@@ -7,7 +7,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDateTime;
 import cn.idev.excel.annotation.*;
 
-@Schema(description = "用户 APP - 学院 Response VO")
+@Schema(description = "学院-响应")
 @Data
 @ExcelIgnoreUnannotated
 public class AppSchoolCollegeRespVO {
@@ -16,8 +16,8 @@ public class AppSchoolCollegeRespVO {
     @ExcelProperty("主键")
     private Long id;
 
-    @Schema(description = "学校ID(biz_school.id)", requiredMode = Schema.RequiredMode.REQUIRED, example = "1694")
-    @ExcelProperty("学校ID(biz_school.id)")
+    @Schema(description = "学校ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "5")
+    @ExcelProperty("学校ID")
     private Long schoolId;
 
     @Schema(description = "院系代码", requiredMode = Schema.RequiredMode.REQUIRED)

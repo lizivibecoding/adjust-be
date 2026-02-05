@@ -5,11 +5,11 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 
-@Schema(description = "用户 APP - 智能推荐结果 Response VO")
+@Schema(description = "智能推荐结果-响应")
 @Data
 public class AppRecommendSchoolRespVO {
 
-    @Schema(description = "学校ID", example = "1024")
+    @Schema(description = "学校ID", example = "5")
     private Long schoolId;
 
     @Schema(description = "调剂ID", example = "1024")
@@ -25,7 +25,7 @@ public class AppRecommendSchoolRespVO {
     private String provinceName;
 
 
-    @Schema(description = "专业ID", example = "2048")
+    @Schema(description = "专业ID", example = "2810")
     private Long majorId;
 
     @Schema(description = "专业代码", example = "081200")
@@ -49,7 +49,7 @@ public class AppRecommendSchoolRespVO {
     @Schema(description = "学院名称", example = "计算机学院")
     private String collegeName;
 
-    @Schema(description = "学习方式(全日制/非全日制)", example = "全日制")
+    @Schema(description = "学习方式：全日制/非全日制", example = "全日制")
     private String studyMode;
 
     @Schema(description = "调剂招生人数", example = "5")

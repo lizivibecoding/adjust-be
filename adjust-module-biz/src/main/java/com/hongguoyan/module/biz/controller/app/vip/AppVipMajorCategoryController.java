@@ -23,7 +23,7 @@ import static com.hongguoyan.framework.common.pojo.CommonResult.success;
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_MAJOR_CATEGORY_OPEN;
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.REF_TYPE_MAJOR_CATEGORY_OPEN;
 
-@Tag(name = "用户 APP - 专业门类")
+@Tag(name = "API - 专业门类")
 @RestController
 @RequestMapping("/biz/vip/major-category")
 @Validated
@@ -33,7 +33,7 @@ public class AppVipMajorCategoryController {
     private VipBenefitService vipBenefitService;
 
     @PostMapping("/open")
-    @Operation(summary = "开放专业门类（按 majorCode 去重扣一次）")
+    @Operation(summary = "开放专业门类")
     public CommonResult<AppVipMajorCategoryOpenRespVO> open(@Valid @RequestBody AppVipMajorCategoryOpenReqVO reqVO) {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
         String majorCode = reqVO.getMajorCode() != null ? reqVO.getMajorCode().trim() : "";

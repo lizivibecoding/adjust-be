@@ -3,7 +3,7 @@ package com.hongguoyan.module.biz.controller.app.recommend.vo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-@Schema(description = "用户 APP - 智能推荐 Request VO")
+@Schema(description = "智能推荐-请求")
 @Data
 public class AppRecommendSchoolListReqVO {
 

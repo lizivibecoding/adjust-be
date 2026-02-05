@@ -36,8 +36,8 @@ public class SchoolScoreSaveReqVO {
     @NotEmpty(message = "专业名称不能为空")
     private String majorName;
 
-    @Schema(description = "学位类型(0=不区分,1=专硕,2=学硕)", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
-    @NotNull(message = "学位类型(0=不区分,1=专硕,2=学硕)不能为空")
+    @Schema(description = "学位类型（0-不区分 1-学硕 2-专硕）", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+    @NotNull(message = "学位类型（0-不区分 1-学硕 2-专硕）不能为空")
     private Integer degreeType;
 
     @Schema(description = "年份(如2025)", requiredMode = Schema.RequiredMode.REQUIRED)

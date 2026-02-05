@@ -10,23 +10,23 @@ import java.time.LocalDateTime;
 
 import static com.hongguoyan.framework.common.util.date.DateUtils.FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND;
 
-@Schema(description = "用户 APP - 调剂录取名单分页 Request VO")
+@Schema(description = "调剂录取名单-分页-请求")
 @Data
 public class AppAdjustmentAdmitPageReqVO extends PageParam {
 
-    @Schema(description = "学校ID", example = "15509")
+    @Schema(description = "学校ID", example = "5")
     private Long schoolId;
 
     @Schema(description = "学校名称", example = "王五")
     private String schoolName;
 
-    @Schema(description = "学院ID", example = "887")
+    @Schema(description = "学院ID", example = "95")
     private Long collegeId;
 
     @Schema(description = "学院名称", example = "赵六")
     private String collegeName;
 
-    @Schema(description = "专业ID", example = "27212")
+    @Schema(description = "专业ID", example = "2810")
     private Long majorId;
 
     @Schema(description = "专业名称", example = "张三")
@@ -35,16 +35,16 @@ public class AppAdjustmentAdmitPageReqVO extends PageParam {
     @Schema(description = "专业代码")
     private String majorCode;
 
-    @Schema(description = "方向ID", example = "27674")
+    @Schema(description = "方向ID", example = "755")
     private Long directionId;
 
     @Schema(description = "方向名称", example = "赵六")
     private String directionName;
 
-    @Schema(description = "年份(如2025)")
+    @Schema(description = "年份")
     private Short year;
 
-    @Schema(description = "学习方式(全日制/非全日制)")
+    @Schema(description = "学习方式：全日制/非全日制")
     private String studyMode;
 
     @Schema(description = "考生名称(脱敏)", example = "芋艿")

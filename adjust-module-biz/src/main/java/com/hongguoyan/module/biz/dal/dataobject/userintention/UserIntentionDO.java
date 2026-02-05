@@ -56,7 +56,7 @@ public class UserIntentionDO extends BaseDO {
      */
     private Integer studyMode;
     /**
-     * 意向学位类型: 0-不限 1-专硕 2-学硕
+     * 意向学位类型: 0-不限 1-学硕 2-专硕
      */
     private Integer degreeType;
     /**

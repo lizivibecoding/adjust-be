@@ -4,7 +4,7 @@ import lombok.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 import com.hongguoyan.framework.common.pojo.PageParam;
 
-@Schema(description = "用户 APP - 用户调剂订阅分页 Request VO")
+@Schema(description = "用户调剂订阅-分页-请求")
 @Data
 public class AppUserSubscriptionPageReqVO extends PageParam {
 

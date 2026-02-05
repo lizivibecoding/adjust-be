@@ -378,7 +378,7 @@ public class RecommendServiceImpl implements RecommendService {
         if (user.getScoreTotal() == null) return false;
 
         // 用户的 "Degree Type" 应该取 UserProfile 中的 targetDegreeType (一志愿)
-        Integer degreeType = user.getTargetDegreeType() != null ? user.getTargetDegreeType() : 2; // 默认为专硕? 或根据 targetMajor 判断
+        Integer degreeType = user.getTargetDegreeType() != null ? user.getTargetDegreeType() : 2; // 默认为专硕
         // 用户的 "Major Code" (一志愿)
         String majorCode = user.getTargetMajorCode();
         if (StrUtil.isBlank(majorCode)) return false; // 没填一志愿专业，无法判断
@@ -431,7 +431,7 @@ public class RecommendServiceImpl implements RecommendService {
         if (user == null || StrUtil.isBlank(area) || CollUtil.isEmpty(nationalScores)) {
             return null;
         }
-        Integer degreeType = user.getTargetDegreeType() != null ? user.getTargetDegreeType() : 1;
+        Integer degreeType = user.getTargetDegreeType() != null ? user.getTargetDegreeType() : 2;
         String majorCode = user.getTargetMajorCode();
         if (StrUtil.isBlank(majorCode)) {
             return null;
@@ -633,8 +633,8 @@ public class RecommendServiceImpl implements RecommendService {
         }
         return switch (degreeType) {
             case 0 -> "不限/不区分";
-            case 1 -> "专硕";
-            case 2 -> "学硕";
+            case 1 -> "学硕";
+            case 2 -> "专硕";
             default -> "未知";
         };
     }

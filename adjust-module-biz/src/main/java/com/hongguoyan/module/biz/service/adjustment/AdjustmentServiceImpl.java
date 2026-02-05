@@ -316,9 +316,9 @@ public class AdjustmentServiceImpl implements AdjustmentService {
         )));
 
         // 4) degreeType
-        groups.add(group("degreeType", "学术类型", Arrays.asList(
-                option("2", "学硕"),
-                option("1", "专硕")
+        groups.add(group("degreeType", "学位类型", Arrays.asList(
+                option("1", "学硕"),
+                option("2", "专硕")
         )));
 
         // 5) schoolFeature (985/211/双一流/其他)

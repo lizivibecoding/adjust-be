@@ -5,22 +5,22 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
-@Schema(description = "用户 APP - 调剂详情切换选项 Request VO")
+@Schema(description = "调剂详情切换选项-请求")
 @Data
 public class AppAdjustmentOptionsReqVO {
 
-    @Schema(description = "学校ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "9101")
+    @Schema(description = "学校ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "5")
     @NotNull(message = "学校ID不能为空")
     private Long schoolId;
 
-    @Schema(description = "学院ID(用于学习方式联动)", example = "6746")
+    @Schema(description = "学院ID", example = "95")
     private Long collegeId;
 
-    @Schema(description = "学习方式(用于年份联动过滤；全日制/非全日制)", example = "全日制")
+    @Schema(description = "学习方式：全日制/非全日制", example = "全日制")
     @Size(max = 16, message = "学习方式长度不能超过16")
     private String studyMode;
 
-    @Schema(description = "专业ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "15937")
+    @Schema(description = "专业ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "2810")
     @NotNull(message = "专业ID不能为空")
     private Long majorId;
 

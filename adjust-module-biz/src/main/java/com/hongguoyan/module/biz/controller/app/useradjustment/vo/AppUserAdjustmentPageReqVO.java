@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 import static com.hongguoyan.framework.common.util.date.DateUtils.FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND;
 
-@Schema(description = "用户 APP - 用户发布调剂分页 Request VO")
+@Schema(description = "用户发布调剂-分页-请求")
 @Data
 public class AppUserAdjustmentPageReqVO extends PageParam {
 
@@ -22,19 +22,19 @@ public class AppUserAdjustmentPageReqVO extends PageParam {
     @Schema(description = "调剂年份")
     private Integer year;
 
-    @Schema(description = "学校ID(biz_school.id)", example = "28868")
+    @Schema(description = "学校ID", example = "5")
     private Long schoolId;
 
     @Schema(description = "学校名称(冗余)", example = "李四")
     private String schoolName;
 
-    @Schema(description = "学院ID(biz_school_college.id)", example = "2253")
+    @Schema(description = "学院ID", example = "95")
     private Long collegeId;
 
     @Schema(description = "学院名称(冗余)", example = "王五")
     private String collegeName;
 
-    @Schema(description = "专业ID(biz_major.id/按业务口径)", example = "11212")
+    @Schema(description = "专业ID", example = "2810")
     private Long majorId;
 
     @Schema(description = "专业代码")
@@ -43,10 +43,10 @@ public class AppUserAdjustmentPageReqVO extends PageParam {
     @Schema(description = "专业名称", example = "芋艿")
     private String majorName;
 
-    @Schema(description = "学位类型(0未知/不区分 1专硕 2学硕)", example = "2")
+    @Schema(description = "学位类型（0-不区分 1-学硕 2-专硕）", example = "1")
     private Integer degreeType;
 
-    @Schema(description = "方向ID(biz_school_direction.id)", example = "28566")
+    @Schema(description = "方向ID", example = "755")
     private Long directionId;
 
     @Schema(description = "方向代码")
@@ -55,7 +55,7 @@ public class AppUserAdjustmentPageReqVO extends PageParam {
     @Schema(description = "方向名称", example = "芋艿")
     private String directionName;
 
-    @Schema(description = "学习方式(1全日制 2非全日制)")
+    @Schema(description = "学习方式：1-全日制 2-非全日制")
     private Integer studyMode;
 
     @Schema(description = "调剂缺额人数", example = "19021")

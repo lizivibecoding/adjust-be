@@ -6,11 +6,11 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
-@Schema(description = "用户 APP - 我申请的调剂 Item Response VO")
+@Schema(description = "我申请的调剂-项-响应")
 @Data
 public class AppUserAdjustmentApplyMyItemRespVO extends AppUserAdjustmentListRespVO {
 
-    @Schema(description = "用户发布调剂ID(biz_user_adjustment.id)")
+    @Schema(description = "用户发布调剂ID")
     private Long userAdjustmentId;
 
     @Schema(description = "申请时间")

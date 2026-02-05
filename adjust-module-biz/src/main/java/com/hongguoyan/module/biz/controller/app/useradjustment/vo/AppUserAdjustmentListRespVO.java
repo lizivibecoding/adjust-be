@@ -5,7 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
-@Schema(description = "用户 APP - 发布调剂列表 Item Response VO")
+@Schema(description = "发布调剂列表-项-响应")
 @Data
 public class AppUserAdjustmentListRespVO {
 
@@ -30,7 +30,7 @@ public class AppUserAdjustmentListRespVO {
     @Schema(description = "专业名称")
     private String majorName;
 
-    @Schema(description = "学位类型(0未知/不区分 1专硕 2学硕)")
+    @Schema(description = "学位类型（0-不区分 1-学硕 2-专硕）")
     private Integer degreeType;
 
     @Schema(description = "调剂缺额人数")

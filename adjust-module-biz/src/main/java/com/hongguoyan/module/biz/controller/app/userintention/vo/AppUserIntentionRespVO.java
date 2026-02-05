@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import lombok.Data;
 
-@Schema(description = "用户 APP - 用户调剂意向与偏好设置 Response VO")
+@Schema(description = "用户调剂意向-响应")
 @Data
 @ExcelIgnoreUnannotated
 public class AppUserIntentionRespVO {
@@ -40,8 +40,8 @@ public class AppUserIntentionRespVO {
     @ExcelProperty("意向学习方式: 0-不限 1-全日制 2-非全日制")
     private Integer studyMode;
 
-    @Schema(description = "意向学位类型: 0-不限 1-专硕 2-学硕", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
-    @ExcelProperty("意向学位类型: 0-不限 1-专硕 2-学硕")
+    @Schema(description = "意向学位类型：0-不限 1-学硕 2-专硕", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+    @ExcelProperty("意向学位类型：0-不限 1-学硕 2-专硕")
     private Integer degreeType;
 
     @Schema(description = "是否包含专项计划: 0-否 1-是", requiredMode = Schema.RequiredMode.REQUIRED)

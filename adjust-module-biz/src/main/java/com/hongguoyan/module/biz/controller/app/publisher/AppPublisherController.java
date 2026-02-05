@@ -16,7 +16,7 @@ import com.hongguoyan.module.biz.controller.app.publisher.vo.*;
 import com.hongguoyan.module.biz.service.publisher.PublisherService;
 import com.hongguoyan.framework.security.core.util.SecurityFrameworkUtils;
 
-@Tag(name = "用户 APP - 发布者资质")
+@Tag(name = "API - 发布者资质")
 @RestController
 @RequestMapping("/biz/publisher")
 @Validated

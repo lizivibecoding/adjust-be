@@ -52,7 +52,7 @@ public class MajorDO extends BaseDO {
      */
     private String name;
     /**
-     * 学位类型(0=两者/不适用,1=专硕,2=学硕)
+     * 学位类型(0=两者/不适用,1=学硕,2=专硕)
      */
     private Integer degreeType;
 

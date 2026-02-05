@@ -6,7 +6,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Schema(description = "用户 APP - 我的订阅分页 Response VO(按学校分组)")
+@Schema(description = "我的订阅-分页-响应")
 @Data
 public class AppUserSubscriptionPageRespVO {
 
@@ -25,10 +25,10 @@ public class AppUserSubscriptionPageRespVO {
     @Schema(description = "学校层次(1=985,2=211(不含985),3=双一流(不含985、211),4=普通)", example = "4")
     private Integer schoolLevel;
 
-    @Schema(description = "更新时间(该学校下订阅专业的最新更新时间)")
+    @Schema(description = "更新时间")
     private LocalDateTime updateTime;
 
-    @Schema(description = "是否有新更新(红点)", example = "true")
+    @Schema(description = "是否有新更新", example = "true")
     private Boolean hasUpdate;
 
     @Schema(description = "订阅专业列表")

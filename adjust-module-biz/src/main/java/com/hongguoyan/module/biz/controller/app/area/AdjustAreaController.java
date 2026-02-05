@@ -15,7 +15,7 @@ import java.util.List;
 
 import static com.hongguoyan.framework.common.pojo.CommonResult.success;
 
-@Tag(name = "用户 APP - 省份/分区")
+@Tag(name = "API - 省份/分区")
 @RestController
 @RequestMapping("/biz/area")
 @Validated
@@ -25,7 +25,7 @@ public class AdjustAreaController {
     private AreaService areaService;
 
     @GetMapping("/list")
-    @Operation(summary = "获得省份列表(code+name+area)")
+    @Operation(summary = "获得省份列表")
     public CommonResult<List<AppAreaRespVO>> getAreaList() {
         return success(areaService.getAreaList());
     }

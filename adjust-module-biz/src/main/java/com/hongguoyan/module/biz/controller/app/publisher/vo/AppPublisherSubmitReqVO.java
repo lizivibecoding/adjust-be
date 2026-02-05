@@ -8,7 +8,7 @@ import lombok.Data;
 
 import java.util.List;
 
-@Schema(description = "用户 APP - 发布者认证提交 Request VO（publish-auth）")
+@Schema(description = "发布者认证提交-请求")
 @Data
 public class AppPublisherSubmitReqVO {
 

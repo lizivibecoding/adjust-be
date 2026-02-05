@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 import static com.hongguoyan.framework.common.util.date.DateUtils.FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND;
 
-@Schema(description = "用户 APP - 用户权益消耗明细分页 Request VO")
+@Schema(description = "用户权益消耗明细-分页-请求")
 @Data
 public class AppVipBenefitLogPageReqVO extends PageParam {
 

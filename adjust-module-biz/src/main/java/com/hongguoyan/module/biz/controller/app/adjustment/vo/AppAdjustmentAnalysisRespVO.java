@@ -6,14 +6,14 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.util.List;
 
-@Schema(description = "用户 APP - 调剂分析 Response VO")
+@Schema(description = "调剂分析-响应")
 @Data
 public class AppAdjustmentAnalysisRespVO {
 
     @Schema(description = "分数段分布")
     private List<NameValue> section;
 
-    @Schema(description = "一志愿院校层次占比(按学校去重计数)")
+    @Schema(description = "一志愿院校层次占比")
     private List<LevelItem> level;
 
     @Schema(description = "录取名单数据概览")

@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import static com.hongguoyan.framework.common.pojo.CommonResult.success;
 
-@Tag(name = "用户 APP - 用户基础档案")
+@Tag(name = "API - 用户基础档案")
 @RestController
 @RequestMapping("/biz/user-profile")
 @Validated
@@ -38,7 +38,7 @@ public class AppUserProfileController {
     }
 
     @PostMapping("/save")
-    @Operation(summary = "保存我的用户基础档案（不存在则新增，存在则覆盖更新）")
+    @Operation(summary = "保存我的用户基础档案")
     public CommonResult<Long> saveMyUserProfile(@Valid @RequestBody AppUserProfileSaveReqVO reqVO) {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
         return success(userProfileService.saveUserProfileByUserId(userId, reqVO));

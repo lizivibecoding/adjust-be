@@ -29,7 +29,7 @@ import com.hongguoyan.module.biz.controller.app.schoolcollege.vo.*;
 import com.hongguoyan.module.biz.dal.dataobject.schoolcollege.SchoolCollegeDO;
 import com.hongguoyan.module.biz.service.schoolcollege.SchoolCollegeService;
 
-@Tag(name = "用户 APP - 学院")
+@Tag(name = "API - 学院")
 @RestController
 @RequestMapping("/biz/school-college")
 @Validated

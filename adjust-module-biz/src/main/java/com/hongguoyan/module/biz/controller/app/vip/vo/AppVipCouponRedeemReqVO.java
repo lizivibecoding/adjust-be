@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
-@Schema(description = "用户 APP - 券码兑换 Request VO")
+@Schema(description = "券码兑换-请求")
 @Data
 public class AppVipCouponRedeemReqVO {
 

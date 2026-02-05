@@ -4,11 +4,11 @@ import com.hongguoyan.framework.common.pojo.PageParam;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-@Schema(description = "用户 APP - 发布调剂公开分页 Request VO（仅搜索框）")
+@Schema(description = "发布调剂-公开分页-请求")
 @Data
 public class AppUserAdjustmentPublicPageReqVO extends PageParam {
 
-    @Schema(description = "搜索关键词(学校/专业等)", example = "北京大学")
+    @Schema(description = "搜索关键词", example = "北京大学")
     private String keyword;
 }
 

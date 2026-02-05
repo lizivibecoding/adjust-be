@@ -5,7 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
-@Schema(description = "用户 APP - 申请人列表 Item Response VO")
+@Schema(description = "申请人列表-项-响应")
 @Data
 public class AppUserAdjustmentApplicantListItemRespVO {
 

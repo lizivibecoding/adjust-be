@@ -30,7 +30,7 @@ import static com.hongguoyan.framework.common.pojo.CommonResult.success;
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_SCHOOL_RECOMMEND;
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_USER_REPORT;
 
-@Tag(name = "用户 APP - 智能推荐")
+@Tag(name = "API - 智能推荐")
 @RestController
 @RequestMapping("/biz/recommend")
 @Validated
@@ -53,7 +53,7 @@ public class AppRecommendController {
     }
 
     @PostMapping("/generate")
-    @Operation(summary = "生成调剂推荐&报告")
+    @Operation(summary = "生成调剂推荐与报告")
     public CommonResult<?> generateRecommend() {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
 //        recommendService.generateRecommend(userId);

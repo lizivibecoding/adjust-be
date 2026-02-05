@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 import static com.hongguoyan.framework.common.util.date.DateUtils.FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND;
 
-@Schema(description = "用户 APP - 用户发布调剂申请记录分页 Request VO")
+@Schema(description = "用户发布调剂申请记录-分页-请求")
 @Data
 public class AppUserAdjustmentApplyPageReqVO extends PageParam {
 

@@ -69,7 +69,7 @@ public class UserAdjustmentDO extends BaseDO {
      */
     private String majorName;
     /**
-     * 学位类型(0未知/不区分 1专硕 2学硕)
+     * 学位类型(0未知/不区分 1学硕 2专硕)
      */
     private Integer degreeType;
     /**

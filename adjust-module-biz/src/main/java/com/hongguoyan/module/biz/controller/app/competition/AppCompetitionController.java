@@ -15,7 +15,7 @@ import java.util.List;
 
 import static com.hongguoyan.framework.common.pojo.CommonResult.success;
 
-@Tag(name = "用户 APP - 竞赛")
+@Tag(name = "API - 竞赛")
 @RestController
 @RequestMapping("/biz/competition")
 @Validated
@@ -25,7 +25,7 @@ public class AppCompetitionController {
     private CompetitionService competitionService;
 
     @GetMapping("/list")
-    @Operation(summary = "获得竞赛列表(id+name+url)")
+    @Operation(summary = "获得竞赛列表")
     public CommonResult<List<AppCompetitionRespVO>> getCompetitionList() {
         return success(competitionService.getCompetitionList());
     }

@@ -5,11 +5,11 @@ import lombok.Data;
 
 import java.util.List;
 
-@Schema(description = "用户 APP - 调剂详情切换选项 Response VO")
+@Schema(description = "调剂详情切换选项-响应")
 @Data
 public class AppAdjustmentOptionsRespVO {
 
-    @Schema(description = "年份列表(倒序)")
+    @Schema(description = "年份列表")
     private List<Integer> yearList;
 
 }

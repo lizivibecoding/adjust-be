@@ -16,7 +16,7 @@ public class NationalScorePageReqVO extends PageParam {
     @Schema(description = "年份")
     private Integer year;
 
-    @Schema(description = "学位类型(0=不区分,1=专硕,2=学硕)", example = "1")
+    @Schema(description = "学位类型（0-不区分 1-学硕 2-专硕）", example = "1")
     private Integer degreeType;
 
     @Schema(description = "考研分区(A/B)")

@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
-@Schema(description = "用户 APP - 修改报告名称 Request VO")
+@Schema(description = "修改报告名称-请求")
 @Data
 public class AppUserCustomReportRenameReqVO {
 
