@@ -1,12 +1,14 @@
 package com.hongguoyan.module.biz.dal.mysql.usersubscription;
 
 import java.util.*;
+import java.time.LocalDateTime;
 
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.framework.mybatis.core.mapper.BaseMapperX;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.hongguoyan.framework.mybatis.core.util.MyBatisUtils;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hongguoyan.module.biz.dal.dataobject.usersubscription.UserSubscriptionDO;
 import org.apache.ibatis.annotations.Mapper;
@@ -55,5 +57,22 @@ public interface UserSubscriptionMapper extends BaseMapperX<UserSubscriptionDO> 
     List<AppUserSubscriptionPageMajorRespVO> selectMyMajorList(@Param("userId") Long userId,
                                                                @Param("schoolIds") Collection<Long> schoolIds,
                                                                @Param("reqVO") AppUserSubscriptionPageReqVO reqVO);
+
+    /**
+     * 是否存在未读订阅更新（1=有，0=无）
+     */
+    Integer selectHasUnread(@Param("userId") Long userId);
+
+    /**
+     * 批量标记用户订阅为已读（进入我的订阅页即更新）
+     */
+    default int updateLastReadTimeByUserId(Long userId, LocalDateTime now) {
+        if (userId == null || now == null) {
+            return 0;
+        }
+        return update(null, new LambdaUpdateWrapper<UserSubscriptionDO>()
+                .eq(UserSubscriptionDO::getUserId, userId)
+                .set(UserSubscriptionDO::getLastReadTime, now));
+    }
 
 }

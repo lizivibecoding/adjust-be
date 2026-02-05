@@ -28,6 +28,9 @@ public class AppUserSubscriptionPageRespVO {
     @Schema(description = "更新时间(该学校下订阅专业的最新更新时间)")
     private LocalDateTime updateTime;
 
+    @Schema(description = "是否有新更新(红点)", example = "true")
+    private Boolean hasUpdate;
+
     @Schema(description = "订阅专业列表")
     private List<AppUserSubscriptionPageMajorRespVO> majors;
 

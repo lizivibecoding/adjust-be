@@ -5,12 +5,14 @@ import jakarta.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.*;
+import java.time.LocalDateTime;
 import com.hongguoyan.module.biz.dal.dataobject.usersubscription.UserSubscriptionDO;
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.module.biz.controller.app.usersubscription.vo.AppUserSubscriptionPageMajorRespVO;
 import com.hongguoyan.module.biz.controller.app.usersubscription.vo.AppUserSubscriptionPageReqVO;
 import com.hongguoyan.module.biz.controller.app.usersubscription.vo.AppUserSubscriptionPageRespVO;
 import com.hongguoyan.module.biz.controller.app.usersubscription.vo.AppUserSubscriptionSubscribeReqVO;
+import com.hongguoyan.module.biz.controller.app.usersubscription.vo.AppUserSubscriptionUnreadRespVO;
 import com.hongguoyan.module.biz.controller.app.usersubscription.vo.AppUserSubscriptionUnsubscribeReqVO;
 
 import com.hongguoyan.module.biz.dal.dataobject.adjustment.AdjustmentDO;
@@ -53,11 +55,14 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
 
         UserSubscriptionDO existing = userSubscriptionMapper.selectByUserIdAndSchoolIdAndMajorId(userId, schoolId, majorId);
         if (existing == null) {
+            LocalDateTime now = LocalDateTime.now();
             UserSubscriptionDO toCreate = new UserSubscriptionDO();
             toCreate.setUserId(userId);
             toCreate.setSchoolId(schoolId);
             toCreate.setCollegeId(collegeId);
             toCreate.setMajorId(majorId);
+            // New subscription is treated as read at subscribe time
+            toCreate.setLastReadTime(now);
             userSubscriptionMapper.insert(toCreate);
             // hot_score +50 for new subscription
             schoolMajorMapper.incrHotScoreByBizKey(schoolId, collegeId, majorId, HOT_SCORE_SUBSCRIBE_DELTA);
@@ -80,6 +85,7 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
 
     @Override
     public PageResult<AppUserSubscriptionPageRespVO> getMyPage(Long userId, AppUserSubscriptionPageReqVO reqVO) {
+        LocalDateTime readAt = LocalDateTime.now();
         // Keep API response shape unchanged (PageResult), but query all data without pagination
         List<AppUserSubscriptionPageRespVO> schools = userSubscriptionMapper.selectMySchoolList(userId, reqVO);
         if (schools == null || schools.isEmpty()) {
@@ -112,7 +118,17 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
             List<AppUserSubscriptionPageMajorRespVO> majors = majorMap.get(school.getSchoolId());
             school.setMajors(majors != null ? majors : List.of());
         }
+        // Entering "My Subscription" page marks all as read
+        userSubscriptionMapper.updateLastReadTimeByUserId(userId, readAt);
         return new PageResult<>(schools, (long) schools.size());
+    }
+
+    @Override
+    public AppUserSubscriptionUnreadRespVO getUnread(Long userId) {
+        Integer has = userSubscriptionMapper.selectHasUnread(userId);
+        AppUserSubscriptionUnreadRespVO respVO = new AppUserSubscriptionUnreadRespVO();
+        respVO.setHasUnread(has != null && has > 0);
+        return respVO;
     }
 
     @Resource

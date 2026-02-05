@@ -44,5 +44,10 @@ public class UserSubscriptionDO extends BaseDO {
      */
     private Long majorId;
 
+    /**
+     * 最后阅读时间(进入我的订阅页即更新)
+     */
+    private LocalDateTime lastReadTime;
+
 
 }

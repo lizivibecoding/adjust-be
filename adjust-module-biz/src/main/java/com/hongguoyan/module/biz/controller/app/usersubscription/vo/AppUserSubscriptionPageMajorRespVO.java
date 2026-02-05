@@ -27,5 +27,8 @@ public class AppUserSubscriptionPageMajorRespVO {
     @Schema(description = "更新时间")
     private LocalDateTime updateTime;
 
+    @Schema(description = "是否有新更新(红点)", example = "true")
+    private Boolean hasUpdate;
+
 }
 

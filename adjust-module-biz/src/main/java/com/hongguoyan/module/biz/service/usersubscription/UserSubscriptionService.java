@@ -26,4 +26,9 @@ public interface UserSubscriptionService {
      */
     PageResult<AppUserSubscriptionPageRespVO> getMyPage(Long userId, @Valid AppUserSubscriptionPageReqVO reqVO);
 
+    /**
+     * 订阅未读状态(首页小铃铛红点)
+     */
+    AppUserSubscriptionUnreadRespVO getUnread(Long userId);
+
 }

@@ -6,6 +6,7 @@ import com.hongguoyan.framework.security.core.util.SecurityFrameworkUtils;
 import com.hongguoyan.module.biz.controller.app.usersubscription.vo.AppUserSubscriptionPageReqVO;
 import com.hongguoyan.module.biz.controller.app.usersubscription.vo.AppUserSubscriptionPageRespVO;
 import com.hongguoyan.module.biz.controller.app.usersubscription.vo.AppUserSubscriptionSubscribeReqVO;
+import com.hongguoyan.module.biz.controller.app.usersubscription.vo.AppUserSubscriptionUnreadRespVO;
 import com.hongguoyan.module.biz.controller.app.usersubscription.vo.AppUserSubscriptionUnsubscribeReqVO;
 import com.hongguoyan.module.biz.service.usersubscription.UserSubscriptionService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -49,6 +51,13 @@ public class AppUserSubscriptionController {
     public CommonResult<PageResult<AppUserSubscriptionPageRespVO>> page(@Valid @RequestBody AppUserSubscriptionPageReqVO reqVO) {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
         return success(userSubscriptionService.getMyPage(userId, reqVO));
+    }
+
+    @GetMapping("/unread")
+    @Operation(summary = "订阅未读状态(首页小铃铛红点)")
+    public CommonResult<AppUserSubscriptionUnreadRespVO> getUnread() {
+        Long userId = SecurityFrameworkUtils.getLoginUserId();
+        return success(userSubscriptionService.getUnread(userId));
     }
 
 }
