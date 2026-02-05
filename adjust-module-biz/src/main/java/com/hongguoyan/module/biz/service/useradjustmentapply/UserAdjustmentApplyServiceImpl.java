@@ -22,9 +22,11 @@ import com.hongguoyan.module.biz.dal.mysql.useradjustmentapply.UserAdjustmentApp
 import com.hongguoyan.module.biz.dal.dataobject.useradjustment.UserAdjustmentDO;
 import com.hongguoyan.module.biz.dal.mysql.useradjustment.UserAdjustmentMapper;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
+import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.*;
+import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_USER_ADJUSTMENT_APPLY;
 
 /**
  * 用户发布调剂申请记录 Service 实现类
@@ -43,10 +45,13 @@ public class UserAdjustmentApplyServiceImpl implements UserAdjustmentApplyServic
     private SchoolMapper schoolMapper;
     @Resource
     private MajorMapper majorMapper;
+    @Resource
+    private VipBenefitService vipBenefitService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long createUserAdjustmentApply(Long userId, AppUserAdjustmentApplyCreateReqVO createReqVO) {
+        vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_ADJUSTMENT_APPLY);
         UserAdjustmentDO userAdjustment = userAdjustmentMapper.selectById(createReqVO.getUserAdjustmentId());
         if (userAdjustment == null) {
             throw exception(USER_ADJUSTMENT_NOT_EXISTS);
@@ -111,6 +116,7 @@ public class UserAdjustmentApplyServiceImpl implements UserAdjustmentApplyServic
 
     @Override
     public PageResult<AppUserAdjustmentApplyMyItemRespVO> getMyAppliedPage(Long userId, AppUserAdjustmentApplyMyPageReqVO pageReqVO) {
+        vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_ADJUSTMENT_APPLY);
         PageResult<UserAdjustmentApplyDO> pageResult = userAdjustmentApplyMapper.selectMyAppliedPage(userId, pageReqVO);
         List<UserAdjustmentApplyDO> applies = pageResult.getList();
         if (applies == null || applies.isEmpty()) {

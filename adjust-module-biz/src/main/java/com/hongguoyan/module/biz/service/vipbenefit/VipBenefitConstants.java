@@ -35,6 +35,8 @@ public interface VipBenefitConstants {
     String BENEFIT_KEY_VIEW_ANALYSIS = "view_analysis";
     String BENEFIT_KEY_VIEW_SAME_SCORE = "view_same_score";
     String BENEFIT_KEY_USER_PREFERENCE = "user_preference";
+    String BENEFIT_KEY_USER_SUBSCRIPTION = "user_subscription";
+    String BENEFIT_KEY_USER_ADJUSTMENT_APPLY = "user_adjustment_apply";
 
     String BENEFIT_KEY_USER_REPORT = "user_report";
     String BENEFIT_KEY_PUBLISH_LIST_PREVIEW_LIMIT = "publish_list_preview_limit";

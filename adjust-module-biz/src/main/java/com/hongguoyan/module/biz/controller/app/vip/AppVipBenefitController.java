@@ -39,6 +39,8 @@ public class AppVipBenefitController {
                 BENEFIT_KEY_USER_REPORT,
                 BENEFIT_KEY_PUBLISH_LIST_PREVIEW_LIMIT,
                 BENEFIT_KEY_USER_INTENTION,
+                BENEFIT_KEY_USER_SUBSCRIPTION,
+                BENEFIT_KEY_USER_ADJUSTMENT_APPLY,
                 BENEFIT_KEY_USER_PREFERENCE_EXPORT,
                 BENEFIT_KEY_SCHOOL_RECOMMEND,
                 BENEFIT_KEY_MAJOR_CATEGORY_OPEN,

@@ -19,9 +19,11 @@ import com.hongguoyan.module.biz.dal.dataobject.adjustment.AdjustmentDO;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.AdjustmentMapper;
 import com.hongguoyan.module.biz.dal.mysql.schoolmajor.SchoolMajorMapper;
 import com.hongguoyan.module.biz.dal.mysql.usersubscription.UserSubscriptionMapper;
+import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.*;
+import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_USER_SUBSCRIPTION;
 
 /**
  * 用户调剂订阅 Service 实现类
@@ -38,9 +40,12 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
     private UserSubscriptionMapper userSubscriptionMapper;
     @Resource
     private SchoolMajorMapper schoolMajorMapper;
+    @Resource
+    private VipBenefitService vipBenefitService;
 
     @Override
     public void subscribe(Long userId, AppUserSubscriptionSubscribeReqVO reqVO) {
+        vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_SUBSCRIPTION);
         AdjustmentDO adjustment = adjustmentMapper.selectById(reqVO.getAdjustmentId());
         if (adjustment == null) {
             throw exception(ADJUSTMENT_NOT_EXISTS);
@@ -85,6 +90,7 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
 
     @Override
     public PageResult<AppUserSubscriptionPageRespVO> getMyPage(Long userId, AppUserSubscriptionPageReqVO reqVO) {
+        vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_SUBSCRIPTION);
         LocalDateTime readAt = LocalDateTime.now();
         // Keep API response shape unchanged (PageResult), but query all data without pagination
         List<AppUserSubscriptionPageRespVO> schools = userSubscriptionMapper.selectMySchoolList(userId, reqVO);

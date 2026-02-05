@@ -43,7 +43,7 @@ public class UserPreferenceServiceImpl implements UserPreferenceService {
 
     @Override
     public List<AppUserPreferenceRespVO> getMyList(Long userId) {
-        // NOTE: my-list is allowed without VIP check (business requirement)
+        vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_PREFERENCE);
         List<UserPreferenceDO> list = userPreferenceMapper.selectListByUserId(userId);
         Map<Integer, UserPreferenceDO> map = new HashMap<>();
         for (UserPreferenceDO item : list) {
