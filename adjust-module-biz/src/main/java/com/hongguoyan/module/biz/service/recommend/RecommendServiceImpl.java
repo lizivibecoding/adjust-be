@@ -344,7 +344,7 @@ public class RecommendServiceImpl implements RecommendService {
         UserCustomReportDO toUpdate = new UserCustomReportDO();
         toUpdate.setId(reportId);
         toUpdate.setUserId(userId);
-        toUpdate.setReportVersion("v1");
+        toUpdate.setReportVersion(String.valueOf(System.currentTimeMillis()));
         toUpdate.setSourceProfileId(userProfile.getId());
         toUpdate.setSourceIntentionId(userIntention != null ? userIntention.getId() : null);
 

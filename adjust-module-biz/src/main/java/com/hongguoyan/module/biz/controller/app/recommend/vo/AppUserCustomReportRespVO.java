@@ -27,6 +27,10 @@ public class AppUserCustomReportRespVO {
     @ExcelProperty("算法/报告版本(如v1.0.3)")
     private String reportVersion;
 
+    @Schema(description = "报告名称", requiredMode = Schema.RequiredMode.REQUIRED)
+    @ExcelProperty("报告名称")
+    private String reportName;
+
     @Schema(description = "生成时使用的档案ID(biz_user_profile.id)", example = "30176")
     @ExcelProperty("生成时使用的档案ID(biz_user_profile.id)")
     private Long sourceProfileId;

@@ -44,6 +44,10 @@ public class UserCustomReportDO extends BaseDO {
      */
     private String reportVersion;
     /**
+     * 报告名称（默认：yyyyMMdd - 调剂报告 - nn；用户可修改）
+     */
+    private String reportName;
+    /**
      * 生成时使用的档案ID(biz_user_profile.id)
      */
     private Long sourceProfileId;
