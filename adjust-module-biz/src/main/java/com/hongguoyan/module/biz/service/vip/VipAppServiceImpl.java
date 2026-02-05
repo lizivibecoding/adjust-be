@@ -29,6 +29,8 @@ import com.hongguoyan.module.biz.dal.mysql.viporder.VipOrderMapper;
 import com.hongguoyan.module.biz.dal.mysql.vipplan.VipPlanMapper;
 import com.hongguoyan.module.biz.dal.mysql.vipplanbenefit.VipPlanBenefitMapper;
 import com.hongguoyan.module.biz.dal.mysql.vipsubscription.VipSubscriptionMapper;
+import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
+import com.hongguoyan.module.biz.service.vipbenefit.model.VipResolvedBenefit;
 import com.hongguoyan.module.pay.api.notify.dto.PayOrderNotifyReqDTO;
 import com.hongguoyan.module.pay.api.order.PayOrderApi;
 import com.hongguoyan.module.pay.api.order.dto.PayOrderCreateReqDTO;
@@ -40,12 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
@@ -53,6 +50,8 @@ import static com.hongguoyan.framework.common.util.collection.CollectionUtils.co
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertSet;
 import static com.hongguoyan.framework.common.util.servlet.ServletUtils.getClientIP;
 import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.*;
+import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_MAJOR_CATEGORY_OPEN;
+import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_USER_REPORT;
 
 /**
  * 用户 APP - 会员 Service 实现类
@@ -96,6 +95,8 @@ public class VipAppServiceImpl implements VipAppService {
     private VipOrderMapper vipOrderMapper;
     @Resource
     private PayOrderApi payOrderApi;
+    @Resource
+    private VipBenefitService vipBenefitService;
 
     @Override
     public List<AppVipPlanRespVO> getPlanList() {
@@ -155,38 +156,70 @@ public class VipAppServiceImpl implements VipAppService {
             return respVO;
         }
 
+        // ========== Major category quota + opened codes ==========
+        fillMajorAndReportQuota(respVO, userId);
+
         LocalDateTime now = LocalDateTime.now();
         List<VipSubscriptionDO> subs = vipSubscriptionMapper.selectList(new LambdaQueryWrapperX<VipSubscriptionDO>()
                 .eq(VipSubscriptionDO::getUserId, userId)
                 .ge(VipSubscriptionDO::getEndTime, now)
                 .orderByAsc(VipSubscriptionDO::getPlanCode));
-        if (CollUtil.isEmpty(subs)) {
-            return respVO;
-        }
-
-        // 订阅状态
-        for (VipSubscriptionDO sub : subs) {
-            if ("VIP".equalsIgnoreCase(sub.getPlanCode())) {
-                respVO.setVipValid(Boolean.TRUE);
-                respVO.setVipEndTime(sub.getEndTime());
-            } else if ("SVIP".equalsIgnoreCase(sub.getPlanCode())) {
-                respVO.setSvipValid(Boolean.TRUE);
-                respVO.setSvipEndTime(sub.getEndTime());
+        if (!CollUtil.isEmpty(subs)) {
+            // 订阅状态
+            for (VipSubscriptionDO sub : subs) {
+                if ("VIP".equalsIgnoreCase(sub.getPlanCode())) {
+                    respVO.setVipValid(Boolean.TRUE);
+                    respVO.setVipEndTime(sub.getEndTime());
+                } else if ("SVIP".equalsIgnoreCase(sub.getPlanCode())) {
+                    respVO.setSvipValid(Boolean.TRUE);
+                    respVO.setSvipEndTime(sub.getEndTime());
+                }
             }
+
+            // maxEndTime
+            respVO.setMaxEndTime(subs.stream().map(VipSubscriptionDO::getEndTime)
+                    .filter(Objects::nonNull).max(Comparator.naturalOrder()).orElse(null));
+
+            // enabledBenefits（并集）
+            List<String> planCodes = convertList(subs, VipSubscriptionDO::getPlanCode);
+            List<VipPlanBenefitDO> enabledBenefits = vipPlanBenefitMapper.selectList(new LambdaQueryWrapperX<VipPlanBenefitDO>()
+                    .in(VipPlanBenefitDO::getPlanCode, planCodes)
+                    .eq(VipPlanBenefitDO::getEnabled, COMMON_STATUS_ENABLE));
+            respVO.setEnabledBenefits(new ArrayList<>(convertSet(enabledBenefits, VipPlanBenefitDO::getBenefitKey)));
         }
-
-        // maxEndTime
-        respVO.setMaxEndTime(subs.stream().map(VipSubscriptionDO::getEndTime)
-                .filter(Objects::nonNull).max(Comparator.naturalOrder()).orElse(null));
-
-        // enabledBenefits（并集）
-        List<String> planCodes = convertList(subs, VipSubscriptionDO::getPlanCode);
-        List<VipPlanBenefitDO> enabledBenefits = vipPlanBenefitMapper.selectList(new LambdaQueryWrapperX<VipPlanBenefitDO>()
-                .in(VipPlanBenefitDO::getPlanCode, planCodes)
-                .eq(VipPlanBenefitDO::getEnabled, COMMON_STATUS_ENABLE));
-        respVO.setEnabledBenefits(new ArrayList<>(convertSet(enabledBenefits, VipPlanBenefitDO::getBenefitKey)));
 
         return respVO;
+    }
+
+    private void fillMajorAndReportQuota(AppVipMeRespVO respVO, Long userId) {
+        // major_category_open
+        VipResolvedBenefit major = vipBenefitService.resolveBenefit(userId, BENEFIT_KEY_MAJOR_CATEGORY_OPEN);
+        AppVipMeRespVO.MajorQuota majorQuota = new AppVipMeRespVO.MajorQuota();
+        majorQuota.setTotal(major.getBenefitValue());
+        majorQuota.setUsed(major.getUsedCount() != null ? major.getUsedCount() : 0);
+        majorQuota.setRemain(calcQuotaRemain(major.getBenefitValue(), majorQuota.getUsed()));
+        Set<String> opened = vipBenefitService.getConsumedUniqueKeys(userId, BENEFIT_KEY_MAJOR_CATEGORY_OPEN);
+        List<String> openedCodes = opened == null ? Collections.emptyList() : opened.stream().filter(Objects::nonNull)
+                .map(String::trim).filter(s -> !s.isEmpty()).sorted().toList();
+        majorQuota.setOpenedCodes(openedCodes);
+        respVO.setMajor(majorQuota);
+
+        // user_report
+        VipResolvedBenefit report = vipBenefitService.resolveBenefit(userId, BENEFIT_KEY_USER_REPORT);
+        AppVipMeRespVO.Quota reportQuota = new AppVipMeRespVO.Quota();
+        reportQuota.setTotal(report.getBenefitValue());
+        reportQuota.setUsed(report.getUsedCount() != null ? report.getUsedCount() : 0);
+        reportQuota.setRemain(calcQuotaRemain(report.getBenefitValue(), reportQuota.getUsed()));
+        respVO.setReport(reportQuota);
+    }
+
+    private Integer calcQuotaRemain(Integer total, Integer used) {
+        if (total != null && total == -1) {
+            return -1;
+        }
+        int t = total != null ? total : 0;
+        int u = used != null ? used : 0;
+        return Math.max(0, t - u);
     }
 
     @Override
