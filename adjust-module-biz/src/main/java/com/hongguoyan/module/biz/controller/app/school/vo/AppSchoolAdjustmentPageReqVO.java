@@ -13,5 +13,11 @@ public class AppSchoolAdjustmentPageReqVO extends PageParam {
     @NotNull(message = "学校ID不能为空")
     private Long schoolId;
 
+    @Schema(description = "开始年份（服务端内部使用）", hidden = true)
+    private Integer beginYear;
+
+    @Schema(description = "结束年份（服务端内部使用）", hidden = true)
+    private Integer endYear;
+
 }
 

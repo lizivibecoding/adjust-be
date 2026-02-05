@@ -364,6 +364,12 @@
             SUM(a.adjust_count) AS adjustCount
         FROM biz_adjustment a
         WHERE a.school_id = #{reqVO.schoolId}
+          <if test="reqVO.beginYear != null">
+              AND a.year &gt;= #{reqVO.beginYear}
+          </if>
+          <if test="reqVO.endYear != null">
+              AND a.year &lt;= #{reqVO.endYear}
+          </if>
         GROUP BY a.school_id, a.college_id, a.major_id, a.year, a.study_mode
         ORDER BY a.year DESC, MAX(a.update_time) DESC
     </select>

@@ -465,7 +465,16 @@ public class AdjustmentServiceImpl implements AdjustmentService {
     }
 
     @Override
-    public PageResult<AppSchoolAdjustmentRespVO> getSchoolAdjustmentPage(@Valid AppSchoolAdjustmentPageReqVO reqVO) {
+    public PageResult<AppSchoolAdjustmentRespVO> getSchoolAdjustmentPage(Long userId, @Valid AppSchoolAdjustmentPageReqVO reqVO) {
+        // Non-member forbidden: controlled by VIP benefit config
+        vipBenefitService.checkEnabledOrThrow(userId, VIEW_SCHOOL_ADJUSTMENT_3Y);
+
+        // Force recent 3 years (currentYear, currentYear-1, currentYear-2)
+        int currentYear = Year.now().getValue();
+        if (reqVO != null) {
+            reqVO.setBeginYear(currentYear - 2);
+            reqVO.setEndYear(currentYear);
+        }
         return adjustmentMapper.selectSchoolAdjustmentPage(reqVO);
     }
 

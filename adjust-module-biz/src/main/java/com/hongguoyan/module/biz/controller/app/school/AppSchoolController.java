@@ -29,6 +29,7 @@ import com.hongguoyan.module.biz.controller.app.school.vo.*;
 import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
 import com.hongguoyan.module.biz.service.adjustment.AdjustmentService;
 import com.hongguoyan.module.biz.service.school.SchoolService;
+import com.hongguoyan.framework.security.core.util.SecurityFrameworkUtils;
 
 @Tag(name = "用户 APP - 院校")
 @RestController
@@ -51,7 +52,8 @@ public class AppSchoolController {
     @GetMapping("/adjustment")
     @Operation(summary = "院校调剂列表(调剂 Tab)")
     public CommonResult<PageResult<AppSchoolAdjustmentRespVO>> getSchoolAdjustmentPage(@Valid AppSchoolAdjustmentPageReqVO reqVO) {
-        return success(adjustmentService.getSchoolAdjustmentPage(reqVO));
+        Long userId = SecurityFrameworkUtils.getLoginUserId();
+        return success(adjustmentService.getSchoolAdjustmentPage(userId, reqVO));
     }
 
     @GetMapping("/simple-all")

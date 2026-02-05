@@ -120,9 +120,10 @@ public interface AdjustmentService {
     /**
      * 院校调剂列表(调剂 Tab)
      *
+     * @param userId 用户ID（不可为空；用于会员权益判断）
      * @param reqVO 条件
      * @return 分页
      */
-    PageResult<AppSchoolAdjustmentRespVO> getSchoolAdjustmentPage(@Valid AppSchoolAdjustmentPageReqVO reqVO);
+    PageResult<AppSchoolAdjustmentRespVO> getSchoolAdjustmentPage(Long userId, @Valid AppSchoolAdjustmentPageReqVO reqVO);
 
 }

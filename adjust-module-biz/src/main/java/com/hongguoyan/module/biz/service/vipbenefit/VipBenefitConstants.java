@@ -28,6 +28,12 @@ public interface VipBenefitConstants {
     String BENEFIT_KEY_VIEW_ADMIT_LIST = "view_admit_list";
     String BENEFIT_KEY_VIEW_ANALYSIS = "view_analysis";
     String BENEFIT_KEY_VIEW_SAME_SCORE = "view_same_score";
+    /**
+     * School adjustment list: allow viewing recent 3 years.
+     * <p>
+     * NOTE: keep benefit_key lowercase to match DB convention.
+     */
+    String VIEW_SCHOOL_ADJUSTMENT_3Y = "view_school_adjustment_3y";
     String BENEFIT_KEY_USER_PREFERENCE = "user_preference";
     String BENEFIT_KEY_USER_SUBSCRIPTION = "user_subscription";
     String BENEFIT_KEY_USER_ADJUSTMENT_APPLY = "user_adjustment_apply";

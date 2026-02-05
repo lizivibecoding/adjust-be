@@ -44,6 +44,7 @@ public class AppVipBenefitController {
                 BENEFIT_KEY_USER_PREFERENCE_EXPORT,
                 BENEFIT_KEY_SCHOOL_RECOMMEND,
                 BENEFIT_KEY_MAJOR_CATEGORY_OPEN,
+                VIEW_SCHOOL_ADJUSTMENT_3Y,
                 BENEFIT_KEY_VIEW_SAME_SCORE,
                 BENEFIT_KEY_VIEW_ADMIT_LIST,
                 BENEFIT_KEY_VIEW_ANALYSIS,
