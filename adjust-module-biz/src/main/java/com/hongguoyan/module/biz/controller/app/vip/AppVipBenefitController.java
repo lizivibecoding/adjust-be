@@ -42,8 +42,8 @@ public class AppVipBenefitController {
                 BENEFIT_KEY_VOLUNTEER_EXPORT,
                 BENEFIT_KEY_MAJOR_CATEGORY_OPEN,
                 BENEFIT_KEY_VIEW_SAME_SCORE,
-                BENEFIT_KEY_VIEW_ADMISSION_LIST,
-                BENEFIT_KEY_VIEW_ADMISSION_ANALYSIS,
+                BENEFIT_KEY_VIEW_ADMIT_LIST,
+                BENEFIT_KEY_VIEW_ANALYSIS,
                 BENEFIT_KEY_USE_VOLUNTEER_LIST,
                 BENEFIT_KEY_USE_PERSON_CENTER_VIP
         );

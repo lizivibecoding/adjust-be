@@ -15,3 +15,5 @@ alwaysApply: true
 - When using `LambdaQueryWrapperX`, do NOT chain `.select(...)` and then `.eqIfPresent(...)` in one fluent chain; call `select(...)` on a separate line (or set up the wrapper first) to avoid the type degrading to MyBatis-Plus `LambdaQueryWrapper` and losing `eqIfPresent(...)`.
 - For request parameters representing ID lists, prefer JSON arrays (e.g. `List<Long>` / `List<String>`) over comma-separated strings; if backward compatibility is needed, support both formats temporarily via custom deserialization.
 - For cloud-storage-backed fields (avatar/logo/file/etc), persist **only object `path/key`** (never store presigned URLs). When returning data, generate an accessible URL in the **service layer** via `FileApi.presignGetUrl(pathOrUrl, expirationSeconds)` (e.g. `7 * 24 * 60 * 60`); controllers should not contain this URL-building logic.
+- 可以通过 MCP 访问数据库以辅助分析与排查问题：使用 MCP server `user-dbhub` 访问 MySQL；执行 SQL 用 `execute_sql`（入参 `{"sql":"..."}`
+  ，支持多语句 `;` 分隔）；检索表/字段等对象用 `search_objects`。

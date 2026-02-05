@@ -108,8 +108,7 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
 
     @Override
     public List<AppAdjustmentAdmitListItemRespVO> getAdmitList(Long userId, AppAdjustmentAdmitListReqVO reqVO) {
-        // TODO VIP-BYPASS: restore benefit check (view_admission_list)
-        // vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_VIEW_ADMISSION_LIST);
+        vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_VIEW_ADMIT_LIST);
         LambdaQueryWrapperX<AdjustmentAdmitDO> wrapper = new LambdaQueryWrapperX<>();
         // 注意：LambdaQueryWrapperX 未重写 select 的返回类型，因此这里不要链式赋值
         wrapper.select(AdjustmentAdmitDO::getCandidateName,
@@ -146,8 +145,7 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
 
     @Override
     public AppAdjustmentAnalysisRespVO getAnalysis(Long userId, AppAdjustmentAnalysisReqVO reqVO) {
-        // TODO VIP-BYPASS: restore benefit check (view_admission_analysis)
-        // vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_VIEW_ADMISSION_ANALYSIS);
+        vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_VIEW_ANALYSIS);
         LambdaQueryWrapperX<AdjustmentAdmitDO> wrapper = new LambdaQueryWrapperX<>();
         wrapper.select(AdjustmentAdmitDO::getFirstSchoolId,
                 AdjustmentAdmitDO::getFirstScore);

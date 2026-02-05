@@ -31,8 +31,8 @@ public interface VipBenefitConstants {
     int CONSUME_POLICY_UNIQUE_KEY = 2;
 
     // ========== Benefit Keys (Stage 2) ==========
-    String BENEFIT_KEY_VIEW_ADMISSION_LIST = "view_admission_list";
-    String BENEFIT_KEY_VIEW_ADMISSION_ANALYSIS = "view_admission_analysis";
+    String BENEFIT_KEY_VIEW_ADMIT_LIST = "view_admit_list";
+    String BENEFIT_KEY_VIEW_ANALYSIS = "view_analysis";
     String BENEFIT_KEY_VIEW_SAME_SCORE = "view_same_score";
     String BENEFIT_KEY_USE_VOLUNTEER_LIST = "use_volunteer_list";
 
