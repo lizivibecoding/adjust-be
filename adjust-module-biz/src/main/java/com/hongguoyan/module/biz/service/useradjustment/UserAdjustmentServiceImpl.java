@@ -95,9 +95,8 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
 
     @Override
     public PageResult<AppUserAdjustmentListRespVO> getUserAdjustmentPublicPage(Long userId, AppUserAdjustmentPublicPageReqVO pageReqVO) {
-        // TODO VIP-BYPASS: restore publish list preview limit (publish_list_preview_limit)
-        int limit = -1;
-        // int limit = vipBenefitService.resolveLimitValue(userId, BENEFIT_KEY_PUBLISH_LIST_PREVIEW_LIMIT);
+        // Publish list preview limit (FREE limited; VIP/SVIP unlimited)
+        int limit = vipBenefitService.resolveLimitValue(userId, BENEFIT_KEY_PUBLISH_LIST_PREVIEW_LIMIT);
         // limit > 0 means preview limited; -1 means unlimited
         if (limit > 0) {
             // If user requests page > 1, return empty list and cap total to limit (avoid leaking full count)
