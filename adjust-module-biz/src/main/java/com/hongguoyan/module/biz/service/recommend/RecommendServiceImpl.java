@@ -10,6 +10,8 @@ import com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil;
 import com.hongguoyan.module.biz.controller.app.recommend.vo.AppRecommendSchoolListReqVO;
 import com.hongguoyan.module.biz.controller.app.recommend.vo.AppRecommendSchoolRespVO;
 import com.hongguoyan.module.biz.dal.dataobject.schoolrank.SchoolRankDO;
+import com.hongguoyan.module.biz.dal.dataobject.majorrank.SchoolMajorRankDO;
+import com.hongguoyan.module.biz.dal.dataobject.major.MajorDO;
 import com.hongguoyan.module.biz.dal.dataobject.adjustment.AdjustmentDO;
 import com.hongguoyan.module.biz.dal.dataobject.nationalscore.NationalScoreDO;
 import com.hongguoyan.module.biz.dal.dataobject.recommend.UserRecommendSchoolDO;
@@ -20,6 +22,7 @@ import com.hongguoyan.module.biz.dal.dataobject.userintention.UserIntentionDO;
 import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.AdjustmentMapper;
 import com.hongguoyan.module.biz.dal.mysql.schoolrank.SchoolRankMapper;
+import com.hongguoyan.module.biz.dal.mysql.majorrank.SchoolMajorRankMapper;
 import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
 import com.hongguoyan.module.biz.dal.mysql.nationalscore.NationalScoreMapper;
 import com.hongguoyan.module.biz.dal.mysql.recommend.UserRecommendSchoolMapper;
@@ -81,6 +84,8 @@ public class RecommendServiceImpl implements RecommendService {
     @Resource
     private SchoolRankMapper schoolRankMapper;
     @Resource
+    private SchoolMajorRankMapper schoolMajorRankMapper;
+    @Resource
     private UserCustomReportService userCustomReportService;
     @Resource
     private UserCustomReportMapper userCustomReportMapper;
@@ -105,8 +110,8 @@ public class RecommendServiceImpl implements RecommendService {
                 .eq(UserProfileDO::getUserId, userId));
         if (userProfile == null) {
             log.warn("用户画像不存在，无法推荐: userId={}", userId);
-        return false;
-    }
+            return false;
+        }
 
         // 2. 清除旧推荐
         userRecommendSchoolMapper.delete(new LambdaQueryWrapper<UserRecommendSchoolDO>()
@@ -141,22 +146,41 @@ public class RecommendServiceImpl implements RecommendService {
 
         // 4. 加载并过滤学校
 
+        // 预加载软科排名 (用于协同过滤)
+        List<SchoolRankDO> allRanks = schoolRankMapper.selectList(new LambdaQueryWrapper<SchoolRankDO>()
+                .orderByAsc(SchoolRankDO::getYear));
+        Map<Long, Double> schoolRankIdMap = new HashMap<>();
+        Map<String, Double> schoolRankNameMap = new HashMap<>();
+        for (SchoolRankDO rank : allRanks) {
+            if (rank.getScore() != null) {
+                double s = rank.getScore().doubleValue();
+                if (rank.getSchoolId() != null) {
+                    schoolRankIdMap.put(rank.getSchoolId(), s);
+                }
+                if (StrUtil.isNotBlank(rank.getSchoolName())) {
+                    schoolRankNameMap.put(rank.getSchoolName(), s);
+                }
+            }
+        }
+
         // 预加载所有学校分数线 (自划线)
         List<SchoolScoreDO> allSchoolScores = schoolScoreMapper.selectList(new LambdaQueryWrapper<SchoolScoreDO>()
                 .eq(SchoolScoreDO::getYear, currentYear));
-        // Map<SchoolId, MinScore> 记录该校最低分数线 (用于粗筛)
-        Map<Long, BigDecimal> schoolMinScoreMap = new HashMap<>();
-        // Map<SchoolId, Map<MajorCode, Score>> 记录具体分数线 (用于精筛)
-        Map<Long, Map<String, SchoolScoreDO>> schoolMajorScoreMap = new HashMap<>();
-        
+        // Map<SchoolId, List<SchoolScoreDO>> 记录具体分数线 (用于精筛)
+        Map<Long, List<SchoolScoreDO>> schoolMajorScoreMap = new HashMap<>();
         for (SchoolScoreDO score : allSchoolScores) {
-            schoolMinScoreMap.merge(score.getSchoolId(), score.getScoreTotal(), (oldVal, newVal) -> oldVal.compareTo(newVal) < 0 ? oldVal : newVal);
-            
-            schoolMajorScoreMap.computeIfAbsent(score.getSchoolId(), k -> new HashMap<>())
-                    .put(score.getMajorCode(), score);
+            schoolMajorScoreMap.computeIfAbsent(score.getSchoolId(), k -> new ArrayList<>())
+                    .add(score);
         }
 
-        double userScoreB = calculateUserScoreB(userProfile, schoolMap);
+        // 获取匹配的国家线
+        NationalScoreDO matchedLine = findMatchedNationalLine(userProfile, firstChoiceArea, nationalScores);
+        if (matchedLine == null) {
+            throw ServiceExceptionUtil.exception(ErrorCodeConstants.NATIONAL_SCORE_NOT_EXISTS);
+        }
+        double nationalLineTotal = matchedLine.getTotal().doubleValue();
+
+        double userScoreB = calculateUserScoreB(userProfile, schoolMap, schoolRankIdMap, schoolRankNameMap, nationalLineTotal);
         double baseBonusC0 = userScoreB * 0.2;
         
         Set<Long> candidateSchoolIds = new HashSet<>();
@@ -165,16 +189,22 @@ public class RecommendServiceImpl implements RecommendService {
             Long schoolId = school.getId();
             
             // 4.1 自划线粗筛 (School Level)
-            // 如果用户分数 < 该校最低自划线，直接淘汰该校
-            BigDecimal minScore = schoolMinScoreMap.get(schoolId);
-            if (minScore != null && userProfile.getScoreTotal().compareTo(minScore) < 0) {
-                 continue;
+            // 必须满足该校对用户一志愿专业的自划线要求（总分 + 单科）
+            List<SchoolScoreDO> majorScores = schoolMajorScoreMap.get(schoolId);
+            if (CollUtil.isNotEmpty(majorScores)) {
+                SchoolScoreDO match = findBestMatchScore(majorScores, userProfile.getTargetMajorCode(), userProfile.getTargetDegreeType());
+                if (match != null) {
+                    if (!checkSchoolScore(userProfile, match)) {
+                        continue;
+                    }
+                }
             }
             
             // 4.2 院校协同过滤
-            double schoolScoreA = getSchoolRankScore(school);
+            double schoolScoreA = getRankScore(schoolId, school.getSchoolName(), schoolRankIdMap, schoolRankNameMap);
+
             // 计算乐观 C (假设 adjustment 匹配良好)
-            double maxC = calculateUserBonusC(userProfile, baseBonusC0, school, null, schoolMap);
+            double maxC = calculateUserBonusC(userProfile, baseBonusC0);
             double totalUserScore = userScoreB + maxC;
             
             if (totalUserScore >= 0.75 * schoolScoreA && totalUserScore <= 1.5 * schoolScoreA) {
@@ -204,7 +234,7 @@ public class RecommendServiceImpl implements RecommendService {
             if (school == null) continue;
             
             // Sim Calculations
-            double simA = calculateSimAInMemory(userProfile, school, adjustment, schoolMajorScoreMap);
+            double simA = calculateSimAInMemory(userProfile, school, adjustment, schoolMajorScoreMap.get(school.getId()));
             double simB = calculateSimB(userProfile, adjustment);
             double simC = calculateSimC(userProfile, adjustment);
             double simFinal = 0.5 * simA + 0.3 * simB + 0.2 * simC;
@@ -377,27 +407,7 @@ public class RecommendServiceImpl implements RecommendService {
     private boolean checkNationalLineStrict(UserProfileDO user, String area, List<NationalScoreDO> nationalScores) {
         if (user.getScoreTotal() == null) return false;
 
-        // 用户的 "Degree Type" 应该取 UserProfile 中的 targetDegreeType (一志愿)
-        Integer degreeType = user.getTargetDegreeType() != null ? user.getTargetDegreeType() : 2; // 默认为专硕
-        // 用户的 "Major Code" (一志愿)
-        String majorCode = user.getTargetMajorCode();
-        if (StrUtil.isBlank(majorCode)) return false; // 没填一志愿专业，无法判断
-
-        NationalScoreDO matchedLine = nationalScores.stream()
-                .filter(ns -> ns.getDegreeType().equals(degreeType))
-                .filter(ns -> ns.getArea().equalsIgnoreCase(area))
-                .filter(ns -> majorCode.startsWith(ns.getMajorCode()))
-                .max((o1, o2) -> o1.getMajorCode().length() - o2.getMajorCode().length())
-                .orElse(null);
-
-        if (matchedLine == null) {
-             matchedLine = nationalScores.stream()
-                .filter(ns -> ns.getDegreeType().equals(degreeType))
-                .filter(ns -> ns.getArea().equalsIgnoreCase(area))
-                .filter(ns -> majorCode.substring(0, 2).equals(ns.getMajorCode()))
-                .findFirst()
-                .orElse(null);
-        }
+        NationalScoreDO matchedLine = findMatchedNationalLine(user, area, nationalScores);
 
         if (matchedLine == null) return false; // 无线数据，默认过
 
@@ -440,20 +450,20 @@ public class RecommendServiceImpl implements RecommendService {
                 .filter(ns -> ns.getDegreeType().equals(degreeType))
                 .filter(ns -> ns.getArea().equalsIgnoreCase(area))
                 .filter(ns -> majorCode.startsWith(ns.getMajorCode()))
-                .max((o1, o2) -> o1.getMajorCode().length() - o2.getMajorCode().length())
+                .max(Comparator.comparingInt(o -> o.getMajorCode().length()))
                 .orElse(null);
         if (matchedLine != null) {
             return matchedLine;
         }
         if (majorCode.length() < 2) {
-            return null;
+            throw ServiceExceptionUtil.exception(ErrorCodeConstants.NATIONAL_SCORE_NOT_EXISTS);
         }
         return nationalScores.stream()
                 .filter(ns -> ns.getDegreeType().equals(degreeType))
                 .filter(ns -> ns.getArea().equalsIgnoreCase(area))
                 .filter(ns -> majorCode.substring(0, 2).equals(ns.getMajorCode()))
                 .findFirst()
-                .orElse(null);
+                .orElseThrow(() -> ServiceExceptionUtil.exception(ErrorCodeConstants.NATIONAL_SCORE_NOT_EXISTS));
     }
 
     private List<Long> parseJsonLongList(String json) {
@@ -760,135 +770,203 @@ public class RecommendServiceImpl implements RecommendService {
         public String getAnalysisSoftSkills() { return analysisSoftSkills; }
         public void setAnalysisSoftSkills(String v) { this.analysisSoftSkills = v; }
     }
-    
-    /**
-     * 获取学校排名分 (A)
-     */
-    private double getSchoolRankScore(SchoolDO school) {
-        if (Boolean.TRUE.equals(school.getIs985())) return 95.0;
-        if (Boolean.TRUE.equals(school.getIs211())) return 85.0;
-        if (Boolean.TRUE.equals(school.getIsSyl())) return 80.0;
-        if (Boolean.TRUE.equals(school.getIsKeySchool())) return 75.0;
-        return 65.0; // 普通院校
-    }
 
     /**
      * 计算用户综合分 (B)
      * B = B1 * 0.7 + B2 * 0.3
      */
-    private double calculateUserScoreB(UserProfileDO user, Map<Long, SchoolDO> schoolMap) {
+    private double calculateUserScoreB(UserProfileDO user, Map<Long, SchoolDO> schoolMap,
+                                       Map<Long, Double> rankIdMap, Map<String, Double> rankNameMap,
+                                       double nationalLineTotal) {
         // B1: 本科院校排名分
-        double b1 = 60.0;
-        if (user.getGraduateSchoolId() != null) {
-            SchoolDO gradSchool = schoolMap.get(user.getGraduateSchoolId());
-            if (gradSchool != null) {
-                b1 = getSchoolRankScore(gradSchool);
+        String gradSchoolName = user.getGraduateSchoolName();
+        if (StrUtil.isBlank(gradSchoolName) && user.getGraduateSchoolId() != null) {
+            SchoolDO s = schoolMap.get(user.getGraduateSchoolId());
+            if (s != null) {
+                gradSchoolName = s.getSchoolName();
             }
         }
+        double b1 = getRankScore(user.getGraduateSchoolId(), gradSchoolName, rankIdMap, rankNameMap);
 
         // B2: 初试总分 (归一化)
         // Formula: L / (1 + e^-k(x-x0))
-        // 假设 L=100, k=0.05, x0=360
-        double score = user.getScoreTotal() != null ? user.getScoreTotal().doubleValue() : 300.0;
-        double b2 = 100.0 / (1.0 + Math.exp(-0.05 * (score - 360.0)));
-
+        // 假设 L=100, k=0.05, x0 = nationalLineTotal
+        if (user.getScoreTotal() == null) {
+            throw ServiceExceptionUtil.exception(ErrorCodeConstants.CANDIDATE_SCORE_TOTAL_NOT_EXISTS);
+        }
+        double score = user.getScoreTotal().doubleValue();
+        int L =5;
+        double K =0.08;
+        double x0 = 56;
+        double b2 = L / (1.0 + Math.exp(-K * (score - nationalLineTotal-x0)));
         return b1 * 0.7 + b2 * 0.3;
+    }
+
+    /**
+     * 统一获取学校排名分
+     */
+    private double getRankScore(Long schoolId, String schoolName, Map<Long, Double> idMap, Map<String, Double> nameMap) {
+        if (schoolId != null && idMap.containsKey(schoolId)) {
+            return idMap.get(schoolId)/100;
+        }
+        if (StrUtil.isNotBlank(schoolName) && nameMap.containsKey(schoolName)) {
+            return nameMap.get(schoolName)/100;
+        }
+        return 1.0/100;
     }
 
     /**
      * 计算用户加分 (C)
      */
-    private double calculateUserBonusC(UserProfileDO user, double c0, SchoolDO targetSchool, AdjustmentDO adjustment, Map<Long, SchoolDO> schoolMap) {
-        double c = 0.0;
-
+    private double calculateUserBonusC(UserProfileDO user, double c0) {
         // C1: 科研经历 (Paper)
+        double c1 = 0.0;
         int paperCount = user.getPaperCount() != null ? user.getPaperCount() : 0;
-        if (paperCount >= 3) c += c0 * 0.2;
-        else if (paperCount >= 2) c += c0 * 0.15;
-        else if (paperCount >= 1) c += c0 * 0.1;
-
-        // C2: 竞赛得分
-        int compCount = user.getCompetitionCount() != null ? user.getCompetitionCount() : 0;
-        // 假设每次竞赛加分逻辑：count/84 * c0 * 0.2? 文档: C2 = count/84 * 加分基数分*0.2 (可能是 typo, 假设是 count * something)
-        // 暂定：每次竞赛 + 0.05 * C0
-        if (compCount > 0) {
-            c += Math.min(compCount * 0.05 * c0, c0 * 0.2);
+        if (paperCount >= 3) {
+            c1 = c0 * 0.2;
+        } else if (paperCount >= 2) {
+            c1 = c0 * 0.15;
+        } else if (paperCount >= 1) {
+            c1 = c0 * 0.1;
         }
 
-        // C3: 四六级
+        // C2: 竞赛得分
+        double c2 = 0.0;
+        int compCount = user.getCompetitionCount() != null ? user.getCompetitionCount() : 0;
+        if (compCount > 0) {
+            // 假设算法：min(次数 * 0.05 * c0, 上限 0.2 * c0)
+            c2 = Math.min(compCount * 0.05 * c0, c0 * 0.2);
+        }
+
+        // C3: 英语水平 (四六级)
+        double c3 = 0.0;
         int cet6 = user.getCet6Score() != null ? user.getCet6Score() : 0;
         int cet4 = user.getCet4Score() != null ? user.getCet4Score() : 0;
-        if (cet6 >= 470) c += c0 * 0.1;
-        else if (cet6 >= 425 || cet4 >= 425) c += c0 * 0.05;
+        if (cet6 >= 470) {
+            c3 = c0 * 0.1;
+        } else if (cet6 >= 425 || cet4 >= 425) {
+            c3 = c0 * 0.05;
+        }
 
-        // C4: 学科 (跨考/跨调)
-        // 暂简单判断：专业代码前4位相同
-        boolean sameDiscipline = false;
+        // C4: 学科匹配度
+        double c4 = 0.0;
+        SchoolMajorRankDO rankDO = null;
+        if (user.getTargetSchoolId() != null && StrUtil.isNotBlank(user.getTargetMajorCode())) {
+            // 尝试 6 位匹配
+            rankDO = schoolMajorRankMapper.selectOne(new LambdaQueryWrapper<SchoolMajorRankDO>()
+                    .eq(SchoolMajorRankDO::getSchoolId, user.getTargetSchoolId())
+                    .eq(SchoolMajorRankDO::getMajorCode, user.getTargetMajorCode()));
+
+            // 尝试 4 位匹配
+            if (rankDO == null && user.getTargetMajorCode().length() >= 4) {
+                 rankDO = schoolMajorRankMapper.selectOne(new LambdaQueryWrapper<SchoolMajorRankDO>()
+                    .eq(SchoolMajorRankDO::getSchoolId, user.getTargetSchoolId())
+                    .eq(SchoolMajorRankDO::getMajorCode, user.getTargetMajorCode().substring(0, 4)));
+            }
+        }
         
-        // 修正：如果 adjustment 为 null (School Level filtering), 默认不加分或者加分?
-        // 文档 C4: 学院学科在 C+ 以上?
-        // 既然在 School 阶段，我们无法精确匹配专业，这里先忽略 C4? 或者给予一个平均值?
-        // 考虑到要筛除不合适的学校，如果 C4 是关键加分项，少了它可能导致学校被筛掉。
-        // 但如果学校很好，A很高，需要高 B+C。如果 C4 缺失，可能 totalUserScore 低。
-        // 策略：在 School Level，假设 C4 满足 (Optimistic)，以免误杀。
-        if (adjustment == null) {
-            sameDiscipline = true; 
-        } else {
-             if (StrUtil.isNotBlank(user.getGraduateMajorName()) && StrUtil.isNotBlank(adjustment.getMajorName())) {
-                 // 简单名字匹配
-                 if (user.getGraduateMajorName().contains(adjustment.getMajorName()) || adjustment.getMajorName().contains(user.getGraduateMajorName())) {
-                     sameDiscipline = true;
+        if (rankDO != null) {
+            // 判断是否跨考
+            boolean isCrossExam = true;
+            String graduateMajorCode = null;
+            if (user.getGraduateMajorId() != null) {
+                MajorDO graduateMajor = majorMapper.selectById(user.getGraduateMajorId());
+                if (graduateMajor != null) {
+                    graduateMajorCode = graduateMajor.getCode();
+                }
+            }
+
+            // 如果 6 位代码完全一致，肯定不是跨考
+            if (StrUtil.isNotBlank(graduateMajorCode) && StrUtil.isNotBlank(user.getTargetMajorCode())) {
+                if (graduateMajorCode.equals(user.getTargetMajorCode())) {
+                    isCrossExam = false;
+                }
+            }
+
+            if (!isCrossExam) {
+                 // 不跨考，按排名等级加分
+                 String level = rankDO.getLevelRaw(); // A+, A ...
+                 if (StrUtil.isNotBlank(level)) {
+                     if ("A+".equalsIgnoreCase(level)) c4 = c0 * 1.0;
+                     else if ("A".equalsIgnoreCase(level)) c4 = c0 * 0.9;
+                     else if ("A-".equalsIgnoreCase(level)) c4 = c0 * 0.8;
+                     else if ("B+".equalsIgnoreCase(level)) c4 = c0 * 0.7;
+                     else if ("B".equalsIgnoreCase(level)) c4 = c0 * 0.6;
+                     else if ("B-".equalsIgnoreCase(level)) c4 = c0 * 0.5;
+                     else if ("C+".equalsIgnoreCase(level)) c4 = c0 * 0.4;
+                     else if ("C".equalsIgnoreCase(level)) c4 = c0 * 0.2;
+                 }
+            } else {
+                 // 跨考 (但可能是相近学科)
+                 // 判断是否命中 6、4、2 维度
+                 boolean isSimilar = false;
+                 String tCode = user.getTargetMajorCode();
+                 String gCode = graduateMajorCode;
+                 if (StrUtil.isNotBlank(tCode) && StrUtil.isNotBlank(gCode)) {
+                     // 4位匹配
+                     if (tCode.length() >= 4 && gCode.length() >= 4 && tCode.substring(0, 4).equals(gCode.substring(0, 4))) {
+                         isSimilar = true;
+                     }
+                     // 2位匹配
+                     else if (tCode.length() >= 2 && gCode.length() >= 2 && tCode.substring(0, 2).equals(gCode.substring(0, 2))) {
+                         isSimilar = true;
+                     }
+                 }
+
+                 if (isSimilar) {
+                     c4 = c0 * 0.6;
                  }
             }
         }
-        
-        if (sameDiscipline) {
-            // 学院学科在 C+ 以上? 暂忽略复杂逻辑
-            // c += c0 * 0.05; // 假设加一点分? 文档没写具体数值，只写了条件。
-            // 假设符合条件不做惩罚? 或者有加分? 文档似乎没明确 C4 的具体加分公式，只是列出 C4。
-            // 假设 C4 不加分，只做判定? 
-            // 让我们假设不加分，或者 user bonus C structure is complex.
-        }
 
-        // C5: 本科平均分
+        // C5: 本科成绩 (GPA/平均分)
+        double c5 = 0.0;
         if (user.getGraduateAverageScore() != null && user.getGraduateAverageScore().doubleValue() > 85) {
-            c += c0 * 0.1;
+            c5 = c0 * 0.1;
         }
 
-        // C6: 奖学金 (User Profile里没有明确字段，暂忽略)
+        // C6: 奖学金 (暂缺字段)
+        double c6 = 0.0;
 
-        // C7: 自评分
+        // C7: 综合自评
+        double c7 = 0.0;
         if (user.getSelfAssessedScore() != null) {
-            c += (user.getSelfAssessedScore() / 10.0) * c0 * 0.05;
+            // 分数范围通常 1-10，归一化后 * 权重
+            c7 = (user.getSelfAssessedScore() / 10.0) * c0 * 0.05;
         }
 
-        // C8: 一志愿院校
+        // C8: 一志愿院校背景加分
+        double c8 = 0.0;
         if (user.getTargetSchoolId() != null) {
-            SchoolDO firstChoice = schoolMap.get(user.getTargetSchoolId());
+            SchoolDO firstChoice = schoolMapper.selectById(user.getTargetSchoolId());
             if (firstChoice != null) {
-                // 文档逻辑复杂，这里简化：如果是985/211，加分
-                if (Boolean.TRUE.equals(firstChoice.getIs985())) c += c0 * 0.2 * 1.0;
-                else if (Boolean.TRUE.equals(firstChoice.getIs211())) c += c0 * 0.2 * 0.8;
-                else c += c0 * 0.2 * 0.5;
+                if (Boolean.TRUE.equals(firstChoice.getIs985())) {
+                    c8 = c0 * 0.2;
+                } else if (Boolean.TRUE.equals(firstChoice.getIs211())) {
+                    c8 = c0 * 0.2 * 0.8; // 211 打8折
+                } else {
+                    c8 = c0 * 0.2 * 0.5; // 其他 打5折
+                }
             }
         }
 
-        return c;
+        return c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8;
     }
 
     /**
      * 计算分数匹配度 SimA (Memory)
      */
-    private double calculateSimAInMemory(UserProfileDO user, SchoolDO school, AdjustmentDO adjustment, Map<Long, Map<String, SchoolScoreDO>> schoolMajorScoreMap) {
+    private double calculateSimAInMemory(UserProfileDO user, SchoolDO school, AdjustmentDO adjustment, List<SchoolScoreDO> schoolMajorScoreMap) {
         if (user.getScoreTotal() == null) return 0.5;
         double userScore = user.getScoreTotal().doubleValue();
 
         double avgScore = 360.0; // 默认
         
         // 查找往年分数 (这里简化为取最新的自划线作为参考，或者沿用 SchoolScoreDO)
-        Map<String, SchoolScoreDO> majorMap = schoolMajorScoreMap.get(school.getId());
-        if (majorMap != null) {
-            SchoolScoreDO schoolScore = majorMap.get(adjustment.getMajorCode());
+        // 传入的是该学校的所有分数线列表
+        if (CollUtil.isNotEmpty(schoolMajorScoreMap)) {
+            // 这里找 adjustment 的目标专业分数
+            SchoolScoreDO schoolScore = findBestMatchScore(schoolMajorScoreMap, adjustment.getMajorCode(), null);
             if (schoolScore != null && schoolScore.getScoreTotal() != null) {
                 avgScore = schoolScore.getScoreTotal().doubleValue();
             }
@@ -933,6 +1011,80 @@ public class RecommendServiceImpl implements RecommendService {
      */
     private double calculateSimC(UserProfileDO user, AdjustmentDO adjustment) {
         return 0.5; // 暂无热度数据
+    }
+
+    /**
+     * 检查用户是否过该专业分数线
+     */
+    private boolean checkSchoolScore(UserProfileDO user, SchoolScoreDO schoolScore) {
+        if (schoolScore == null) return false;
+
+        // 总分
+        if (schoolScore.getScoreTotal() != null) {
+            if (user.getScoreTotal() == null || user.getScoreTotal().compareTo(schoolScore.getScoreTotal()) < 0) {
+                return false;
+            }
+        }
+
+        // 单科1 (政治)
+        if (schoolScore.getScoreSubject1() != null) {
+            if (user.getSubjectScore1() == null || user.getSubjectScore1().compareTo(schoolScore.getScoreSubject1()) < 0) {
+                return false;
+            }
+        }
+        // 单科2 (外语)
+        if (schoolScore.getScoreSubject2() != null) {
+            if (user.getSubjectScore2() == null || user.getSubjectScore2().compareTo(schoolScore.getScoreSubject2()) < 0) {
+                return false;
+            }
+        }
+        // 单科3 (业务课1)
+        if (schoolScore.getScoreSubject3() != null) {
+            if (user.getSubjectScore3() == null || user.getSubjectScore3().compareTo(schoolScore.getScoreSubject3()) < 0) {
+                return false;
+            }
+        }
+        // 单科4 (业务课2)
+        if (schoolScore.getScoreSubject4() != null) {
+            if (user.getSubjectScore4() == null || user.getSubjectScore4().compareTo(schoolScore.getScoreSubject4()) < 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private SchoolScoreDO findBestMatchScore(List<SchoolScoreDO> scores, String majorCode, Integer degreeType) {
+        if (StrUtil.isBlank(majorCode)) return null;
+
+        // 1. 6-digit match
+        for (SchoolScoreDO s : scores) {
+            if ((degreeType == null || Objects.equals(s.getDegreeType(), degreeType))
+                    && Objects.equals(s.getMajorCode(), majorCode)) {
+                return s;
+            }
+        }
+        // 2. 4-digit match
+        if (majorCode.length() >= 4) {
+            String prefix4 = majorCode.substring(0, 4);
+            for (SchoolScoreDO s : scores) {
+                if ((degreeType == null || Objects.equals(s.getDegreeType(), degreeType))
+                        && s.getMajorCode() != null && s.getMajorCode().equals(prefix4)) {
+                    return s;
+                }
+            }
+        }
+        // 3. 2-digit match
+        if (majorCode.length() >= 2) {
+            String prefix2 = majorCode.substring(0, 2);
+            for (SchoolScoreDO s : scores) {
+                if ((degreeType == null || Objects.equals(s.getDegreeType(), degreeType))
+                        && s.getMajorCode() != null && s.getMajorCode().equals(prefix2)) {
+                    return s;
+                }
+            }
+        }
+        return null;
     }
 
 }
