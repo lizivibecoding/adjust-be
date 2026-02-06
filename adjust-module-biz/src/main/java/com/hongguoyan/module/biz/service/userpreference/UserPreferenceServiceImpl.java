@@ -106,7 +106,7 @@ public class UserPreferenceServiceImpl implements UserPreferenceService {
         toSave.setMajorId(major.getMajorId());
         toSave.setMajorCode(major.getCode());
         toSave.setMajorName(major.getName());
-        toSave.setStudyMode(convertStudyMode(direction.getStudyMode()));
+        toSave.setStudyMode(direction.getStudyMode());
 
         if (existing == null) {
             userPreferenceMapper.insert(toSave);
@@ -160,19 +160,6 @@ public class UserPreferenceServiceImpl implements UserPreferenceService {
         if (preferenceNo == null || preferenceNo < 1 || preferenceNo > 3) {
             throw exception(USER_PREFERENCE_NO_INVALID);
         }
-    }
-
-    private Integer convertStudyMode(String studyMode) {
-        if (studyMode == null || studyMode.isEmpty()) {
-            return null;
-        }
-        if ("全日制".equals(studyMode)) {
-            return 1;
-        }
-        if ("非全日制".equals(studyMode)) {
-            return 2;
-        }
-        return null;
     }
 
 }

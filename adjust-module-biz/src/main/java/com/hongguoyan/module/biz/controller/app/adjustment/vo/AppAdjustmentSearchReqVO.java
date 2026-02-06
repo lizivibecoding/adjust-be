@@ -29,8 +29,8 @@ public class AppAdjustmentSearchReqVO extends PageParam {
     @Schema(description = "调剂年份")
     private Integer year;
 
-    @Schema(description = "学习方式：全日制/非全日制")
-    private String studyMode;
+    @Schema(description = "学习方式：1-全日制 2-非全日制", example = "1")
+    private Integer studyMode;
 
     @Schema(description = "学位类型（0-不区分 1-学硕 2-专硕）")
     private Integer degreeType;

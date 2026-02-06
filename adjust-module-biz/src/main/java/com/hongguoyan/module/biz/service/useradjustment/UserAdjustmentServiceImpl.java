@@ -200,7 +200,7 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
         toSave.setDirectionId(directionId);
         toSave.setDirectionCode(direction.getDirectionCode());
         toSave.setDirectionName(direction.getDirectionName());
-        toSave.setStudyMode(mapStudyMode(direction.getStudyMode()));
+        toSave.setStudyMode(direction.getStudyMode());
 
         toSave.setSchoolId(direction.getSchoolId());
         SchoolDO school = direction.getSchoolId() != null ? schoolMapper.selectById(direction.getSchoolId()) : null;
@@ -228,20 +228,6 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
         toSave.setTitle(StrUtil.blankToDefault(title, ""));
         toSave.setRemark(StrUtil.blankToDefault(remark, ""));
         return toSave;
-    }
-
-    private int mapStudyMode(String studyMode) {
-        if (StrUtil.isBlank(studyMode)) {
-            return 0;
-        }
-        String s = studyMode.trim();
-        if ("全日制".equals(s)) {
-            return 1;
-        }
-        if ("非全日制".equals(s)) {
-            return 2;
-        }
-        return 0;
     }
 
     private AppUserAdjustmentListRespVO toListResp(UserAdjustmentDO item,

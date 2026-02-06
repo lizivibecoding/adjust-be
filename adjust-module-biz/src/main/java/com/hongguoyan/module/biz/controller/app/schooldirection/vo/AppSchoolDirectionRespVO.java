@@ -1,5 +1,7 @@
 package com.hongguoyan.module.biz.controller.app.schooldirection.vo;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.hongguoyan.module.biz.framework.jackson.StudyModeNameSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import java.util.*;
@@ -28,9 +30,10 @@ public class AppSchoolDirectionRespVO {
     @ExcelProperty("专业ID")
     private Long majorId;
 
-    @Schema(description = "学习方式", requiredMode = Schema.RequiredMode.REQUIRED, example = "全日制")
+    @Schema(description = "学习方式", requiredMode = Schema.RequiredMode.REQUIRED, example = "全日制", type = "string")
     @ExcelProperty("学习方式")
-    private String studyMode;
+    @JsonSerialize(using = StudyModeNameSerializer.class)
+    private Integer studyMode;
 
     @Schema(description = "方向代码", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("方向代码")

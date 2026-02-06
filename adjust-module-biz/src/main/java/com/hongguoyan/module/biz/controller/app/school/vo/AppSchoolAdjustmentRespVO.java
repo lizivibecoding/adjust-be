@@ -1,5 +1,7 @@
 package com.hongguoyan.module.biz.controller.app.school.vo;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.hongguoyan.module.biz.framework.jackson.StudyModeNameSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -28,8 +30,9 @@ public class AppSchoolAdjustmentRespVO {
     @Schema(description = "年份", example = "2024")
     private Integer year;
 
-    @Schema(description = "学习方式：全日制/非全日制")
-    private String studyMode;
+    @Schema(description = "学习方式", example = "全日制", type = "string")
+    @JsonSerialize(using = StudyModeNameSerializer.class)
+    private Integer studyMode;
 
     @Schema(description = "招生人数(调剂缺额汇总)", example = "8")
     private Long adjustCount;

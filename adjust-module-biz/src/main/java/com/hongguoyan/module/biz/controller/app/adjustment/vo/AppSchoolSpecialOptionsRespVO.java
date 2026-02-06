@@ -1,6 +1,9 @@
 package com.hongguoyan.module.biz.controller.app.adjustment.vo;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.v3.oas.annotations.media.Schema;
+import com.hongguoyan.module.biz.framework.jackson.StudyModeListMapNameSerializer;
+import com.hongguoyan.module.biz.framework.jackson.StudyModeNameSerializer;
 import lombok.Data;
 
 import java.util.List;
@@ -20,7 +23,8 @@ public class AppSchoolSpecialOptionsRespVO {
     private List<DirectionOption> directions;
 
     @Schema(description = "学习方式映射(type=2 返回，key=majorId)")
-    private Map<Long, List<String>> studyModes;
+    @JsonSerialize(using = StudyModeListMapNameSerializer.class)
+    private Map<Long, List<Integer>> studyModes;
 
     @Schema(description = "分数线(type=4 返回)")
     private ScoreLimit scoreLimit;
@@ -50,8 +54,9 @@ public class AppSchoolSpecialOptionsRespVO {
         @Schema(description = "方向名称", example = "人工智能")
         private String directionName;
 
-        @Schema(description = "学习方式", example = "全日制")
-        private String studyMode;
+        @Schema(description = "学习方式", example = "全日制", type = "string")
+        @JsonSerialize(using = StudyModeNameSerializer.class)
+        private Integer studyMode;
     }
 
     @Data

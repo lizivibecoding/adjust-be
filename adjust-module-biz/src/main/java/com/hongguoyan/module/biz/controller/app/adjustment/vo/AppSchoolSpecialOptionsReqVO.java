@@ -21,8 +21,8 @@ public class AppSchoolSpecialOptionsReqVO {
     @Schema(description = "专业ID。type=3 需要；type=2 不需要", example = "2810")
     private Long majorId;
 
-    @Schema(description = "学习方式。type=3 可选；不传则返回全部", example = "全日制")
-    private String studyMode;
+    @Schema(description = "学习方式(1-全日制 2-非全日制)。仅 type=3 时可选", example = "1")
+    private Integer studyMode;
 
     @Schema(description = "方向ID。type=4 可传；不传则用 schoolId+majorId", example = "755")
     private Long directionId;

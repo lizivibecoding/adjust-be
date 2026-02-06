@@ -30,8 +30,8 @@ public class AppUserIntentionSaveReqVO {
     @Size(min = 1, message = "意向专业至少选择1个")
     private List<Long> majorIds;
 
-    @Schema(description = "意向学习方式: 0-不限 1-全日制 2-非全日制", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotNull(message = "意向学习方式: 0-不限 1-全日制 2-非全日制不能为空")
+    @Schema(description = "意向学习方式: 0-不限 1-全日制 2-非全日制", requiredMode = Schema.RequiredMode.REQUIRED, example = "0")
+    @NotNull(message = "意向学习方式不能为空")
     private Integer studyMode;
 
     @Schema(description = "意向学位类型：0-不限 1-学硕 2-专硕", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")

@@ -1,5 +1,7 @@
 package com.hongguoyan.module.biz.controller.app.adjustmentadmit.vo;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.hongguoyan.module.biz.framework.jackson.StudyModeNameSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import java.util.*;
@@ -57,9 +59,10 @@ public class AppAdjustmentAdmitRespVO {
     @ExcelProperty("年份")
     private Short year;
 
-    @Schema(description = "学习方式：全日制/非全日制", requiredMode = Schema.RequiredMode.REQUIRED)
-    @ExcelProperty("学习方式：全日制/非全日制")
-    private String studyMode;
+    @Schema(description = "学习方式", requiredMode = Schema.RequiredMode.REQUIRED, example = "全日制", type = "string")
+    @ExcelProperty("学习方式")
+    @JsonSerialize(using = StudyModeNameSerializer.class)
+    private Integer studyMode;
 
     @Schema(description = "考生名称(脱敏)", requiredMode = Schema.RequiredMode.REQUIRED, example = "芋艿")
     @ExcelProperty("考生名称(脱敏)")

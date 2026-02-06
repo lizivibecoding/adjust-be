@@ -1,6 +1,7 @@
 package com.hongguoyan.module.biz.controller.app.userpreference.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import com.hongguoyan.module.biz.enums.StudyModeEnum;
 import lombok.*;
 
 @Schema(description = "用户志愿-响应")
@@ -30,5 +31,10 @@ public class AppUserPreferenceRespVO {
 
     @Schema(description = "学习方式：1-全日制 2-非全日制")
     private Integer studyMode;
+
+    @Schema(description = "学习方式名称", example = "全日制")
+    public String getStudyModeName() {
+        return StudyModeEnum.getName(studyMode);
+    }
 
 }

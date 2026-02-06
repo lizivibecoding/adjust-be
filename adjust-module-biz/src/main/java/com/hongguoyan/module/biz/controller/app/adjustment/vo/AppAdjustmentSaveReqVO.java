@@ -59,8 +59,8 @@ public class AppAdjustmentSaveReqVO {
     @Schema(description = "方向名称", example = "王五")
     private String directionName;
 
-    @Schema(description = "学习方式：全日制/非全日制")
-    private String studyMode;
+    @Schema(description = "学习方式：1-全日制 2-非全日制", example = "1")
+    private Integer studyMode;
 
     @Schema(description = "调剂缺额人数", example = "20026")
     private Integer adjustCount;

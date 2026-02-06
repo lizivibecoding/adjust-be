@@ -36,7 +36,7 @@ public class AppUserIntentionRespVO {
     @ExcelProperty("意向调剂专业/一级学科ID列表")
     private List<Long> majorIds;
 
-    @Schema(description = "意向学习方式: 0-不限 1-全日制 2-非全日制", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "意向学习方式: 0-不限 1-全日制 2-非全日制", requiredMode = Schema.RequiredMode.REQUIRED, example = "0")
     @ExcelProperty("意向学习方式: 0-不限 1-全日制 2-非全日制")
     private Integer studyMode;
 

@@ -52,9 +52,9 @@ public class AppAdjustmentAdmitSaveReqVO {
     @NotNull(message = "年份不能为空")
     private Short year;
 
-    @Schema(description = "学习方式：全日制/非全日制", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotEmpty(message = "学习方式不能为空")
-    private String studyMode;
+    @Schema(description = "学习方式：1-全日制 2-非全日制", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+    @NotNull(message = "学习方式不能为空")
+    private Integer studyMode;
 
     @Schema(description = "考生名称(脱敏)", requiredMode = Schema.RequiredMode.REQUIRED, example = "芋艿")
     @NotEmpty(message = "考生名称(脱敏)不能为空")

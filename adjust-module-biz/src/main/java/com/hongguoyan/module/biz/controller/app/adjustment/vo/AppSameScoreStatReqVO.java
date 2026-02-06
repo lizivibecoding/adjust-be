@@ -26,7 +26,7 @@ public class AppSameScoreStatReqVO {
     @Schema(description = "省份代码(biz_school.province_code)", example = "110000")
     private String provinceCode;
 
-    @Schema(description = "学习方式：全日制/非全日制", example = "全日制")
-    private String studyMode;
+    @Schema(description = "学习方式：1-全日制 2-非全日制", example = "1")
+    private Integer studyMode;
 }
 

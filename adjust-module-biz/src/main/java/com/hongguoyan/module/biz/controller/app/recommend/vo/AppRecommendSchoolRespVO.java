@@ -1,5 +1,7 @@
 package com.hongguoyan.module.biz.controller.app.recommend.vo;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.hongguoyan.module.biz.framework.jackson.StudyModeNameSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -49,8 +51,9 @@ public class AppRecommendSchoolRespVO {
     @Schema(description = "学院名称", example = "计算机学院")
     private String collegeName;
 
-    @Schema(description = "学习方式：全日制/非全日制", example = "全日制")
-    private String studyMode;
+    @Schema(description = "学习方式", example = "全日制", type = "string")
+    @JsonSerialize(using = StudyModeNameSerializer.class)
+    private Integer studyMode;
 
     @Schema(description = "调剂招生人数", example = "5")
     private Integer planCount;

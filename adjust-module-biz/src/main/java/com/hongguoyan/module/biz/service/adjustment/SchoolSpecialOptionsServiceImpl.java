@@ -147,21 +147,24 @@ public class SchoolSpecialOptionsServiceImpl implements SchoolSpecialOptionsServ
                 .eq(SchoolDirectionDO::getDeleted, false)
                 .groupBy(SchoolDirectionDO::getMajorId, SchoolDirectionDO::getStudyMode));
 
-        Map<Long, List<String>> map = new HashMap<>();
+        Map<Long, List<Integer>> map = new HashMap<>();
         for (SchoolDirectionDO item : modes) {
             if (item == null || item.getMajorId() == null) {
                 continue;
             }
-            String mode = StrUtil.blankToDefault(item.getStudyMode(), "");
+            Integer mode = item.getStudyMode();
+            if (mode == null) {
+                continue;
+            }
             map.computeIfAbsent(item.getMajorId(), k -> new ArrayList<>()).add(mode);
         }
-        // stable order: 全日制 -> 非全日制 -> others
-        for (Map.Entry<Long, List<String>> entry : map.entrySet()) {
-            List<String> list = entry.getValue();
+        // stable order: 1(全日制) -> 2(非全日制) -> others
+        for (Map.Entry<Long, List<Integer>> entry : map.entrySet()) {
+            List<Integer> list = entry.getValue();
             if (list == null) {
                 continue;
             }
-            list.sort((a, b) -> studyModeRank(a) - studyModeRank(b));
+            list.sort(Comparator.comparingInt(this::studyModeRank));
         }
         respVO.setStudyModes(map);
     }
@@ -170,7 +173,7 @@ public class SchoolSpecialOptionsServiceImpl implements SchoolSpecialOptionsServ
         Long schoolId = reqVO.getSchoolId();
         Long collegeId = reqVO.getCollegeId();
         Long majorId = reqVO.getMajorId();
-        String studyMode = reqVO.getStudyMode();
+        Integer studyMode = reqVO.getStudyMode();
         if (schoolId == null) {
             throw exception(new ErrorCode(400, "schoolId is required"));
         }
@@ -190,7 +193,7 @@ public class SchoolSpecialOptionsServiceImpl implements SchoolSpecialOptionsServ
                 .eq(SchoolDirectionDO::getDeleted, false)
                 .orderByAsc(SchoolDirectionDO::getDirectionCode)
                 .orderByAsc(SchoolDirectionDO::getDirectionName);
-        if (StrUtil.isNotBlank(studyMode)) {
+        if (studyMode != null) {
             qw.eq(SchoolDirectionDO::getStudyMode, studyMode);
         }
         List<SchoolDirectionDO> list = schoolDirectionMapper.selectList(qw);
@@ -201,7 +204,7 @@ public class SchoolSpecialOptionsServiceImpl implements SchoolSpecialOptionsServ
             opt.setId(item.getId());
             opt.setDirectionCode(StrUtil.blankToDefault(item.getDirectionCode(), ""));
             opt.setDirectionName(StrUtil.blankToDefault(item.getDirectionName(), ""));
-            opt.setStudyMode(StrUtil.blankToDefault(item.getStudyMode(), ""));
+            opt.setStudyMode(item.getStudyMode());
             directions.add(opt);
         }
         return directions;
@@ -292,15 +295,12 @@ public class SchoolSpecialOptionsServiceImpl implements SchoolSpecialOptionsServ
         return v.intValue();
     }
 
-    private int studyModeRank(String mode) {
-        if ("全日制".equals(mode)) {
+    private int studyModeRank(Integer mode) {
+        if (mode != null && mode == 1) {
             return 0;
         }
-        if ("非全日制".equals(mode)) {
+        if (mode != null && mode == 2) {
             return 1;
-        }
-        if (mode == null) {
-            return 99;
         }
         return 10;
     }

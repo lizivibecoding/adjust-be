@@ -27,7 +27,7 @@ public class AppUserIntentionPageReqVO extends PageParam {
     @Schema(description = "意向调剂专业/一级学科ID列表")
     private String majorIds;
 
-    @Schema(description = "意向学习方式: 0-不限 1-全日制 2-非全日制")
+    @Schema(description = "意向学习方式: 0-不限 1-全日制 2-非全日制", example = "0")
     private Integer studyMode;
 
     @Schema(description = "意向学位类型：0-不限 1-学硕 2-专硕", example = "1")

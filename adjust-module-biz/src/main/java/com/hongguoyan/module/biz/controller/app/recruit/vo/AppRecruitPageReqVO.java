@@ -46,8 +46,8 @@ public class AppRecruitPageReqVO extends PageParam {
     @Schema(description = "方向名称", example = "赵六")
     private String directionName;
 
-    @Schema(description = "学习方式：全日制/非全日制")
-    private String studyMode;
+    @Schema(description = "学习方式：1-全日制 2-非全日制", example = "1")
+    private Integer studyMode;
 
     @Schema(description = "考试方式")
     private String examMode;

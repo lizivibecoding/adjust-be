@@ -40,9 +40,9 @@ public class SchoolDirectionDO extends BaseDO {
      */
     private Long majorId;
     /**
-     * 学习方式
+     * 学习方式：1-全日制 2-非全日制
      */
-    private String studyMode;
+    private Integer studyMode;
     /**
      * 方向代码
      */

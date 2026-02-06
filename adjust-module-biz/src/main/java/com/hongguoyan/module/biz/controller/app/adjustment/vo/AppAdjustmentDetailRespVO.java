@@ -1,6 +1,8 @@
 package com.hongguoyan.module.biz.controller.app.adjustment.vo;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.v3.oas.annotations.media.Schema;
+import com.hongguoyan.module.biz.framework.jackson.StudyModeNameSerializer;
 import lombok.Data;
 
 import java.util.List;
@@ -59,8 +61,9 @@ public class AppAdjustmentDetailRespVO {
     @Schema(description = "调剂年份")
     private Integer year;
 
-    @Schema(description = "学习方式：全日制/非全日制")
-    private String studyMode;
+    @Schema(description = "学习方式", example = "全日制", type = "string")
+    @JsonSerialize(using = StudyModeNameSerializer.class)
+    private Integer studyMode;
 
     // ========== 方向列表(按 directionCode 从小到大排序) ==========
 

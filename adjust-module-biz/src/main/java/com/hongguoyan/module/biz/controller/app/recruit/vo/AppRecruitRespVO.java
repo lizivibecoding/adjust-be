@@ -1,5 +1,7 @@
 package com.hongguoyan.module.biz.controller.app.recruit.vo;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.hongguoyan.module.biz.framework.jackson.StudyModeNameSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import java.util.*;
@@ -60,9 +62,10 @@ public class AppRecruitRespVO {
     @ExcelProperty("方向名称")
     private String directionName;
 
-    @Schema(description = "学习方式：全日制/非全日制")
-    @ExcelProperty("学习方式：全日制/非全日制")
-    private String studyMode;
+    @Schema(description = "学习方式", example = "全日制", type = "string")
+    @ExcelProperty("学习方式")
+    @JsonSerialize(using = StudyModeNameSerializer.class)
+    private Integer studyMode;
 
     @Schema(description = "考试方式")
     @ExcelProperty("考试方式")

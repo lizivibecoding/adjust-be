@@ -1,7 +1,6 @@
 package com.hongguoyan.module.biz.controller.app.adjustment.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
@@ -25,9 +24,9 @@ public class AppAdjustmentAnalysisReqVO {
     @NotNull(message = "年份不能为空")
     private Short year;
 
-    @Schema(description = "学习方式：全日制/非全日制", requiredMode = Schema.RequiredMode.REQUIRED, example = "全日制")
-    @NotBlank(message = "学习方式不能为空")
-    private String studyMode;
+    @Schema(description = "学习方式：1-全日制 2-非全日制", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+    @NotNull(message = "学习方式不能为空")
+    private Integer studyMode;
 
     @Schema(description = "方向ID", example = "755")
     private Long directionId;

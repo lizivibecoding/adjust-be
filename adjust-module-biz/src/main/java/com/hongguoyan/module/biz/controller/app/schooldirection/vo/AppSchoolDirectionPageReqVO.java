@@ -22,8 +22,8 @@ public class AppSchoolDirectionPageReqVO extends PageParam {
     @Schema(description = "专业ID", example = "2810")
     private Long majorId;
 
-    @Schema(description = "学习方式")
-    private String studyMode;
+    @Schema(description = "学习方式：1-全日制 2-非全日制", example = "1")
+    private Integer studyMode;
 
     @Schema(description = "方向代码")
     private String directionCode;

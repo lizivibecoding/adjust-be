@@ -31,7 +31,7 @@
             <if test="reqVO.year != null">
                 AND a.year = #{reqVO.year}
             </if>
-            <if test="reqVO.studyMode != null and reqVO.studyMode != ''">
+            <if test="reqVO.studyMode != null">
                 AND a.study_mode = #{reqVO.studyMode}
             </if>
             <if test="reqVO.degreeType != null">
@@ -124,7 +124,7 @@
             <if test="reqVO.year != null">
                 AND a.year = #{reqVO.year}
             </if>
-            <if test="reqVO.studyMode != null and reqVO.studyMode != ''">
+            <if test="reqVO.studyMode != null">
                 AND a.study_mode = #{reqVO.studyMode}
             </if>
             <if test="reqVO.provinceCode != null and reqVO.provinceCode != ''">
@@ -296,12 +296,8 @@
         FROM biz_adjustment a
         WHERE a.school_id = #{schoolId}
           AND a.major_id = #{majorId}
-          <if test="collegeId != null">
-              AND a.college_id = #{collegeId}
-          </if>
-          <if test="studyMode != null and studyMode != ''">
-              AND a.study_mode = #{studyMode}
-          </if>
+          AND a.college_id = #{collegeId}
+          AND a.study_mode = #{studyMode}
         ORDER BY a.year DESC
     </select>
 
@@ -316,7 +312,7 @@
         ORDER BY a.college_name ASC
     </select>
 
-    <select id="selectOptionStudyModes" resultType="java.lang.String">
+    <select id="selectOptionStudyModes" resultType="java.lang.Integer">
         SELECT DISTINCT a.study_mode
         FROM biz_adjustment a
         WHERE a.school_id = #{schoolId}
@@ -324,8 +320,8 @@
           AND a.major_id = #{majorId}
         ORDER BY
             CASE a.study_mode
-                WHEN '全日制' THEN 0
-                WHEN '非全日制' THEN 1
+                WHEN 1 THEN 0
+                WHEN 2 THEN 1
                 ELSE 9
             END,
             a.study_mode ASC

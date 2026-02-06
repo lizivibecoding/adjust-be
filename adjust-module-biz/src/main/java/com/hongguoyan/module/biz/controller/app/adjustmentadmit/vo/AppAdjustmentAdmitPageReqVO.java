@@ -44,8 +44,8 @@ public class AppAdjustmentAdmitPageReqVO extends PageParam {
     @Schema(description = "年份")
     private Short year;
 
-    @Schema(description = "学习方式：全日制/非全日制")
-    private String studyMode;
+    @Schema(description = "学习方式：1-全日制 2-非全日制", example = "1")
+    private Integer studyMode;
 
     @Schema(description = "考生名称(脱敏)", example = "芋艿")
     private String candidateName;

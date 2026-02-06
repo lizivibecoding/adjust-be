@@ -72,9 +72,9 @@ public class RecruitDO extends BaseDO {
      */
     private String directionName;
     /**
-     * 学习方式(全日制/非全日制)
+     * 学习方式：1-全日制 2-非全日制
      */
-    private String studyMode;
+    private Integer studyMode;
     /**
      * 考试方式
      */

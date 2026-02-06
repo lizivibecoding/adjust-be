@@ -24,9 +24,9 @@ public class AppSchoolDirectionSaveReqVO {
     @NotNull(message = "专业ID不能为空")
     private Long majorId;
 
-    @Schema(description = "学习方式", requiredMode = Schema.RequiredMode.REQUIRED, example = "全日制")
-    @NotEmpty(message = "学习方式不能为空")
-    private String studyMode;
+    @Schema(description = "学习方式：1-全日制 2-非全日制", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+    @NotNull(message = "学习方式不能为空")
+    private Integer studyMode;
 
     @Schema(description = "方向代码", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotEmpty(message = "方向代码不能为空")

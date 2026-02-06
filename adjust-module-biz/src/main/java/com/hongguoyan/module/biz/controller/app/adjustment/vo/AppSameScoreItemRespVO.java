@@ -1,6 +1,8 @@
 package com.hongguoyan.module.biz.controller.app.adjustment.vo;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.v3.oas.annotations.media.Schema;
+import com.hongguoyan.module.biz.framework.jackson.StudyModeNameSerializer;
 import lombok.Data;
 
 @Schema(description = "同分调剂去向列表-项-响应")
@@ -43,8 +45,9 @@ public class AppSameScoreItemRespVO {
     @Schema(description = "年份", example = "2025")
     private Integer year;
 
-    @Schema(description = "学习方式：全日制/非全日制", example = "全日制")
-    private String studyMode;
+    @Schema(description = "学习方式", example = "全日制", type = "string")
+    @JsonSerialize(using = StudyModeNameSerializer.class)
+    private Integer studyMode;
 
     @Schema(description = "初试分数(同分区间内该去向的最高初试分)", example = "298")
     private Integer firstScore;
