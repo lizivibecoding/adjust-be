@@ -12,6 +12,9 @@ public class AppSchoolAdjustmentRespVO {
     @Schema(description = "学校ID", example = "5")
     private Long schoolId;
 
+    @Schema(description = "学校Logo")
+    private String schoolLogo;
+
     @Schema(description = "学院ID", example = "95")
     private Long collegeId;
 

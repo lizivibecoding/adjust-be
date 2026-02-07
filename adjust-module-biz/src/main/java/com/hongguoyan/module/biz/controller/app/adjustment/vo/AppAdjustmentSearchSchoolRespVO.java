@@ -16,6 +16,9 @@ public class AppAdjustmentSearchSchoolRespVO {
     @Schema(description = "学校名称")
     private String schoolName;
 
+    @Schema(description = "学校Logo")
+    private String schoolLogo;
+
     @Schema(description = "学校类别", example = "综合类")
     private String schoolType;
 

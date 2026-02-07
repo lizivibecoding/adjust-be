@@ -23,6 +23,9 @@ public class AppAdjustmentSearchRespVO {
     @Schema(description = "学校名称")
     private String schoolName;
 
+    @Schema(description = "学校Logo")
+    private String schoolLogo;
+
     @Schema(description = "学院名称")
     private String collegeName;
 
