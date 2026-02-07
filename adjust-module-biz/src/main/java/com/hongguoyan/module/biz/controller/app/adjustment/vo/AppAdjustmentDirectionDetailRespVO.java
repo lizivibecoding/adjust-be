@@ -47,47 +47,8 @@ public class AppAdjustmentDirectionDetailRespVO {
     @Schema(description = "允许调入的一志愿专业范围")
     private String requireMajor;
 
-    @Schema(description = "科目1代码")
-    private String subjectCode1;
-
-    @Schema(description = "科目1名称")
-    private String subjectName1;
-
-    @Schema(description = "科目1说明")
-    private String subjectNote1;
-
-    @Schema(description = "科目2代码")
-    private String subjectCode2;
-
-    @Schema(description = "科目2名称")
-    private String subjectName2;
-
-    @Schema(description = "科目2说明")
-    private String subjectNote2;
-
-    @Schema(description = "科目3代码")
-    private String subjectCode3;
-
-    @Schema(description = "科目3名称")
-    private String subjectName3;
-
-    @Schema(description = "科目3说明")
-    private String subjectNote3;
-
-    @Schema(description = "科目4代码")
-    private String subjectCode4;
-
-    @Schema(description = "科目4名称")
-    private String subjectName4;
-
-    @Schema(description = "科目4说明")
-    private String subjectNote4;
-
-    @Schema(description = "科目组合JSON")
-    private String subjectCombinations;
-
-    @Schema(description = "联系方式")
-    private String contact;
+    @Schema(description = "考试科目(仅名称)")
+    private AppAdjustmentSubjectsRespVO subjects;
 
     @Schema(description = "备注")
     private String remark;

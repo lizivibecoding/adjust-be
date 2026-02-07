@@ -1,46 +1,44 @@
 package com.hongguoyan.module.biz.service.adjustment;
 
 import cn.hutool.core.util.StrUtil;
-import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import jakarta.annotation.Resource;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.*;
-import java.time.Year;
-import java.util.regex.Pattern;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hongguoyan.framework.common.pojo.PageResult;
+import com.hongguoyan.framework.common.util.object.BeanUtils;
+import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.*;
 import com.hongguoyan.module.biz.controller.app.school.vo.AppSchoolAdjustmentPageReqVO;
 import com.hongguoyan.module.biz.controller.app.school.vo.AppSchoolAdjustmentRespVO;
-import com.hongguoyan.module.biz.dal.dataobject.area.AreaDO;
 import com.hongguoyan.module.biz.dal.dataobject.adjustment.AdjustmentDO;
+import com.hongguoyan.module.biz.dal.dataobject.area.AreaDO;
 import com.hongguoyan.module.biz.dal.dataobject.major.MajorDO;
 import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
-import com.hongguoyan.framework.common.pojo.PageResult;
-import com.hongguoyan.framework.common.pojo.PageParam;
-import com.hongguoyan.framework.common.util.object.BeanUtils;
-
-import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
-import com.hongguoyan.module.biz.dal.mysql.area.AreaMapper;
+import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.AdjustmentMapper;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.BizMajorKeyDTO;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.RecruitSnapshotRowDTO;
+import com.hongguoyan.module.biz.dal.mysql.area.AreaMapper;
 import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
 import com.hongguoyan.module.biz.dal.mysql.schoolmajor.SchoolMajorMapper;
-import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
-import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
 import com.hongguoyan.module.biz.service.userprofile.UserProfileService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
+import jakarta.annotation.Resource;
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
+
+import java.time.Year;
+import java.util.*;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
-import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertList;
-import static com.hongguoyan.framework.common.util.collection.CollectionUtils.diffList;
-import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.*;
-import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.*;
+import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.ADJUSTMENT_NOT_EXISTS;
+import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.VIP_MAJOR_CATEGORY_NOT_OPENED;
+import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_MAJOR_CATEGORY_OPEN;
+import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.VIEW_SCHOOL_ADJUSTMENT_3Y;
 
 /**
  * 调剂 Service 实现类
@@ -66,6 +64,8 @@ public class AdjustmentServiceImpl implements AdjustmentService {
     private VipBenefitService vipBenefitService;
     @Resource
     private UserProfileService userProfileService;
+    @Resource
+    private ObjectMapper objectMapper;
 
     private static final Pattern SPLIT_PATTERN = Pattern.compile("[\\n;,，；]+");
     private static final int DEFAULT_STATS_YEAR = 2025;
@@ -175,7 +175,15 @@ public class AdjustmentServiceImpl implements AdjustmentService {
                 }
             }
         }
-        validateMajorCategoryAccess(userId, reqVO != null ? reqVO.getMajorCode() : null);
+        ResolvedMajorCode resolved = resolveMajorCodeForSearch(reqVO != null ? reqVO.getMajorCode() : null);
+        if (reqVO != null) {
+            reqVO.setResolvedMajorCodePrefix(resolved.prefix());
+            reqVO.setResolvedMajorCodeExact(resolved.exact());
+            ResolvedMajorCodeList resolvedLevel2 = resolveMajorCodesForSearch(reqVO.getLevel2MajorCodes());
+            reqVO.setResolvedLevel2MajorCodePrefixes(resolvedLevel2.prefixes());
+            reqVO.setResolvedLevel2MajorCodeExacts(resolvedLevel2.exacts());
+        }
+        validateMajorCategoryAccess(userId, resolved.majorCategoryCode());
         if (reqVO != null && StrUtil.isNotBlank(reqVO.getKeyword())) {
             reqVO.setKeyword(buildBooleanKeyword(reqVO.getKeyword()));
         }
@@ -237,6 +245,73 @@ public class AdjustmentServiceImpl implements AdjustmentService {
             return;
         }
         throw exception(VIP_MAJOR_CATEGORY_NOT_OPENED);
+    }
+
+    private ResolvedMajorCode resolveMajorCodeForSearch(String majorCode) {
+        if (StrUtil.isBlank(majorCode)) {
+            return ResolvedMajorCode.empty();
+        }
+        String input = majorCode.trim();
+        // Frontend codes are from biz_major: level1=2 digits, level2=4 digits, level3=6 digits.
+        // Do NOT parse/translate; only decide exact vs prefix by length.
+        if (input.matches("\\d{6}")) {
+            return ResolvedMajorCode.exact(input);
+        }
+        if (input.matches("\\d{2}") || input.matches("\\d{4}")) {
+            return ResolvedMajorCode.prefix(input);
+        }
+        // Fallback for unexpected formats: keep previous behavior (prefix match).
+        return ResolvedMajorCode.prefix(input);
+    }
+
+    private ResolvedMajorCodeList resolveMajorCodesForSearch(List<String> codes) {
+        if (codes == null || codes.isEmpty()) {
+            return ResolvedMajorCodeList.empty();
+        }
+        List<String> prefixes = new ArrayList<>();
+        List<String> exacts = new ArrayList<>();
+        for (String code : codes) {
+            String input = StrUtil.trimToNull(code);
+            if (input == null) {
+                continue;
+            }
+            if (input.matches("\\d{6}")) {
+                exacts.add(input);
+            } else {
+                // expect 2/4; keep as prefix (also fallback)
+                prefixes.add(input);
+            }
+        }
+        // de-dup, keep order
+        prefixes = prefixes.stream().distinct().collect(Collectors.toList());
+        exacts = exacts.stream().distinct().collect(Collectors.toList());
+        return new ResolvedMajorCodeList(prefixes, exacts);
+    }
+
+    private record ResolvedMajorCode(String prefix, String exact, String majorCategoryCode) {
+
+        static ResolvedMajorCode empty() {
+            return new ResolvedMajorCode(null, null, null);
+        }
+
+        static ResolvedMajorCode prefix(String prefix) {
+            String p = StrUtil.trimToNull(prefix);
+            String cat = p != null && p.length() >= 2 ? p.substring(0, 2) : null;
+            return new ResolvedMajorCode(p, null, cat);
+        }
+
+        static ResolvedMajorCode exact(String exact) {
+            String e = StrUtil.trimToNull(exact);
+            String cat = e != null && e.length() >= 2 ? e.substring(0, 2) : null;
+            return new ResolvedMajorCode(null, e, cat);
+        }
+    }
+
+    private record ResolvedMajorCodeList(List<String> prefixes, List<String> exacts) {
+
+        static ResolvedMajorCodeList empty() {
+            return new ResolvedMajorCodeList(Collections.emptyList(), Collections.emptyList());
+        }
     }
 
     private String resolveDefaultMajorCategoryCode(Long userId) {
@@ -465,23 +540,10 @@ public class AdjustmentServiceImpl implements AdjustmentService {
             direction.setTuitionFee(adjustment.getTuitionFee());
             direction.setRetestRatio(adjustment.getRetestRatio());
             direction.setRetestWeight(adjustment.getRetestWeight());
-            direction.setRetestBooks(splitToList(adjustment.getRetestBooks()));
+            direction.setRetestBooks(parseStringList(adjustment.getRetestBooks()));
             direction.setRequireScore(adjustment.getRequireScore());
             direction.setRequireMajor(adjustment.getRequireMajor());
-            direction.setSubjectCode1(adjustment.getSubjectCode1());
-            direction.setSubjectName1(adjustment.getSubjectName1());
-            direction.setSubjectNote1(adjustment.getSubjectNote1());
-            direction.setSubjectCode2(adjustment.getSubjectCode2());
-            direction.setSubjectName2(adjustment.getSubjectName2());
-            direction.setSubjectNote2(adjustment.getSubjectNote2());
-            direction.setSubjectCode3(adjustment.getSubjectCode3());
-            direction.setSubjectName3(adjustment.getSubjectName3());
-            direction.setSubjectNote3(adjustment.getSubjectNote3());
-            direction.setSubjectCode4(adjustment.getSubjectCode4());
-            direction.setSubjectName4(adjustment.getSubjectName4());
-            direction.setSubjectNote4(adjustment.getSubjectNote4());
-            direction.setSubjectCombinations(adjustment.getSubjectCombinations());
-            direction.setContact(adjustment.getContact());
+            direction.setSubjects(parseSubjectsNamesOnly(adjustment.getSubjects()));
             direction.setRemark(adjustment.getRemark());
             direction.setPublishTime(adjustment.getPublishTime());
             direction.setViewCount(adjustment.getViewCount());
@@ -712,11 +774,33 @@ public class AdjustmentServiceImpl implements AdjustmentService {
         return schoolId + ":" + collegeId + ":" + majorId + ":" + (year != null ? year : "");
     }
 
-    private List<String> splitToList(String text) {
-        if (StrUtil.isBlank(text)) {
+    private List<String> parseStringList(String value) {
+        if (StrUtil.isBlank(value)) {
             return Collections.emptyList();
         }
-        String normalized = text.trim();
+        String normalized = value.trim();
+        // Prefer JSON array (DB column is JSON)
+        if (normalized.startsWith("[")) {
+            try {
+                JsonNode root = objectMapper.readTree(normalized);
+                if (root != null && root.isArray()) {
+                    List<String> list = new ArrayList<>();
+                    for (JsonNode n : root) {
+                        if (n == null || n.isNull()) {
+                            continue;
+                        }
+                        String s = StrUtil.trimToNull(n.asText(null));
+                        if (s != null) {
+                            list.add(s);
+                        }
+                    }
+                    return list;
+                }
+            } catch (Exception ignore) {
+                // fall through to legacy split
+            }
+        }
+        // Legacy: split by newline/semicolon/comma
         String[] parts = SPLIT_PATTERN.split(normalized);
         List<String> result = new ArrayList<>();
         for (String part : parts) {
@@ -726,6 +810,60 @@ public class AdjustmentServiceImpl implements AdjustmentService {
             }
         }
         return result;
+    }
+
+    private AppAdjustmentSubjectsRespVO parseSubjectsNamesOnly(String subjectsJson) {
+        AppAdjustmentSubjectsRespVO vo = new AppAdjustmentSubjectsRespVO();
+        if (StrUtil.isBlank(subjectsJson)) {
+            vo.setS1(Collections.emptyList());
+            vo.setS2(Collections.emptyList());
+            vo.setS3(Collections.emptyList());
+            vo.setS4(Collections.emptyList());
+            return vo;
+        }
+        try {
+            JsonNode root = objectMapper.readTree(subjectsJson);
+            vo.setS1(extractSubjectNames(root, "s1"));
+            vo.setS2(extractSubjectNames(root, "s2"));
+            vo.setS3(extractSubjectNames(root, "s3"));
+            vo.setS4(extractSubjectNames(root, "s4"));
+            return vo;
+        } catch (Exception ignore) {
+            // best-effort: avoid breaking detail if malformed
+            vo.setS1(Collections.emptyList());
+            vo.setS2(Collections.emptyList());
+            vo.setS3(Collections.emptyList());
+            vo.setS4(Collections.emptyList());
+            return vo;
+        }
+    }
+
+    private List<String> extractSubjectNames(JsonNode root, String key) {
+        if (root == null || StrUtil.isBlank(key)) {
+            return Collections.emptyList();
+        }
+        JsonNode arr = root.get(key);
+        if (arr == null || !arr.isArray()) {
+            return Collections.emptyList();
+        }
+        // Accept both ["name"] and [{"name": "..."}]
+        List<String> names = new ArrayList<>();
+        for (JsonNode item : arr) {
+            if (item == null || item.isNull()) {
+                continue;
+            }
+            String name;
+            if (item.isObject()) {
+                name = StrUtil.trimToNull(item.path("name").asText(null));
+            } else {
+                name = StrUtil.trimToNull(item.asText(null));
+            }
+            if (name != null) {
+                names.add(name);
+            }
+        }
+        // de-dup but keep order
+        return names.stream().distinct().collect(Collectors.toList());
     }
 
     private int compareDirectionCode(String a, String b) {

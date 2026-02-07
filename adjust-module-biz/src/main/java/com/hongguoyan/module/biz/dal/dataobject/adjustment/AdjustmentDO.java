@@ -4,7 +4,6 @@ import lombok.*;
 import java.util.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.*;
 import com.hongguoyan.framework.mybatis.core.dataobject.BaseDO;
 
@@ -81,6 +80,10 @@ public class AdjustmentDO extends BaseDO {
      */
     private String directionName;
     /**
+     * 方向ID（biz_school_direction.id）
+     */
+    private Long directionId;
+    /**
      * 学习方式：1-全日制 2-非全日制
      */
     private Integer studyMode;
@@ -92,6 +95,10 @@ public class AdjustmentDO extends BaseDO {
      * 原计划招生人数(参考)
      */
     private Integer adjustLeft;
+    /**
+     * 调剂缺额人数统计范围（1-专业维度 2-方向维度）
+     */
+    private Integer adjustCountScope;
     /**
      * 学制(年)
      */
@@ -121,65 +128,9 @@ public class AdjustmentDO extends BaseDO {
      */
     private String requireMajor;
     /**
-     * 科目1代码
+     * 考试科目 JSON（原始 JSON 字符串，包含 s1~s4 + subject_codes 冗余字段）
      */
-    private String subjectCode1;
-    /**
-     * 科目1名称
-     */
-    private String subjectName1;
-    /**
-     * 科目1说明
-     */
-    private String subjectNote1;
-    /**
-     * 科目2代码
-     */
-    private String subjectCode2;
-    /**
-     * 科目2名称
-     */
-    private String subjectName2;
-    /**
-     * 科目2说明
-     */
-    private String subjectNote2;
-    /**
-     * 科目3代码
-     */
-    private String subjectCode3;
-    /**
-     * 科目3名称
-     */
-    private String subjectName3;
-    /**
-     * 科目3说明
-     */
-    private String subjectNote3;
-    /**
-     * 科目4代码
-     */
-    private String subjectCode4;
-    /**
-     * 科目4名称
-     */
-    private String subjectName4;
-    /**
-     * 科目4说明
-     */
-    private String subjectNote4;
-    /**
-     * 科目组合JSON
-     */
-    private String subjectCombinations;
-    /**
-     * 发布人用户ID(0代表系统爬虫)
-     */
-    private Long userId;
-    /**
-     * 联系方式
-     */
-    private String contact;
+    private String subjects;
     /**
      * 备注
      */
@@ -203,14 +154,6 @@ public class AdjustmentDO extends BaseDO {
      * 状态(1=开放, 0=关闭)
      */
     private Integer status;
-    /**
-     * 审核状态(0=待审, 1=通过, 2=拒绝)
-     */
-    private Integer reviewStatus;
-    /**
-     * 审核人ID
-     */
-    private Long reviewer;
     /**
      * 发布时间
      */

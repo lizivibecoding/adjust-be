@@ -21,12 +21,21 @@
     <sql id="SearchWhere">
         <where>
             <if test="reqVO.keyword != null and reqVO.keyword != ''">
-                AND MATCH(a.school_name, a.major_name, a.major_code,
-                    a.subject_name1, a.subject_name2, a.subject_name3, a.subject_name4)
+                AND MATCH(a.school_name, a.major_name, a.major_code)
                 AGAINST(#{reqVO.keyword} IN BOOLEAN MODE)
             </if>
             <if test="reqVO.majorCode != null and reqVO.majorCode != ''">
-                AND a.major_code LIKE CONCAT(#{reqVO.majorCode}, '%')
+                <choose>
+                    <when test="reqVO.resolvedMajorCodeExact != null and reqVO.resolvedMajorCodeExact != ''">
+                        AND a.major_code = #{reqVO.resolvedMajorCodeExact}
+                    </when>
+                    <when test="reqVO.resolvedMajorCodePrefix != null and reqVO.resolvedMajorCodePrefix != ''">
+                        AND a.major_code LIKE CONCAT(#{reqVO.resolvedMajorCodePrefix}, '%')
+                    </when>
+                    <otherwise>
+                        AND a.major_code LIKE CONCAT(#{reqVO.majorCode}, '%')
+                    </otherwise>
+                </choose>
             </if>
             <if test="reqVO.year != null">
                 AND a.year = #{reqVO.year}
@@ -47,9 +56,32 @@
 
             <if test="reqVO.level2MajorCodes != null and reqVO.level2MajorCodes.size() &gt; 0">
                 AND (
-                <foreach collection="reqVO.level2MajorCodes" item="code" separator=" OR ">
-                    a.major_code LIKE CONCAT(#{code}, '%')
-                </foreach>
+                <choose>
+                    <when test="(reqVO.resolvedLevel2MajorCodeExacts != null and reqVO.resolvedLevel2MajorCodeExacts.size() &gt; 0)
+                                or (reqVO.resolvedLevel2MajorCodePrefixes != null and reqVO.resolvedLevel2MajorCodePrefixes.size() &gt; 0)">
+                        <if test="reqVO.resolvedLevel2MajorCodeExacts != null and reqVO.resolvedLevel2MajorCodeExacts.size() &gt; 0">
+                            a.major_code IN
+                            <foreach collection="reqVO.resolvedLevel2MajorCodeExacts" item="code" open="(" separator="," close=")">
+                                #{code}
+                            </foreach>
+                        </if>
+                        <if test="reqVO.resolvedLevel2MajorCodePrefixes != null and reqVO.resolvedLevel2MajorCodePrefixes.size() &gt; 0">
+                            <if test="reqVO.resolvedLevel2MajorCodeExacts != null and reqVO.resolvedLevel2MajorCodeExacts.size() &gt; 0">
+                                OR
+                            </if>
+                            (
+                            <foreach collection="reqVO.resolvedLevel2MajorCodePrefixes" item="code" separator=" OR ">
+                                a.major_code LIKE CONCAT(#{code}, '%')
+                            </foreach>
+                            )
+                        </if>
+                    </when>
+                    <otherwise>
+                        <foreach collection="reqVO.level2MajorCodes" item="code" separator=" OR ">
+                            a.major_code LIKE CONCAT(#{code}, '%')
+                        </foreach>
+                    </otherwise>
+                </choose>
                 )
             </if>
 
@@ -98,21 +130,8 @@
 
             <if test="reqVO.subjectCodes != null and reqVO.subjectCodes.size() &gt; 0">
                 AND (
-                    a.subject_code1 IN
-                    <foreach collection="reqVO.subjectCodes" item="code" open="(" separator="," close=")">
-                        #{code}
-                    </foreach>
-                    OR a.subject_code2 IN
-                    <foreach collection="reqVO.subjectCodes" item="code" open="(" separator="," close=")">
-                        #{code}
-                    </foreach>
-                    OR a.subject_code3 IN
-                    <foreach collection="reqVO.subjectCodes" item="code" open="(" separator="," close=")">
-                        #{code}
-                    </foreach>
-                    OR a.subject_code4 IN
-                    <foreach collection="reqVO.subjectCodes" item="code" open="(" separator="," close=")">
-                        #{code}
+                    <foreach collection="reqVO.subjectCodes" item="code" separator=" OR ">
+                        (#{code} MEMBER OF (a.subjects-&gt;'$.subject_codes'))
                     </foreach>
                 )
             </if>

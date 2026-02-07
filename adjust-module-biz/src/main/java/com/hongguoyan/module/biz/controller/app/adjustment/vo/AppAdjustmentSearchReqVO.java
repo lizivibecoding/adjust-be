@@ -26,6 +26,18 @@ public class AppAdjustmentSearchReqVO extends PageParam {
     @NotBlank(message = "学科/专业代码不能为空")
     private String majorCode;
 
+    @Schema(hidden = true)
+    private String resolvedMajorCodePrefix;
+
+    @Schema(hidden = true)
+    private String resolvedMajorCodeExact;
+
+    @Schema(hidden = true)
+    private List<String> resolvedLevel2MajorCodePrefixes;
+
+    @Schema(hidden = true)
+    private List<String> resolvedLevel2MajorCodeExacts;
+
     @Schema(description = "调剂年份")
     private Integer year;
 
