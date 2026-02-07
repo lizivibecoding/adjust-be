@@ -64,6 +64,13 @@ public class UserProfileServiceImpl implements UserProfileService {
 
         // 覆盖更新：按 userId 唯一行覆盖
         toSave.setId(existing.getId());
+        // 兼容旧客户端未传新字段：不覆盖原值
+        if (reqVO.getIsNationalScholarship() == null) {
+            toSave.setIsNationalScholarship(existing.getIsNationalScholarship());
+        }
+        if (reqVO.getIsSchoolScholarship() == null) {
+            toSave.setIsSchoolScholarship(existing.getIsSchoolScholarship());
+        }
         // 目前不处理锁定/提交逻辑，这两个字段保持原值，避免被覆盖为 null
         toSave.setBasicLocked(existing.getBasicLocked());
         toSave.setSubmitTime(existing.getSubmitTime());
@@ -116,6 +123,8 @@ public class UserProfileServiceImpl implements UserProfileService {
         toSave.setCet6Score(reqVO.getCet6Score());
         toSave.setUndergraduateAwards(reqVO.getUndergraduateAwards());
         toSave.setAwardCount(reqVO.getAwardCount());
+        toSave.setIsNationalScholarship(reqVO.getIsNationalScholarship());
+        toSave.setIsSchoolScholarship(reqVO.getIsSchoolScholarship());
 
         // target direction (id -> school/college/major + snapshots)
         Long targetDirectionId = reqVO.getTargetDirectionId();

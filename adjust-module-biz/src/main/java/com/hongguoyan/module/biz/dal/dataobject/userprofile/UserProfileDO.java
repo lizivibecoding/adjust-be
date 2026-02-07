@@ -85,6 +85,14 @@ public class UserProfileDO extends BaseDO {
     @TableField("award_count")
     private Integer awardCount;
     /**
+     * 是否获得国家级奖学金: 0-否 1-是
+     */
+    private Boolean isNationalScholarship;
+    /**
+     * 是否获得学校级及以上奖学金: 0-否 1-是
+     */
+    private Boolean isSchoolScholarship;
+    /**
      * 一志愿报考学校ID(biz_school.id)
      */
     private Long targetSchoolId;

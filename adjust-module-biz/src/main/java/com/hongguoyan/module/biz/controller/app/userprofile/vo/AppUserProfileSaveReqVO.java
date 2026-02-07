@@ -72,6 +72,12 @@ public class AppUserProfileSaveReqVO {
     @Schema(description = "本科获奖次数", example = "3")
     private Integer awardCount;
 
+    @Schema(description = "是否获得国家级奖学金: 0-否 1-是")
+    private Boolean isNationalScholarship;
+
+    @Schema(description = "是否获得学校级及以上奖学金: 0-否 1-是")
+    private Boolean isSchoolScholarship;
+
     @Schema(description = "软实力自评(0-10)", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "软实力自评(0-10)不能为空")
     private Integer selfAssessedScore;
