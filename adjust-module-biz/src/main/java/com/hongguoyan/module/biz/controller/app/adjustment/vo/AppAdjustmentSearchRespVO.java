@@ -1,6 +1,8 @@
 package com.hongguoyan.module.biz.controller.app.adjustment.vo;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.hongguoyan.module.biz.framework.jackson.StudyModeNameSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import com.hongguoyan.module.biz.enums.StudyModeEnum;
 import lombok.Data;
@@ -42,6 +44,7 @@ public class AppAdjustmentSearchRespVO {
     private Integer year;
 
     @Schema(description = "学习方式：1-全日制 2-非全日制", example = "1")
+    @JsonSerialize(using = StudyModeNameSerializer.class)
     private Integer studyMode;
 
     @Schema(description = "学习方式名称", example = "全日制")
