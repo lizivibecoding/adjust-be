@@ -1,5 +1,6 @@
 package com.hongguoyan.module.biz.dal.mysql.adjustmentadmit;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 import com.hongguoyan.framework.common.pojo.PageResult;
@@ -16,6 +17,7 @@ import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreItemRe
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScorePageReqVO;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreStatItemRespVO;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreStatReqVO;
+import org.apache.ibatis.annotations.Select;
 
 /**
  * 调剂录取名单 Mapper
@@ -59,5 +61,27 @@ public interface AdjustmentAdmitMapper extends BaseMapperX<AdjustmentAdmitDO> {
                                                      @Param("reqVO") AppSameScorePageReqVO reqVO);
 
     List<AppSameScoreStatItemRespVO> selectSameScoreStat(@Param("reqVO") AppSameScoreStatReqVO reqVO);
+
+
+    /**
+     * 计算某学校、学院、专业（及方向）的初试平均分
+     * @param schoolId 学校ID
+     * @param collegeId 学院ID（可空）
+     * @param majorCode 专业代码（可空）
+     * @param year 年份（可空）
+     * @return 平均初试分
+     */
+    @Select("<script>" +
+        "SELECT AVG(first_score) FROM biz_adjustment_admit " +
+        "WHERE deleted = 0 " +
+        "AND school_id = #{schoolId} " +
+        "<if test='collegeId != null'> AND college_id = #{collegeId} </if> " +
+        "<if test='majorCode != null and majorCode != \"\"'> AND major_code = #{majorCode} </if> " +
+        "<if test='year != null'> AND year = #{year} </if>" +
+        "</script>")
+    BigDecimal selectAvgFirstScore(@Param("schoolId") Long schoolId,
+        @Param("collegeId") Long collegeId,
+        @Param("majorCode") String majorCode,
+        @Param("year") Integer year);
 
 }

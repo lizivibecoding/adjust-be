@@ -74,4 +74,7 @@ public interface ErrorCodeConstants {
     ErrorCode VIP_BENEFIT_TYPE_INVALID = new ErrorCode(60, "权益类型不匹配");
     ErrorCode VIP_BENEFIT_ALREADY_OPENED = new ErrorCode(61, "已开通");
     ErrorCode VIP_MAJOR_CATEGORY_NOT_OPENED = new ErrorCode(62, "该专业门类未开通");
+    ErrorCode NO_RECOMMEND_RULE = new ErrorCode(63, "没有配置推荐规则");
+    ErrorCode CRAWL_SOURCE_CONFIG_NOT_EXISTS = new ErrorCode(64, "爬虫配置不存在");
+    ErrorCode CRAWL_TASK_NOT_EXISTS = new ErrorCode(65, "爬虫任务不存在");
 }

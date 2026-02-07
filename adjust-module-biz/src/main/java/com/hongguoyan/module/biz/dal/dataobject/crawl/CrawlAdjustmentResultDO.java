@@ -1,4 +1,4 @@
-package com.hongguoyan.module.biz.dal.dataobject.recommend;
+package com.hongguoyan.module.biz.dal.dataobject.crawl;
 
 import com.baomidou.mybatisplus.annotation.KeySequence;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -6,38 +6,31 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.hongguoyan.framework.mybatis.core.dataobject.BaseDO;
 import lombok.*;
 
-import java.math.BigDecimal;
-
 /**
- * 推荐结果 DO
+ * 爬虫数据调剂专业信息 DO
  *
  * @author hgy
  */
-@TableName("biz_user_recommend_adjustment")
-@KeySequence("biz_user_recommend_adjustment_seq")
+@TableName("crawl_adjustment_results")
+@KeySequence("crawl_adjustment_results_seq")
 @Data
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserRecommendSchoolDO extends BaseDO {
+public class CrawlAdjustmentResultDO extends BaseDO {
 
     /**
-     * 主键ID
+     * ID
      */
     @TableId
     private Long id;
 
     /**
-     * 用户ID
+     * 任务ID
      */
-    private Long userId;
-
-    /**
-     * 调剂信息ID (关联 biz_adjustment)
-     */
-    private Long adjustmentId;
+    private Long taskId;
 
     /**
      * 学校ID
@@ -60,9 +53,9 @@ public class UserRecommendSchoolDO extends BaseDO {
     private String collegeName;
 
     /**
-     * 专业ID
+     * 专业代码
      */
-    private Long majorId;
+    private String majorCode;
 
     /**
      * 专业名称
@@ -70,38 +63,38 @@ public class UserRecommendSchoolDO extends BaseDO {
     private String majorName;
 
     /**
-     * 研究方向代码
+     * 学位类型
      */
-    private String directionCode;
+    private String degreeType;
 
     /**
-     * 研究方向名称
+     * 学习方式
      */
-    private String directionName;
+    private String learningMethod;
 
     /**
-     * 最终推荐概率 (SimFinal)
+     * 计划数
      */
-    private BigDecimal simFinal;
+    private String plannedCount;
 
     /**
-     * 分数匹配度 (SimA)
+     * 专项计划
      */
-    private BigDecimal simA;
+    private String specProject;
 
     /**
-     * 专业匹配度 (SimB)
+     * 研究方向
      */
-    private BigDecimal simB;
+    private String direction;
 
     /**
-     * 竞争力 (SimC)
+     * 调剂要求
      */
-    private BigDecimal simC;
+    private String remark;
 
     /**
-     * 推荐分类: 1=冲刺(<=0.4), 2=稳妥(<=0.8), 3=保底(<=1.0)
+     * 原始数据
      */
-    private Integer category;
+    private String rawJson;
 
 }
