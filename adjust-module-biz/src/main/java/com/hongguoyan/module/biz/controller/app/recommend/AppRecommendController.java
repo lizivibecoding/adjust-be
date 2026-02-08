@@ -1,5 +1,10 @@
 package com.hongguoyan.module.biz.controller.app.recommend;
 
+import static com.hongguoyan.framework.common.pojo.CommonResult.success;
+import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_SCHOOL_RECOMMEND;
+import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_USER_REPORT;
+
+import cn.hutool.core.util.StrUtil;
 import com.hongguoyan.framework.common.pojo.CommonResult;
 import com.hongguoyan.framework.common.util.object.BeanUtils;
 import com.hongguoyan.framework.security.core.util.SecurityFrameworkUtils;
@@ -9,26 +14,23 @@ import com.hongguoyan.module.biz.controller.app.recommend.vo.AppUserCustomReport
 import com.hongguoyan.module.biz.controller.app.recommend.vo.AppUserCustomReportRenameReqVO;
 import com.hongguoyan.module.biz.controller.app.recommend.vo.AppUserCustomReportRespVO;
 import com.hongguoyan.module.biz.dal.dataobject.usercustomreport.UserCustomReportDO;
+import com.hongguoyan.module.biz.service.recommend.RecommendPdfService;
 import com.hongguoyan.module.biz.service.recommend.RecommendService;
 import com.hongguoyan.module.biz.service.usercustomreport.UserCustomReportService;
 import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
+import com.hongguoyan.module.infra.service.file.FileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
-
-import static com.hongguoyan.framework.common.pojo.CommonResult.success;
-import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_SCHOOL_RECOMMEND;
-import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_USER_REPORT;
 
 @Tag(name = "API - 智能推荐")
 @RestController
@@ -38,6 +40,10 @@ public class AppRecommendController {
 
     @Resource
     private RecommendService recommendService;
+    @Resource
+    private RecommendPdfService recommendPdfService;
+    @Resource
+    private FileService fileService;
 
     @Resource
     private UserCustomReportService userCustomReportService;
@@ -87,5 +93,30 @@ public class AppRecommendController {
         userCustomReportService.updateReportName(userId, reqVO.getReportId(), reqVO.getReportName());
         return success(true);
     }
+
+
+
+    @GetMapping("/my/report/export-pdf")
+    @Operation(summary = "导出报告 PDF")
+    public CommonResult<String> exportReportPdf(@RequestParam("reportId") Long reportId) {
+        Long userId = SecurityFrameworkUtils.getLoginUserId();
+        // 校验权限
+        vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_REPORT);
+        // 1. 检查是否已有生成好的 PDF URL
+        UserCustomReportDO report = userCustomReportService.getByUserIdAndId(userId, reportId);
+        if (report != null && StrUtil.isNotBlank(report.getReportPdfUrl())) {
+            return success(report.getReportPdfUrl());
+        }
+        // 2. 实时生成 PDF
+        byte[] pdfBytes = recommendPdfService.generateReportPdf(userId, reportId);
+        // 3. 上传 OSS
+        String fileName = (report != null ? report.getReportName() : "report") + ".pdf";
+        fileService.createFile(pdfBytes, fileName, "user-report/" + userId, "application/pdf");
+        // 4. 回写 URL 到 UserCustomReportDO
+        String url = "user-report/"+fileName;
+        userCustomReportService.updateReportPdfUrl(userId, reportId, url);
+        return success(url);
+    }
+
 
 }

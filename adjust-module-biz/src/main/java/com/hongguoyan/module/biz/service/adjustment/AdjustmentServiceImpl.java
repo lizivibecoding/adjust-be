@@ -1,12 +1,33 @@
 package com.hongguoyan.module.biz.service.adjustment;
 
+import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
+import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.ADJUSTMENT_NOT_EXISTS;
+import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.VIP_MAJOR_CATEGORY_NOT_OPENED;
+import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_MAJOR_CATEGORY_OPEN;
+import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.VIEW_SCHOOL_ADJUSTMENT_3Y;
+
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.framework.common.util.object.BeanUtils;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
-import com.hongguoyan.module.biz.controller.app.adjustment.vo.*;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentDetailReqVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentDetailRespVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentDirectionDetailRespVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentFilterConfigRespVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentHotRankingReqVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentOptionsReqVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentOptionsRespVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentPageReqVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentSaveReqVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentSearchReqVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentSearchRespVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentSearchSchoolRespVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentSearchTabRespVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentSubjectsRespVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentSuggestRespVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentUpdateStatsRespVO;
 import com.hongguoyan.module.biz.controller.app.school.vo.AppSchoolAdjustmentPageReqVO;
 import com.hongguoyan.module.biz.controller.app.school.vo.AppSchoolAdjustmentRespVO;
 import com.hongguoyan.module.biz.dal.dataobject.adjustment.AdjustmentDO;
@@ -25,20 +46,21 @@ import com.hongguoyan.module.biz.service.userprofile.UserProfileService;
 import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
+import java.time.Year;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-
-import java.time.Year;
-import java.util.*;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
-import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.ADJUSTMENT_NOT_EXISTS;
-import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.VIP_MAJOR_CATEGORY_NOT_OPENED;
-import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_MAJOR_CATEGORY_OPEN;
-import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.VIEW_SCHOOL_ADJUSTMENT_3Y;
 
 /**
  * 调剂 Service 实现类

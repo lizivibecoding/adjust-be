@@ -56,6 +56,14 @@ public class UserCustomReportDO extends BaseDO {
      */
     private Long sourceIntentionId;
     /**
+     * 用户基础信息快照 (JSON)
+     */
+    private String sourceProfileJson;
+    /**
+     * 用户意向信息快照 (JSON)
+     */
+    private String sourceIntentionJson;
+    /**
      * 雷达图-背景维度评分(0-100)
      */
     private Integer dimBackgroundScore;
@@ -95,6 +103,10 @@ public class UserCustomReportDO extends BaseDO {
      * 总分维度分析文案
      */
     private String analysisTotal;
+    /**
+     * 报告PDF文件URL
+     */
+    private String reportPdfUrl;
 
 }
 

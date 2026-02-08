@@ -77,4 +77,5 @@ public interface ErrorCodeConstants {
     ErrorCode NO_RECOMMEND_RULE = new ErrorCode(63, "没有配置推荐规则");
     ErrorCode CRAWL_SOURCE_CONFIG_NOT_EXISTS = new ErrorCode(64, "爬虫配置不存在");
     ErrorCode CRAWL_TASK_NOT_EXISTS = new ErrorCode(65, "爬虫任务不存在");
+    ErrorCode PDF_GENERATE_ERROR = new ErrorCode(66, "PDF生成报错");;
 }

@@ -1,5 +1,6 @@
 package com.hongguoyan.module.biz.service.usercustomreport;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.hongguoyan.module.biz.controller.admin.recommend.report.vo.UserCustomReportPageReqVO;
@@ -62,6 +63,18 @@ public class UserCustomReportServiceImpl implements UserCustomReportService {
         if (updated <= 0) {
             throw exception(ErrorCodeConstants.CANDIDATE_CUSTOM_REPORTS_NOT_EXISTS);
         }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateReportPdfUrl(Long userId, Long reportId, String pdfUrl) {
+        if (userId == null || reportId == null) {
+            return;
+        }
+        userCustomReportMapper.update(null, new LambdaUpdateWrapper<UserCustomReportDO>()
+                .eq(UserCustomReportDO::getUserId, userId)
+                .eq(UserCustomReportDO::getId, reportId)
+                .set(UserCustomReportDO::getReportPdfUrl, pdfUrl));
     }
 
     @Override

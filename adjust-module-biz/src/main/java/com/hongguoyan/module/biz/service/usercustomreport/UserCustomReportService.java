@@ -32,6 +32,11 @@ public interface UserCustomReportService {
     void updateReportName(Long userId, Long reportId, String reportName);
 
     /**
+     * 更新报告的 PDF 链接
+     */
+    void updateReportPdfUrl(Long userId, Long reportId, String pdfUrl);
+
+    /**
      * 创建新版本报告（按 userId 自动递增 reportNo）
      */
     Long createNewVersionByUserId(Long userId);

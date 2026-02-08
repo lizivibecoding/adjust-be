@@ -513,6 +513,8 @@ public class RecommendServiceImpl implements RecommendService {
         toUpdate.setReportVersion(String.valueOf(System.currentTimeMillis()));
         toUpdate.setSourceProfileId(userProfile.getId());
         toUpdate.setSourceIntentionId(userIntention != null ? userIntention.getId() : null);
+        toUpdate.setSourceProfileJson(JSONUtil.toJsonStr(userProfile));
+        toUpdate.setSourceIntentionJson(userIntention != null ? JSONUtil.toJsonStr(userIntention) : null);
 
         if (aiReport != null) {
             toUpdate.setDimBackgroundScore(aiReport.getDimBackgroundScore());

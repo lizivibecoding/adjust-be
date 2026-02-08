@@ -147,4 +147,50 @@
         <include refid="SameScoreStatWhere" />
     </select>
 
+    <select id="selectAvgFirstScore" resultType="java.math.BigDecimal">
+        SELECT AVG(first_score) FROM biz_adjustment_admit
+        WHERE deleted = 0
+        AND school_id = #{schoolId}
+        <if test="collegeId != null"> AND college_id = #{collegeId} </if>
+        <if test="majorCode != null and majorCode != ''"> AND major_code = #{majorCode} </if>
+        <if test="year != null"> AND year = #{year} </if>
+    </select>
+
+    <select id="selectAdmitStats" resultType="java.util.Map">
+        SELECT
+            MIN(first_score) as minScore,
+            MAX(first_score) as maxScore,
+            AVG(first_score) as avgScore,
+            COUNT(*) as count
+        FROM biz_adjustment_admit
+        WHERE deleted = 0
+        AND school_id = #{schoolId}
+        <if test="collegeId != null"> AND college_id = #{collegeId} </if>
+        <if test="majorCode != null and majorCode != ''"> AND major_code = #{majorCode} </if>
+        <if test="year != null"> AND year = #{year} </if>
+    </select>
+
+    <select id="selectAdmitScores" resultType="java.math.BigDecimal">
+        SELECT first_score
+        FROM biz_adjustment_admit
+        WHERE deleted = 0
+        AND school_id = #{schoolId}
+        <if test="collegeId != null"> AND college_id = #{collegeId} </if>
+        <if test="majorCode != null and majorCode != ''"> AND major_code = #{majorCode} </if>
+        <if test="year != null"> AND year = #{year} </if>
+        ORDER BY first_score ASC
+    </select>
+
+    <select id="selectAdmitList" resultType="com.hongguoyan.module.biz.dal.dataobject.adjustmentadmit.AdjustmentAdmitDO">
+        SELECT candidate_name, first_score, first_school_name
+        FROM biz_adjustment_admit
+        WHERE deleted = 0
+        AND school_id = #{schoolId}
+        <if test="collegeId != null"> AND college_id = #{collegeId} </if>
+        <if test="majorCode != null and majorCode != ''"> AND major_code = #{majorCode} </if>
+        <if test="year != null"> AND year = #{year} </if>
+        ORDER BY first_score DESC
+        LIMIT 20
+    </select>
+
 </mapper>

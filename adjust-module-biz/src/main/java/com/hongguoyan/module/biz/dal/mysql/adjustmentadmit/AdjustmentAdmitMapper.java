@@ -84,4 +84,14 @@ public interface AdjustmentAdmitMapper extends BaseMapperX<AdjustmentAdmitDO> {
         @Param("majorCode") String majorCode,
         @Param("year") Integer year);
 
+    Map<String, Object> selectAdmitStats(@Param("schoolId") Long schoolId,
+                                         @Param("collegeId") Long collegeId,
+                                         @Param("majorCode") String majorCode,
+                                         @Param("year") Integer year);
+
+    List<BigDecimal> selectAdmitScores(@Param("schoolId") Long schoolId,
+                                       @Param("collegeId") Long collegeId,
+                                       @Param("majorCode") String majorCode,
+                                       @Param("year") Integer year);
+
 }

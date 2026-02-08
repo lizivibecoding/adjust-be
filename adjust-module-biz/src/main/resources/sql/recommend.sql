@@ -26,3 +26,7 @@ CREATE TABLE `biz_user_recommend_adjustment` (
   KEY `idx_user_id` (`user_id`),
   KEY `idx_adjustment_id` (`adjustment_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='推荐结果表';
+
+ALTER TABLE `biz_user_custom_report` ADD COLUMN `source_profile_json` text DEFAULT NULL COMMENT '用户基础信息快照';
+ALTER TABLE `biz_user_custom_report` ADD COLUMN `source_intention_json` text DEFAULT NULL COMMENT '用户意向信息快照';
+ALTER TABLE `biz_user_custom_report` ADD COLUMN `report_pdf_url` varchar(512) DEFAULT NULL COMMENT '报告PDF文件URL';
