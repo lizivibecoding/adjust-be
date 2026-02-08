@@ -56,7 +56,6 @@ public class AppRecommendController {
     @Operation(summary = "生成调剂推荐与报告")
     public CommonResult<?> generateRecommend() {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
-//        recommendService.generateRecommend(userId);
         Long reportId = recommendService.generateAssessmentReport(userId);
         return success(reportId);
     }
@@ -64,11 +63,11 @@ public class AppRecommendController {
     @GetMapping("/my/report")
     @Operation(summary = "获取用户报告")
     public CommonResult<AppUserCustomReportRespVO> getMyLatestReport(
-            @RequestParam(value = "reportId", required = false) Long reportId) {
+        @RequestParam(value = "reportId", required = false) Long reportId) {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
         UserCustomReportDO report = reportId != null
-                ? userCustomReportService.getByUserIdAndId(userId, reportId)
-                : userCustomReportService.getLatestByUserId(userId);
+            ? userCustomReportService.getByUserIdAndId(userId, reportId)
+            : userCustomReportService.getLatestByUserId(userId);
         return success(BeanUtils.toBean(report, AppUserCustomReportRespVO.class));
     }
 

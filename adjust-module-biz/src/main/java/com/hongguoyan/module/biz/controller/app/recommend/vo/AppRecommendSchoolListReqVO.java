@@ -16,4 +16,7 @@ public class AppRecommendSchoolListReqVO {
     @Schema(description = "专业课", example = "408")
     private String professionalSubject;
 
+    @Schema(description = "报告ID", example = "408")
+    private Long reportId;
+
 }

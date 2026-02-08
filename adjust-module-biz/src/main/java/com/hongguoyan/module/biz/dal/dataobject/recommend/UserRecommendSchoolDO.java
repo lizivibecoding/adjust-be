@@ -35,6 +35,11 @@ public class UserRecommendSchoolDO extends BaseDO {
     private Long userId;
 
     /**
+     * 报告ID
+     */
+    private Long reportId;
+
+    /**
      * 调剂信息ID (关联 biz_adjustment)
      */
     private Long adjustmentId;

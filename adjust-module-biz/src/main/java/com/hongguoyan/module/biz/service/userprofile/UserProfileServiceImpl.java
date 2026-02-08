@@ -3,7 +3,11 @@ package com.hongguoyan.module.biz.service.userprofile;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.hongguoyan.framework.common.exception.ErrorCode;
+import com.hongguoyan.framework.common.pojo.PageResult;
+import com.hongguoyan.framework.common.util.object.BeanUtils;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
+import com.hongguoyan.module.biz.controller.admin.userprofile.vo.UserProfilePageReqVO;
+import com.hongguoyan.module.biz.controller.admin.userprofile.vo.UserProfileSaveReqVO;
 import com.hongguoyan.module.biz.controller.app.userprofile.vo.AppUserProfileSaveReqVO;
 import com.hongguoyan.module.biz.dal.dataobject.major.MajorDO;
 import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
@@ -44,6 +48,45 @@ public class UserProfileServiceImpl implements UserProfileService {
     private SchoolDirectionMapper schoolDirectionMapper;
     @Resource
     private SchoolCollegeMapper schoolCollegeMapper;
+
+    @Override
+    public Long createUserProfile(UserProfileSaveReqVO createReqVO) {
+        UserProfileDO userProfile = BeanUtils.toBean(createReqVO, UserProfileDO.class);
+        userProfileMapper.insert(userProfile);
+        return userProfile.getId();
+    }
+
+    @Override
+    public void updateUserProfile(UserProfileSaveReqVO updateReqVO) {
+        validateUserProfileExists(updateReqVO.getId());
+        UserProfileDO updateObj = BeanUtils.toBean(updateReqVO, UserProfileDO.class);
+        userProfileMapper.updateById(updateObj);
+    }
+
+    @Override
+    public void deleteUserProfile(Long id) {
+        validateUserProfileExists(id);
+        userProfileMapper.deleteById(id);
+    }
+
+    private void validateUserProfileExists(Long id) {
+        if (userProfileMapper.selectById(id) == null) {
+            throw exception(new ErrorCode(404, "用户基础档案不存在"));
+        }
+    }
+
+    @Override
+    public UserProfileDO getUserProfile(Long id) {
+        return userProfileMapper.selectById(id);
+    }
+
+    @Override
+    public PageResult<UserProfileDO> getUserProfilePage(UserProfilePageReqVO pageReqVO) {
+        return userProfileMapper.selectPage(pageReqVO, new LambdaQueryWrapperX<UserProfileDO>()
+                .eqIfPresent(UserProfileDO::getUserId, pageReqVO.getUserId())
+                .likeIfPresent(UserProfileDO::getGraduateSchoolName, pageReqVO.getGraduateSchoolName())
+                .likeIfPresent(UserProfileDO::getTargetSchoolName, pageReqVO.getTargetSchoolName()));
+    }
 
     @Override
     public UserProfileDO getUserProfileByUserId(Long userId) {

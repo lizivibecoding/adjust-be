@@ -36,5 +36,15 @@ public interface UserCustomReportService {
      */
     Long createNewVersionByUserId(Long userId);
 
+    /**
+     * 删除报告
+     */
+    void deleteUserCustomReport(Long id);
+
+    /**
+     * 获得报告分页
+     */
+    com.hongguoyan.framework.common.pojo.PageResult<UserCustomReportDO> getUserCustomReportPage(com.hongguoyan.module.biz.controller.admin.recommend.report.vo.UserCustomReportPageReqVO pageReqVO);
+
 }
 

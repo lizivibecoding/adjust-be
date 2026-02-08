@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil;
@@ -40,6 +41,7 @@ import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 import com.hongguoyan.module.biz.service.vipbenefit.model.VipResolvedBenefit;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -111,13 +113,99 @@ public class RecommendServiceImpl implements RecommendService {
 
     @Override
     public List<AppRecommendSchoolRespVO> recommendSchools(Long userId, AppRecommendSchoolListReqVO reqVO) {
-        // TODO: Implement query from userRecommendSchoolMapper
-        return new ArrayList<>();
+        // 1. Determine reportId
+        Long reportId = reqVO.getReportId();
+        if (reportId == null) {
+            UserCustomReportDO latestReport = userCustomReportMapper.selectLatestByUserId(userId);
+            if (latestReport != null) {
+                reportId = latestReport.getId();
+            } else {
+                return Collections.emptyList();
+            }
+        }
+        // 2. Query recommendations
+        List<UserRecommendSchoolDO> recommendations = userRecommendSchoolMapper.selectList(new LambdaQueryWrapperX<UserRecommendSchoolDO>()
+                .eq(UserRecommendSchoolDO::getUserId, userId)
+                .eq(UserRecommendSchoolDO::getReportId, reportId)
+                .orderByDesc(UserRecommendSchoolDO::getSimFinal));
+
+        if (CollUtil.isEmpty(recommendations)) {
+            return Collections.emptyList();
+        }
+
+        // 3. Collect IDs and fetch related entities
+        Set<Long> adjustmentIds = new HashSet<>();
+        Set<Long> schoolIds = new HashSet<>();
+        for (UserRecommendSchoolDO rec : recommendations) {
+            if (rec.getAdjustmentId() != null) adjustmentIds.add(rec.getAdjustmentId());
+            if (rec.getSchoolId() != null) schoolIds.add(rec.getSchoolId());
+        }
+
+        Map<Long, AdjustmentDO> adjustmentMap = adjustmentIds.isEmpty() ? Collections.emptyMap() :
+                adjustmentMapper.selectBatchIds(adjustmentIds).stream()
+                        .collect(Collectors.toMap(AdjustmentDO::getId, Function.identity()));
+
+        Map<Long, SchoolDO> schoolMap = schoolIds.isEmpty() ? Collections.emptyMap() :
+                schoolMapper.selectBatchIds(schoolIds).stream()
+                        .collect(Collectors.toMap(SchoolDO::getId, Function.identity()));
+
+        // 4. Build response
+        List<AppRecommendSchoolRespVO> result = new ArrayList<>(recommendations.size());
+        for (UserRecommendSchoolDO rec : recommendations) {
+            AppRecommendSchoolRespVO resp = new AppRecommendSchoolRespVO();
+            resp.setSchoolId(rec.getSchoolId());
+            resp.setAdjustment_id(rec.getAdjustmentId());
+            resp.setSchoolName(rec.getSchoolName());
+
+            SchoolDO school = schoolMap.get(rec.getSchoolId());
+            if (school != null) {
+                resp.setSchoolLogo(school.getSchoolLogo());
+                resp.setProvinceName(school.getProvinceName());
+            }
+
+            resp.setMajorId(rec.getMajorId());
+            resp.setMajorName(rec.getMajorName());
+
+            if (rec.getSimFinal() != null) {
+                resp.setMatchProbability(rec.getSimFinal().doubleValue());
+            }
+            Integer category = rec.getCategory();
+            if (category != null) {
+                if (category == 1) {
+                    resp.setProbabilityLabel("冲刺");
+                    resp.setDifficultyLabel("难");
+                } else if (category == 2) {
+                    resp.setProbabilityLabel("稳妥");
+                    resp.setDifficultyLabel("中");
+                } else {
+                    resp.setProbabilityLabel("保底");
+                    resp.setDifficultyLabel("易");
+                }
+            } else {
+                resp.setProbabilityLabel("未知");
+                resp.setDifficultyLabel("未知");
+            }
+
+            resp.setRankingGapLabel("适中");
+
+            AdjustmentDO adj = adjustmentMap.get(rec.getAdjustmentId());
+            if (adj != null) {
+                resp.setMajorCode(adj.getMajorCode());
+                resp.setYear(adj.getYear());
+                resp.setCollegeName(adj.getCollegeName());
+                resp.setStudyMode(adj.getStudyMode());
+                resp.setPlanCount(adj.getAdjustCount());
+            }
+
+            result.add(resp);
+        }
+
+        return result;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean generateRecommend(Long userId) {
+    public boolean generateRecommend(Long userId,Long reportId) {
         // 1. 获取用户信息
         UserProfileDO userProfile = userProfileMapper.selectOne(new LambdaQueryWrapper<UserProfileDO>()
             .eq(UserProfileDO::getUserId, userId));
@@ -283,9 +371,9 @@ public class RecommendServiceImpl implements RecommendService {
             } else {
                 category = 3;
             }
-
             UserRecommendSchoolDO recommendDO = UserRecommendSchoolDO.builder()
                 .userId(userId)
+                .reportId(reportId)
                 .adjustmentId(adjustment.getId())
                 .schoolId(school.getId())
                 .schoolName(school.getSchoolName())
@@ -301,7 +389,6 @@ public class RecommendServiceImpl implements RecommendService {
                 .simC(BigDecimal.valueOf(simC))
                 .category(category)
                 .build();
-
             recommendations.add(recommendDO);
         }
 
@@ -317,6 +404,7 @@ public class RecommendServiceImpl implements RecommendService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @Async
     public Long generateAssessmentReport(Long userId) {
         // 0) Quick quota check (no consume yet). Consume after success to avoid charging on failure.
         vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_REPORT);
@@ -439,6 +527,7 @@ public class RecommendServiceImpl implements RecommendService {
         // 6. Consume quota after success
         vipBenefitService.consumeQuotaOrThrow(userId, BENEFIT_KEY_USER_REPORT, 1,
             REF_TYPE_CUSTOM_REPORT, String.valueOf(reportId), null);
+        generateRecommend(userId, reportId);
         return reportId;
     }
 

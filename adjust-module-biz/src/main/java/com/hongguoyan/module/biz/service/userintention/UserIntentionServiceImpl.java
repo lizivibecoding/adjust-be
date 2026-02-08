@@ -2,7 +2,12 @@ package com.hongguoyan.module.biz.service.userintention;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
+import com.hongguoyan.framework.common.exception.ErrorCode;
+import com.hongguoyan.framework.common.pojo.PageResult;
+import com.hongguoyan.framework.common.util.object.BeanUtils;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
+import com.hongguoyan.module.biz.controller.admin.userintention.vo.UserIntentionPageReqVO;
+import com.hongguoyan.module.biz.controller.admin.userintention.vo.UserIntentionSaveReqVO;
 import com.hongguoyan.module.biz.controller.app.userintention.vo.AppUserIntentionRespVO;
 import com.hongguoyan.module.biz.controller.app.userintention.vo.AppUserIntentionSaveReqVO;
 import com.hongguoyan.module.biz.dal.dataobject.userintention.UserIntentionDO;
@@ -18,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
+import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_USER_INTENTION;
 
 /**
@@ -33,6 +39,49 @@ public class UserIntentionServiceImpl implements UserIntentionService {
     private UserIntentionMapper userIntentionMapper;
     @Resource
     private VipBenefitService vipBenefitService;
+
+    @Override
+    public Long createUserIntention(UserIntentionSaveReqVO createReqVO) {
+        UserIntentionDO userIntention = BeanUtils.toBean(createReqVO, UserIntentionDO.class);
+        userIntention.setProvinceCodes(toJsonOrNullString(createReqVO.getProvinceCodes()));
+        userIntention.setExcludeProvinceCodes(toJsonOrNullString(createReqVO.getExcludeProvinceCodes()));
+        userIntention.setMajorIds(toJsonOrNullLong(createReqVO.getMajorIds()));
+        userIntentionMapper.insert(userIntention);
+        return userIntention.getId();
+    }
+
+    @Override
+    public void updateUserIntention(UserIntentionSaveReqVO updateReqVO) {
+        validateUserIntentionExists(updateReqVO.getId());
+        UserIntentionDO updateObj = BeanUtils.toBean(updateReqVO, UserIntentionDO.class);
+        updateObj.setProvinceCodes(toJsonOrNullString(updateReqVO.getProvinceCodes()));
+        updateObj.setExcludeProvinceCodes(toJsonOrNullString(updateReqVO.getExcludeProvinceCodes()));
+        updateObj.setMajorIds(toJsonOrNullLong(updateReqVO.getMajorIds()));
+        userIntentionMapper.updateById(updateObj);
+    }
+
+    @Override
+    public void deleteUserIntention(Long id) {
+        validateUserIntentionExists(id);
+        userIntentionMapper.deleteById(id);
+    }
+
+    private void validateUserIntentionExists(Long id) {
+        if (userIntentionMapper.selectById(id) == null) {
+            throw exception(new ErrorCode(404, "用户调剂意向不存在"));
+        }
+    }
+
+    @Override
+    public UserIntentionDO getUserIntention(Long id) {
+        return userIntentionMapper.selectById(id);
+    }
+
+    @Override
+    public PageResult<UserIntentionDO> getUserIntentionPage(UserIntentionPageReqVO pageReqVO) {
+        return userIntentionMapper.selectPage(pageReqVO, new LambdaQueryWrapperX<UserIntentionDO>()
+                .eqIfPresent(UserIntentionDO::getUserId, pageReqVO.getUserId()));
+    }
 
     @Override
     public UserIntentionDO getUserIntentionByUserId(Long userId) {

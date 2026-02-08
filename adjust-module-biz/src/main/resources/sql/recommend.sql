@@ -1,11 +1,16 @@
-CREATE TABLE `biz_user_recommend_school` (
+CREATE TABLE `biz_user_recommend_adjustment` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   `user_id` bigint(20) NOT NULL COMMENT '用户ID',
+  `report_id` bigint(20) DEFAULT NULL COMMENT '报告ID',
   `adjustment_id` bigint(20) NOT NULL COMMENT '调剂信息ID',
   `school_id` bigint(20) NOT NULL COMMENT '学校ID',
   `school_name` varchar(64) NOT NULL DEFAULT '' COMMENT '学校名称',
+  `college_id` bigint(20) DEFAULT NULL COMMENT '学院ID',
+  `college_name` varchar(64) DEFAULT '' COMMENT '学院名称',
   `major_id` bigint(20) NOT NULL COMMENT '专业ID',
   `major_name` varchar(64) NOT NULL DEFAULT '' COMMENT '专业名称',
+  `direction_code` varchar(64) DEFAULT '' COMMENT '研究方向代码',
+  `direction_name` varchar(64) DEFAULT '' COMMENT '研究方向名称',
   `sim_final` decimal(10,4) NOT NULL DEFAULT '0.0000' COMMENT '最终推荐概率',
   `sim_a` decimal(10,4) NOT NULL DEFAULT '0.0000' COMMENT '分数匹配度',
   `sim_b` decimal(10,4) NOT NULL DEFAULT '0.0000' COMMENT '专业匹配度',

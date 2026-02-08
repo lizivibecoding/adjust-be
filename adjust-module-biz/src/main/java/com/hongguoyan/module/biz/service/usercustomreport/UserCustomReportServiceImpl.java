@@ -1,5 +1,8 @@
 package com.hongguoyan.module.biz.service.usercustomreport;
 
+import com.hongguoyan.framework.common.pojo.PageResult;
+import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
+import com.hongguoyan.module.biz.controller.admin.recommend.report.vo.UserCustomReportPageReqVO;
 import com.hongguoyan.module.biz.dal.dataobject.usercustomreport.UserCustomReportDO;
 import com.hongguoyan.module.biz.dal.mysql.usercustomreport.UserCustomReportMapper;
 import com.hongguoyan.module.biz.enums.ErrorCodeConstants;
@@ -76,6 +79,26 @@ public class UserCustomReportServiceImpl implements UserCustomReportService {
         return report.getId();
     }
 
+    @Override
+    public void deleteUserCustomReport(Long id) {
+        if (userCustomReportMapper.selectById(id) == null) {
+            throw exception(ErrorCodeConstants.CANDIDATE_CUSTOM_REPORTS_NOT_EXISTS);
+        }
+        userCustomReportMapper.deleteById(id);
+    }
+
+    @Override
+    public PageResult<UserCustomReportDO> getUserCustomReportPage(UserCustomReportPageReqVO pageReqVO) {
+        PageResult<UserCustomReportDO> pageResult = userCustomReportMapper.selectPage(pageReqVO, new LambdaQueryWrapperX<UserCustomReportDO>()
+                .eqIfPresent(UserCustomReportDO::getUserId, pageReqVO.getUserId())
+                .likeIfPresent(UserCustomReportDO::getReportName, pageReqVO.getReportName())
+                .orderByDesc(UserCustomReportDO::getId));
+        if (pageResult != null && pageResult.getList() != null) {
+            pageResult.getList().forEach(this::fillDefaultReportNameIfMissing);
+        }
+        return pageResult;
+    }
+
     private void fillDefaultReportNameIfMissing(UserCustomReportDO report) {
         if (report == null) {
             return;
@@ -90,4 +113,3 @@ public class UserCustomReportServiceImpl implements UserCustomReportService {
     }
 
 }
-

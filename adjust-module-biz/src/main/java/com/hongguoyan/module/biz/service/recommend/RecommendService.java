@@ -27,7 +27,7 @@ public interface RecommendService {
      * @param userId 用户ID
      * @return b
      */
-    boolean generateRecommend(Long userId);
+    boolean generateRecommend(Long userId,Long reportId);
 
     /**
      * Generate user's assessment report (5 dimensions) and persist to biz_user_custom_report.
