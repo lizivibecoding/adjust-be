@@ -591,15 +591,13 @@ public class RecommendServiceImpl implements RecommendService {
         if (user == null || StrUtil.isBlank(area) || CollUtil.isEmpty(nationalScores)) {
             return null;
         }
-        Integer degreeType = user.getTargetDegreeType() != null ? user.getTargetDegreeType() : 2;
         String majorCode = user.getTargetMajorCode();
         if (StrUtil.isBlank(majorCode)) {
             return null;
         }
         NationalScoreDO matchedLine = nationalScores.stream()
-            .filter(ns -> ns.getDegreeType().equals(degreeType))
-            .filter(ns -> ns.getArea().equalsIgnoreCase(area))
-            .filter(ns -> majorCode.startsWith(ns.getMajorCode()))
+            .filter(ns -> area.equalsIgnoreCase(ns.getArea()))
+            .filter(ns -> ns.getMajorCode() != null && majorCode.startsWith(ns.getMajorCode()))
             .max(Comparator.comparingInt(o -> o.getMajorCode().length()))
             .orElse(null);
         if (matchedLine != null) {
@@ -609,9 +607,8 @@ public class RecommendServiceImpl implements RecommendService {
             throw ServiceExceptionUtil.exception(ErrorCodeConstants.NATIONAL_SCORE_NOT_EXISTS);
         }
         return nationalScores.stream()
-            .filter(ns -> ns.getDegreeType().equals(degreeType))
-            .filter(ns -> ns.getArea().equalsIgnoreCase(area))
-            .filter(ns -> majorCode.substring(0, 2).equals(ns.getMajorCode()))
+            .filter(ns -> area.equalsIgnoreCase(ns.getArea()))
+            .filter(ns -> ns.getMajorCode() != null && majorCode.substring(0, 2).equals(ns.getMajorCode()))
             .findFirst()
             .orElseThrow(() -> ServiceExceptionUtil.exception(ErrorCodeConstants.NATIONAL_SCORE_NOT_EXISTS));
     }

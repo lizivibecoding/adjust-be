@@ -115,7 +115,7 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
             Document document = new Document(pdf, PageSize.A4);
             
             // 设置中文字体
-            PdfFont font = PdfFontFactory.createFont(FONT_NAME, FONT_ENCODING, EmbeddingStrategy.FORCE_EMBEDDED);
+            PdfFont font = PdfFontFactory.createFont(FONT_NAME, FONT_ENCODING);
             document.setFont(font);
 
             // --- 标题 ---

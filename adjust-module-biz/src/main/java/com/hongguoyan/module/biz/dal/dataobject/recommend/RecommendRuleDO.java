@@ -1,6 +1,7 @@
 package com.hongguoyan.module.biz.dal.dataobject.recommend;
 
 import com.baomidou.mybatisplus.annotation.KeySequence;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.hongguoyan.framework.mybatis.core.dataobject.BaseDO;
@@ -184,18 +185,22 @@ public class RecommendRuleDO extends BaseDO {
     /**
      * C8: 6.29 分数区间比率 默认 1.0
      */
+    @TableField("c8_ratio_629")
     private BigDecimal c8Ratio629;
     /**
      * C8: 5.04 分数区间比率 默认 0.8
      */
+    @TableField("c8_ratio_504")
     private BigDecimal c8Ratio504;
     /**
      * C8: 4.25 分数区间比率 默认 0.5
      */
+    @TableField("c8_ratio_425")
     private BigDecimal c8Ratio425;
     /**
      * C8: 3.3 分数区间比率 默认 0.2
      */
+    @TableField("c8_ratio_33")
     private BigDecimal c8Ratio33;
 
 
