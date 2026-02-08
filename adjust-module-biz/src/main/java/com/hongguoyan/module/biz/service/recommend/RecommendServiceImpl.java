@@ -165,6 +165,9 @@ public class RecommendServiceImpl implements RecommendService {
 
             resp.setMajorId(rec.getMajorId());
             resp.setMajorName(rec.getMajorName());
+            resp.setDirectionId(rec.getDirectionId());
+            resp.setDirectionCode(rec.getDirectionCode());
+            resp.setDirectionName(rec.getDirectionName());
 
             if (rec.getSimFinal() != null) {
                 resp.setMatchProbability(rec.getSimFinal().doubleValue());
@@ -194,6 +197,7 @@ public class RecommendServiceImpl implements RecommendService {
                 resp.setYear(adj.getYear());
                 resp.setCollegeName(adj.getCollegeName());
                 resp.setStudyMode(adj.getStudyMode());
+                resp.setDegreeType(adj.getDegreeType());
                 resp.setPlanCount(adj.getAdjustCount());
             }
 
@@ -381,6 +385,7 @@ public class RecommendServiceImpl implements RecommendService {
                 .collegeName(adjustment.getCollegeName())
                 .majorId(adjustment.getMajorId())
                 .majorName(adjustment.getMajorName())
+                .directionId(adjustment.getDirectionId())
                 .directionCode(adjustment.getDirectionCode())
                 .directionName(adjustment.getDirectionName())
                 .simFinal(BigDecimal.valueOf(simFinal))
@@ -405,7 +410,7 @@ public class RecommendServiceImpl implements RecommendService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     @Async
-    public Long generateAssessmentReport(Long userId) {
+    public void generateAssessmentReport(Long userId) {
         // 0) Quick quota check (no consume yet). Consume after success to avoid charging on failure.
         vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_REPORT);
         VipResolvedBenefit quota = vipBenefitService.resolveBenefit(userId, BENEFIT_KEY_USER_REPORT);
@@ -528,7 +533,6 @@ public class RecommendServiceImpl implements RecommendService {
         vipBenefitService.consumeQuotaOrThrow(userId, BENEFIT_KEY_USER_REPORT, 1,
             REF_TYPE_CUSTOM_REPORT, String.valueOf(reportId), null);
         generateRecommend(userId, reportId);
-        return reportId;
     }
 
     // --- Helper Methods ---

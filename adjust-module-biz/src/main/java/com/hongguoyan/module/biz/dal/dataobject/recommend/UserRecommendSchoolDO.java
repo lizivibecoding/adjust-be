@@ -85,6 +85,11 @@ public class UserRecommendSchoolDO extends BaseDO {
     private String directionName;
 
     /**
+     * 研究方向ID
+     */
+    private Long directionId;
+
+    /**
      * 最终推荐概率 (SimFinal)
      */
     private BigDecimal simFinal;

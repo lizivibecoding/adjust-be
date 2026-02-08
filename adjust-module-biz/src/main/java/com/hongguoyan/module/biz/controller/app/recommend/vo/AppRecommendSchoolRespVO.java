@@ -36,6 +36,18 @@ public class AppRecommendSchoolRespVO {
     @Schema(description = "专业名称", example = "计算机科学与技术")
     private String majorName;
 
+    @Schema(description = "方向ID", example = "755")
+    private Long directionId;
+
+    @Schema(description = "方向代码", example = "01")
+    private String directionCode;
+
+    @Schema(description = "方向名称", example = "人工智能")
+    private String directionName;
+
+    @Schema(description = "学位类型（0-不区分 1-学硕 2-专硕）", example = "1")
+    private Integer degreeType;
+
     @Schema(description = "匹配概率(0-1)", example = "0.85")
     private Double matchProbability;
 

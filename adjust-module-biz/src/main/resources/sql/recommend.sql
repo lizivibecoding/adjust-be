@@ -11,6 +11,7 @@ CREATE TABLE `biz_user_recommend_adjustment` (
   `major_name` varchar(64) NOT NULL DEFAULT '' COMMENT '专业名称',
   `direction_code` varchar(64) DEFAULT '' COMMENT '研究方向代码',
   `direction_name` varchar(64) DEFAULT '' COMMENT '研究方向名称',
+  `direction_id` bigint(20) DEFAULT NULL COMMENT '研究方向ID',
   `sim_final` decimal(10,4) NOT NULL DEFAULT '0.0000' COMMENT '最终推荐概率',
   `sim_a` decimal(10,4) NOT NULL DEFAULT '0.0000' COMMENT '分数匹配度',
   `sim_b` decimal(10,4) NOT NULL DEFAULT '0.0000' COMMENT '专业匹配度',

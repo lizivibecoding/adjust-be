@@ -5,7 +5,9 @@ import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.framework.common.util.object.BeanUtils;
 import com.hongguoyan.module.biz.controller.admin.recommend.report.vo.UserCustomReportPageReqVO;
 import com.hongguoyan.module.biz.controller.admin.recommend.report.vo.UserCustomReportRespVO;
+import com.hongguoyan.module.biz.controller.admin.recommend.report.vo.UserCustomReportSaveReqVO;
 import com.hongguoyan.module.biz.dal.dataobject.usercustomreport.UserCustomReportDO;
+import com.hongguoyan.module.biz.service.recommend.RecommendService;
 import com.hongguoyan.module.biz.service.usercustomreport.UserCustomReportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -26,6 +28,16 @@ public class RecommendReportController {
 
     @Resource
     private UserCustomReportService userCustomReportService;
+    @Resource
+    private RecommendService recommendService;
+
+    @PostMapping("/create")
+    @Operation(summary = "创建调剂报告")
+    @PreAuthorize("@ss.hasPermission('biz:recommend-report:create')")
+    public CommonResult<Long> createUserCustomReport(@Valid @RequestBody UserCustomReportSaveReqVO createReqVO) {
+        recommendService.generateAssessmentReport(createReqVO.getUserId());
+        return success(0L);
+    }
 
     @GetMapping("/page")
     @Operation(summary = "获得调剂报告分页")

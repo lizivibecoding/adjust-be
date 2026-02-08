@@ -35,6 +35,6 @@ public interface RecommendService {
      * @param userId 用户ID
      * @return reportId 生成的报告ID
      */
-    Long generateAssessmentReport(Long userId);
+     void generateAssessmentReport(Long userId);
 
 }
