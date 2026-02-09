@@ -90,5 +90,5 @@ jobs:
               --restart unless-stopped \
               -e SPRING_PROFILES_ACTIVE=${{ vars.SPRING_PROFILE }} \
               -e JAVA_OPTS="${{ vars.JAVA_OPTS }}" \
-              -p ${{ vars.SERVER_PORT }}:${{ vars.SERVER_PORT }} \
+              -p 48080:48080 \
               adjust-server:${{ github.sha }}
