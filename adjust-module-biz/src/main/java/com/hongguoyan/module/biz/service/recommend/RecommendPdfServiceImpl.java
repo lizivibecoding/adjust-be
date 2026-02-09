@@ -2,59 +2,57 @@ package com.hongguoyan.module.biz.service.recommend;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.google.common.collect.Lists;
 import com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
+import com.hongguoyan.module.biz.dal.dataobject.adjustmentadmit.AdjustmentAdmitDO;
+import com.hongguoyan.module.biz.dal.dataobject.area.AreaDO;
+import com.hongguoyan.module.biz.dal.dataobject.major.MajorDO;
 import com.hongguoyan.module.biz.dal.dataobject.recommend.UserRecommendSchoolDO;
 import com.hongguoyan.module.biz.dal.dataobject.usercustomreport.UserCustomReportDO;
 import com.hongguoyan.module.biz.dal.dataobject.userintention.UserIntentionDO;
 import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
-import com.hongguoyan.module.biz.dal.dataobject.area.AreaDO;
 import com.hongguoyan.module.biz.dal.mysql.adjustmentadmit.AdjustmentAdmitMapper;
 import com.hongguoyan.module.biz.dal.mysql.area.AreaMapper;
+import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
 import com.hongguoyan.module.biz.dal.mysql.recommend.UserRecommendSchoolMapper;
 import com.hongguoyan.module.biz.dal.mysql.usercustomreport.UserCustomReportMapper;
 import com.hongguoyan.module.biz.dal.mysql.userintention.UserIntentionMapper;
-import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
-import com.hongguoyan.module.biz.dal.dataobject.adjustmentadmit.AdjustmentAdmitDO;
-import com.hongguoyan.module.biz.dal.dataobject.major.MajorDO;
 import com.hongguoyan.module.biz.dal.mysql.userprofile.UserProfileMapper;
 import com.hongguoyan.module.biz.enums.ErrorCodeConstants;
-import com.itextpdf.io.font.PdfEncodings;
 import com.itextpdf.io.image.ImageData;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
-import com.itextpdf.kernel.font.PdfFontFactory.EmbeddingStrategy;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfPage;
+import com.itextpdf.kernel.pdf.PdfReader;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 import com.itextpdf.kernel.pdf.extgstate.PdfExtGState;
 import com.itextpdf.layout.Document;
-import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.borders.SolidBorder;
-import com.itextpdf.layout.element.*;
-import com.itextpdf.layout.properties.HorizontalAlignment;
+import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Div;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
-import com.itextpdf.layout.properties.VerticalAlignment;
 import jakarta.annotation.Resource;
-import java.util.List;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 /**
  * 推荐报告 PDF 生成 Service 实现类
@@ -146,8 +144,6 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
 
             addCell(infoTable, "本科平均分", true);
             addCell(infoTable, userProfile != null && userProfile.getGraduateAverageScore() != null ? userProfile.getGraduateAverageScore().toString() : "-", false);
-            addCell(infoTable, "软实力", true); // Placeholder to align
-            addCell(infoTable, "", false);
 
             addCell(infoTable, "英语四级", true);
             addCell(infoTable, userProfile != null && userProfile.getCet4Score() != null ? userProfile.getCet4Score().toString() : "-", false);
@@ -266,14 +262,66 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
             addRecommendationGroup(document, "5.2 稳妥方案 (匹配度高，重点关注)", grouped.get(2));
             addRecommendationGroup(document, "5.3 保底方案 (成功率高，确保有学上)", grouped.get(3));
 
-            // --- 添加水印（每页：中心竖版 logo + 右上角横版 logo） ---
-            addWatermarks(pdf);
-
             document.close();
-            return baos.toByteArray();
+            
+            // 第二步：重新打开 PDF，逐页添加水印
+            return addWatermarks(baos.toByteArray());
         } catch (Exception e) {
             log.error("生成 PDF 失败", e);
             throw ServiceExceptionUtil.exception(ErrorCodeConstants.PDF_GENERATE_ERROR);
+        }
+    }
+
+    /**
+     * 重新打开已生成的 PDF，逐页添加水印图片
+     */
+    private byte[] addWatermarks(byte[] srcPdfBytes) {
+        try {
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            if (classLoader == null) {
+                classLoader = getClass().getClassLoader();
+            }
+            ImageData centerImgData = ImageDataFactory.create(
+                    Objects.requireNonNull(classLoader.getResource("logo/hgy_shuban_mid.png"), "Center watermark not found"));
+            ImageData topRightImgData = ImageDataFactory.create(
+                    Objects.requireNonNull(classLoader.getResource("logo/hgy_hengban_top.png"), "Top-right watermark not found"));
+
+            ByteArrayOutputStream destBaos = new ByteArrayOutputStream();
+            PdfDocument pdfDoc = new PdfDocument(new PdfReader(new java.io.ByteArrayInputStream(srcPdfBytes)), new PdfWriter(destBaos));
+
+            PdfExtGState gs = new PdfExtGState().setFillOpacity(0.3f);
+
+            int numberOfPages = pdfDoc.getNumberOfPages();
+            for (int i = 1; i <= numberOfPages; i++) {
+                PdfPage page = pdfDoc.getPage(i);
+                Rectangle pageSize = page.getPageSize();
+                PdfCanvas canvas = new PdfCanvas(page);
+                canvas.saveState();
+                canvas.setExtGState(gs);
+
+                // 1. 居中水印（竖版 logo）
+                float centerImgWidth = 200;
+                float centerImgHeight = centerImgWidth * centerImgData.getHeight() / centerImgData.getWidth();
+                float centerX = (pageSize.getWidth() - centerImgWidth) / 2;
+                float centerY = (pageSize.getHeight() - centerImgHeight) / 2;
+                canvas.addImageFittedIntoRectangle(centerImgData,
+                        new Rectangle(centerX, centerY, centerImgWidth, centerImgHeight), false);
+
+                // 2. 右上角水印（横版 logo，10pt 边距）
+                float topRightImgWidth = 80;
+                float topRightImgHeight = topRightImgWidth * topRightImgData.getHeight() / topRightImgData.getWidth();
+                float topRightX = pageSize.getWidth() - topRightImgWidth - 10;
+                float topRightY = pageSize.getHeight() - topRightImgHeight - 10;
+                canvas.addImageFittedIntoRectangle(topRightImgData,
+                        new Rectangle(topRightX, topRightY, topRightImgWidth, topRightImgHeight), false);
+
+                canvas.restoreState();
+            }
+            pdfDoc.close();
+            return destBaos.toByteArray();
+        } catch (Exception e) {
+            log.warn("添加水印失败，返回无水印 PDF", e);
+            return srcPdfBytes;
         }
     }
 
@@ -426,57 +474,12 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
         }
     }
 
-    /**
-     * Add watermarks to every page:
-     * 1. Center watermark: hgy_shuban_mid.png (semi-transparent)
-     * 2. Top-right watermark: hgy_hengban_top.png (semi-transparent)
-     */
-    private void addWatermarks(PdfDocument pdf) {
-        try {
-            ImageData centerImgData = ImageDataFactory.create(
-                    Objects.requireNonNull(getClass().getClassLoader().getResource("logo/hgy_shuban_mid.png")));
-            ImageData topRightImgData = ImageDataFactory.create(
-                    Objects.requireNonNull(getClass().getClassLoader().getResource("logo/hgy_hengban_top.png")));
-
-            PdfExtGState gs = new PdfExtGState().setFillOpacity(0.08f);
-
-            float centerImgWidth = 300;
-            float centerImgHeight = centerImgWidth * centerImgData.getHeight() / centerImgData.getWidth();
-
-            float topRightImgWidth = 120;
-            float topRightImgHeight = topRightImgWidth * topRightImgData.getHeight() / topRightImgData.getWidth();
-
-            int totalPages = pdf.getNumberOfPages();
-            for (int i = 1; i <= totalPages; i++) {
-                PdfPage page = pdf.getPage(i);
-                Rectangle pageSize = page.getPageSize();
-                PdfCanvas canvas = new PdfCanvas(page.newContentStreamAfter(), page.getResources(), pdf);
-                canvas.saveState();
-                canvas.setExtGState(gs);
-
-                // 1. Center watermark
-                float centerX = (pageSize.getWidth() - centerImgWidth) / 2;
-                float centerY = (pageSize.getHeight() - centerImgHeight) / 2;
-                canvas.addImageAt(centerImgData, centerX, centerY, false);
-
-                // 2. Top-right watermark (with 10pt margin)
-                float topRightX = pageSize.getWidth() - topRightImgWidth - 10;
-                float topRightY = pageSize.getHeight() - topRightImgHeight - 10;
-                canvas.addImageAt(topRightImgData, topRightX, topRightY, false);
-
-                canvas.restoreState();
-            }
-        } catch (Exception e) {
-            log.warn("Failed to add watermarks to PDF", e);
-        }
-    }
-
     private String getProvinceNames(String provinceCodesJson) {
         if (StrUtil.isBlank(provinceCodesJson)) {
             return "";
         }
         try {
-            List<String> codes = JSONUtil.toList(provinceCodesJson, String.class);
+            List<String> codes = Lists.newArrayList(provinceCodesJson.split(","));
             if (CollUtil.isEmpty(codes)) {
                 return "";
             }

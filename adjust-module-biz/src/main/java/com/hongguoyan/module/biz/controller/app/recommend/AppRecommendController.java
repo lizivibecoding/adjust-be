@@ -104,9 +104,7 @@ public class AppRecommendController {
         vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_REPORT);
         // 1. 检查是否已有生成好的 PDF URL
         UserCustomReportDO report = userCustomReportService.getByUserIdAndId(userId, reportId);
-        if (report != null && StrUtil.isNotBlank(report.getReportPdfUrl())) {
-            return success(report.getReportPdfUrl());
-        }
+
         // 2. 实时生成 PDF
         byte[] pdfBytes = recommendPdfService.generateReportPdf(userId, reportId);
         // 3. 上传 OSS

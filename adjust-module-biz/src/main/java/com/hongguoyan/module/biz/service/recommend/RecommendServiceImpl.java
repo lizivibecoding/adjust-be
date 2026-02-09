@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.google.common.collect.Lists;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,6 +42,7 @@ import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 import com.hongguoyan.module.biz.service.vipbenefit.model.VipResolvedBenefit;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.dromara.hutool.core.text.split.SplitUtil;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -221,6 +223,10 @@ public class RecommendServiceImpl implements RecommendService {
         UserIntentionDO userIntention = userIntentionMapper.selectOne(new LambdaQueryWrapper<UserIntentionDO>()
             .eq(UserIntentionDO::getUserId, userId));
 
+        if (Objects.isNull(userIntention)){
+            throw ServiceExceptionUtil.exception(ErrorCodeConstants.INTENT_NO_FOUND);
+        }
+
         // 预加载基础数据
         List<SchoolDO> allSchools = schoolMapper.selectList();
         Map<Long, SchoolDO> schoolMap = allSchools.stream()
@@ -329,8 +335,6 @@ public class RecommendServiceImpl implements RecommendService {
 
         // 5. 获取候选学校的调剂信息
         List<AdjustmentDO> adjustments = adjustmentMapper.selectList(new LambdaQueryWrapper<AdjustmentDO>()
-            .eq(AdjustmentDO::getStatus, 1) // 开放状态
-            .eq(AdjustmentDO::getAdjustStatus, 1) // 正常招生
             .in(AdjustmentDO::getSchoolId, candidateSchoolIds)); // 限制在候选学校中
 
         if (CollUtil.isEmpty(adjustments)) {
@@ -498,13 +502,13 @@ public class RecommendServiceImpl implements RecommendService {
         String prompt = buildAssessmentPrompt(currentYear, userProfile, userIntention, firstChoiceArea, matchedLine, ruanke,
             schoolMap, intentionMajorNameMap, openAdjustmentCountByMajorId);
 
-        AiTextResult aiResult = aiTextService.generateText(AiTextRequest.builder()
-            .provider("doubao")
-            .prompt(prompt)
-            .timeoutMs(60_000L)
-            .build());
+//        AiTextResult aiResult = aiTextService.generateText(AiTextRequest.builder()
+//            .provider("doubao")
+//            .prompt(prompt)
+//            .timeoutMs(60_000L)
+//            .build());
 
-        StudentAssessmentAiReport aiReport = parseAssessmentAiJson(aiResult != null ? aiResult.getText() : null);
+        StudentAssessmentAiReport aiReport = parseAssessmentAiJson(null);
 
         // 5. Persist result
         UserCustomReportDO toUpdate = new UserCustomReportDO();
@@ -1474,7 +1478,7 @@ public class RecommendServiceImpl implements RecommendService {
 
         // 1. Parse Intention Fields
         List<String> provinceCodes = StrUtil.isNotBlank(intention.getProvinceCodes())
-            ? JSONUtil.toList(intention.getProvinceCodes(), String.class) : Collections.emptyList();
+            ? SplitUtil.splitTo(intention.getProvinceCodes(),",", List.class) : Collections.emptyList();
         List<Long> majorIds = parseJsonLongList(intention.getMajorIds()); // Use existing helper
         Integer schoolLevel = intention.getSchoolLevel();
         Integer studyMode = intention.getStudyMode(); // 0-不限 1-全 2-非

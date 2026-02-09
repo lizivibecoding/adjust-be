@@ -79,4 +79,5 @@ public interface ErrorCodeConstants {
     ErrorCode CRAWL_SOURCE_CONFIG_NOT_EXISTS = new ErrorCode(64, "爬虫配置不存在");
     ErrorCode CRAWL_TASK_NOT_EXISTS = new ErrorCode(65, "爬虫任务不存在");
     ErrorCode PDF_GENERATE_ERROR = new ErrorCode(66, "PDF生成报错");
+    ErrorCode INTENT_NO_FOUND = new ErrorCode(67, "未填写需求表");
 }
