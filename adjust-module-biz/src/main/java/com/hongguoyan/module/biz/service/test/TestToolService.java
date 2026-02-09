@@ -60,6 +60,10 @@ public class TestToolService {
     private static final int VIP_SUBSCRIPTION_LOG_SOURCE_ADMIN = 3;
     private static final int VIP_SUBSCRIPTION_LOG_REF_TYPE_ADMIN = 3;
 
+    private static final int PUBLISHER_STATUS_PENDING = 0;
+    private static final int PUBLISHER_STATUS_APPROVED = 1;
+    private static final int PUBLISHER_AUDIT_ACTION_APPROVE = 2;
+
     @Resource
     private JdbcTemplate jdbcTemplate;
 
@@ -234,6 +238,60 @@ public class TestToolService {
         vipSubscriptionLogMapper.insert(log);
 
         return afterEndTime;
+    }
+
+    /**
+     * Set publisher qualification to approved for the user (for integration testing).
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void approvePublisher(@NotNull Long userId) {
+        if (userId == null) {
+            throw exception(new ErrorCode(400, "userId is required"));
+        }
+        LocalDateTime now = LocalDateTime.now();
+
+        PublisherDO existing = publisherMapper.selectOne(new LambdaQueryWrapperX<PublisherDO>()
+                .eq(PublisherDO::getUserId, userId)
+                .last("LIMIT 1"));
+        Integer fromStatus = existing != null ? existing.getStatus() : PUBLISHER_STATUS_PENDING;
+
+        if (existing == null) {
+            PublisherDO toCreate = new PublisherDO();
+            toCreate.setUserId(userId);
+            toCreate.setIdentityType(0);
+            toCreate.setSchoolId(null);
+            toCreate.setSchoolName("");
+            toCreate.setStatus(PUBLISHER_STATUS_APPROVED);
+            toCreate.setRealName("");
+            toCreate.setIdNo("");
+            toCreate.setOrgName("");
+            toCreate.setMobile("");
+            toCreate.setFiles("");
+            toCreate.setNote("");
+            toCreate.setReviewerId(0L);
+            toCreate.setReviewTime(now);
+            toCreate.setRejectReason("");
+            publisherMapper.insert(toCreate);
+        } else {
+            PublisherDO toUpdate = new PublisherDO();
+            toUpdate.setId(existing.getId());
+            toUpdate.setStatus(PUBLISHER_STATUS_APPROVED);
+            toUpdate.setReviewerId(0L);
+            toUpdate.setReviewTime(now);
+            toUpdate.setRejectReason("");
+            // Keep other fields unchanged
+            publisherMapper.updateById(toUpdate);
+        }
+
+        PublisherAuditLogDO log = new PublisherAuditLogDO();
+        log.setUserId(userId);
+        log.setAction(PUBLISHER_AUDIT_ACTION_APPROVE);
+        log.setFromStatus(fromStatus != null ? fromStatus : PUBLISHER_STATUS_PENDING);
+        log.setToStatus(PUBLISHER_STATUS_APPROVED);
+        log.setReviewerId(0L);
+        log.setReason("测试接口通过");
+        log.setSnapshot(null);
+        publisherAuditLogMapper.insert(log);
     }
 }
 

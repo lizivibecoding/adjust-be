@@ -47,5 +47,14 @@ public class AppTestController {
                                                @RequestParam("planCode") @NotBlank String planCode) {
         return success(testToolService.openVip(userId, planCode));
     }
+
+    @PostMapping("/publisher/approve")
+    @Operation(summary = "将用户发布资质设置为审核通过")
+    @PermitAll
+    @Parameter(name = "userId", description = "用户ID", required = true)
+    public CommonResult<Boolean> approvePublisher(@RequestParam("userId") @NotNull Long userId) {
+        testToolService.approvePublisher(userId);
+        return success(true);
+    }
 }
 
