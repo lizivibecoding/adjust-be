@@ -2,13 +2,22 @@ name: Deploy
 
 on:
   push:
-    branches: ["dev"]
+    branches: ["dev", "prod"]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "部署环境"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - prod
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # NOTE: change "production" to your GitHub Environment name
-    environment: dev
+    environment: ${{ github.event.inputs.environment || (github.ref_name == 'prod' && 'prod' || 'dev') }}
 
     steps:
       - name: Checkout
@@ -55,7 +64,7 @@ jobs:
           username: ${{ vars.DEPLOY_USER }}
           password: ${{ secrets.DEPLOY_PASSWORD }}
           source: "adjust-server.jar"
-          target: "/home/cndinx/app"
+          target: ${{ vars.DEPLOY_PATH }}
 
       - name: Upload Dockerfile
         uses: appleboy/scp-action@v0.1.7
@@ -64,7 +73,7 @@ jobs:
           username: ${{ vars.DEPLOY_USER }}
           password: ${{ secrets.DEPLOY_PASSWORD }}
           source: "Dockerfile.adjust-server"
-          target: "/home/cndinx/app"
+          target: ${{ vars.DEPLOY_PATH }}
 
       - name: Restart app
         uses: appleboy/ssh-action@v1.0.3
@@ -74,10 +83,12 @@ jobs:
           password: ${{ secrets.DEPLOY_PASSWORD }}
           script: |
             set -e
-            cd /home/cndinx/app
+            cd ${{ vars.DEPLOY_PATH }}
             docker rm -f adjust-server || true
             docker build -f Dockerfile.adjust-server -t adjust-server:${{ github.sha }} .
             docker run -d --name adjust-server \
               --restart unless-stopped \
-              -p 48080:48080 \
+              -e SPRING_PROFILES_ACTIVE=${{ vars.SPRING_PROFILE }} \
+              -e JAVA_OPTS="${{ vars.JAVA_OPTS }}" \
+              -p ${{ vars.SERVER_PORT }}:${{ vars.SERVER_PORT }} \
               adjust-server:${{ github.sha }}

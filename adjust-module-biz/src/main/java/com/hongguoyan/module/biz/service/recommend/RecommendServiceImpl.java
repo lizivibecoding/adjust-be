@@ -715,20 +715,7 @@ public class RecommendServiceImpl implements RecommendService {
         }
         input.put("intentionMajors", intentionMajorNameMap);
         input.put("openAdjustmentCountByMajorId", openAdjustmentCountByMajorId);
-        // NOTE: Map.of supports up to 10 pairs only; use LinkedHashMap for larger payloads
-        Map<String, Object> softSkills = new LinkedHashMap<>();
-        softSkills.put("cet4", profile.getCet4Score());
-        softSkills.put("cet6", profile.getCet6Score());
-        softSkills.put("paperCount", profile.getPaperCount());
-        softSkills.put("paperExperience", profile.getPaperExperience());
-        softSkills.put("competitionCount", profile.getCompetitionCount());
-        softSkills.put("competitionExperience", profile.getCompetitionExperience());
-        softSkills.put("awardCount", profile.getAwardCount());
-        softSkills.put("awards", profile.getUndergraduateAwards());
-        softSkills.put("gpa", profile.getUndergraduateGpa());
-        softSkills.put("avgScore", profile.getGraduateAverageScore());
-        softSkills.put("selfAssessedScore", profile.getSelfAssessedScore());
-        softSkills.put("selfIntroduction", profile.getSelfIntroduction());
+        Map<String, Object> softSkills = getStringObjectMap(profile);
         input.put("softSkills", softSkills);
 
         String inputJson;
@@ -740,20 +727,20 @@ public class RecommendServiceImpl implements RecommendService {
 
         return """
             你是一名考研调剂咨询顾问，请基于输入数据生成“学生评估报告（5个维度）”。
-                            
+                           \s
             维度：
             1) 院校背景维度（软科排名/985/211/双一流等）
             2) 学生初试总分维度（与国家线离散程度：delta=总分-国家线总分）
             3) 目标院校层次维度（结合一志愿学校层次与调剂意向院校层次）
             4) 专业竞争力维度（调剂意向专业 + 市场供给：openAdjustmentCountByMajorId）
             5) 软实力维度（英语/科研/竞赛/获奖/GPA/自评等）
-                            
+                           \s
             输出要求：
             - 只输出一个 JSON 对象，不要 Markdown，不要额外解释。
             - 分数字段为 0-100 的整数。
             - 文案字段使用中文，分段清晰，给出优势/风险/建议。
             - 字段必须完整，缺数据时也要给合理兜底说明。
-                            
+                           \s
             输出 JSON Schema（必须严格遵守字段名）：
             {
               "dimBackgroundScore": 0,
@@ -767,10 +754,27 @@ public class RecommendServiceImpl implements RecommendService {
               "dimSoftSkillsScore": 0,
               "analysisSoftSkills": ""
             }
-                            
+                           \s
             输入数据(JSON)：
             %s
-            """.formatted(inputJson);
+           \s""".formatted(inputJson);
+    }
+
+    private static Map<String, Object> getStringObjectMap(UserProfileDO profile) {
+        Map<String, Object> softSkills = new LinkedHashMap<>();
+        softSkills.put("cet4", profile.getCet4Score());
+        softSkills.put("cet6", profile.getCet6Score());
+        softSkills.put("paperCount", profile.getPaperCount());
+        softSkills.put("paperExperience", profile.getPaperExperience());
+        softSkills.put("competitionCount", profile.getCompetitionCount());
+        softSkills.put("competitionExperience", profile.getCompetitionExperience());
+        softSkills.put("awardCount", profile.getAwardCount());
+        softSkills.put("awards", profile.getUndergraduateAwards());
+        softSkills.put("gpa", profile.getUndergraduateGpa());
+        softSkills.put("avgScore", profile.getGraduateAverageScore());
+        softSkills.put("selfAssessedScore", profile.getSelfAssessedScore());
+        softSkills.put("selfIntroduction", profile.getSelfIntroduction());
+        return softSkills;
     }
 
     /**

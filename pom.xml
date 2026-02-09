@@ -22,8 +22,7 @@
     </modules>
 
     <name>${project.artifactId}</name>
-    <description>芋道项目基础脚手架</description>
-    <url>https://github.com/YunaiV/ruoyi-vue-pro</url>
+    <description>项目基础脚手架</description>
 
     <properties>
         <revision>2025.12-SNAPSHOT</revision>
@@ -117,6 +116,9 @@
                 <configuration>
                     <flattenMode>oss</flattenMode>
                     <updatePomFile>true</updatePomFile>
+                    <pomElements>
+                        <properties>keep</properties>
+                    </pomElements>
                 </configuration>
                 <executions>
                     <execution>

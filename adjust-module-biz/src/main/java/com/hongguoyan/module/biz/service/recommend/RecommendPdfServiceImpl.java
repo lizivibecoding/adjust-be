@@ -12,7 +12,9 @@ import com.hongguoyan.module.biz.dal.dataobject.recommend.UserRecommendSchoolDO;
 import com.hongguoyan.module.biz.dal.dataobject.usercustomreport.UserCustomReportDO;
 import com.hongguoyan.module.biz.dal.dataobject.userintention.UserIntentionDO;
 import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
+import com.hongguoyan.module.biz.dal.dataobject.area.AreaDO;
 import com.hongguoyan.module.biz.dal.mysql.adjustmentadmit.AdjustmentAdmitMapper;
+import com.hongguoyan.module.biz.dal.mysql.area.AreaMapper;
 import com.hongguoyan.module.biz.dal.mysql.recommend.UserRecommendSchoolMapper;
 import com.hongguoyan.module.biz.dal.mysql.usercustomreport.UserCustomReportMapper;
 import com.hongguoyan.module.biz.dal.mysql.userintention.UserIntentionMapper;
@@ -22,14 +24,20 @@ import com.hongguoyan.module.biz.dal.dataobject.major.MajorDO;
 import com.hongguoyan.module.biz.dal.mysql.userprofile.UserProfileMapper;
 import com.hongguoyan.module.biz.enums.ErrorCodeConstants;
 import com.itextpdf.io.font.PdfEncodings;
+import com.itextpdf.io.image.ImageData;
+import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.font.PdfFontFactory.EmbeddingStrategy;
 import com.itextpdf.kernel.geom.PageSize;
+import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
+import com.itextpdf.kernel.pdf.extgstate.PdfExtGState;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.borders.SolidBorder;
@@ -69,6 +77,8 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
     private AdjustmentAdmitMapper adjustmentAdmitMapper;
     @Resource
     private MajorMapper majorMapper;
+    @Resource
+    private AreaMapper areaMapper;
 
     // 字体路径 (假设在 resources 目录下，或者使用系统字体)
     // 注意：iText 7 需要字体文件支持中文，如 NotoSansCJKsc-Regular.otf
@@ -119,7 +129,7 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
             document.setFont(font);
 
             // --- 标题 ---
-            Paragraph title = new Paragraph(StrUtil.blankToDefault(report.getReportName(), "考研调剂智能评估报告"))
+            Paragraph title = new Paragraph(DateUtil.thisYear() + " 年考研调剂智能评估报告")
                     .setFontSize(20)
                     .setBold()
                     .setTextAlignment(TextAlignment.CENTER)
@@ -193,7 +203,7 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
                 Table intentTable = new Table(UnitValue.createPercentArray(new float[]{1, 4})).useAllAvailableWidth();
                 
                 // 意向地区 (Codes -> Names)
-                String provinceNames = userIntention.getProvinceCodes(); // TODO: Translate codes to names using AreaService or cache
+                String provinceNames = getProvinceNames(userIntention.getProvinceCodes());
                 addCell(intentTable, "意向地区", true);
                 addCell(intentTable, StrUtil.blankToDefault(provinceNames, "不限"), false);
 
@@ -255,6 +265,9 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
             addRecommendationGroup(document, "5.1 冲刺方案 (机会较小，值得一试)", grouped.get(1));
             addRecommendationGroup(document, "5.2 稳妥方案 (匹配度高，重点关注)", grouped.get(2));
             addRecommendationGroup(document, "5.3 保底方案 (成功率高，确保有学上)", grouped.get(3));
+
+            // --- 添加水印（每页：中心竖版 logo + 右上角横版 logo） ---
+            addWatermarks(pdf);
 
             document.close();
             return baos.toByteArray();
@@ -324,17 +337,24 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
             Paragraph pTitle = new Paragraph(titleLine).setBold().setFontSize(11);
             card.add(pTitle);
 
-            // 匹配度
-            Paragraph pSim = new Paragraph(String.format("匹配概率: %.1f%%", first.getSimFinal().doubleValue() * 100))
-                    .setFontSize(10).setFontColor(ColorConstants.BLUE);
-            card.add(pSim);
-
             // 方向列表
             String directions = group.stream()
                     .map(r -> StrUtil.blankToDefault(r.getDirectionName(), "不区分方向"))
                     .distinct()
                     .collect(Collectors.joining("，"));
             card.add(new Paragraph("研究方向: " + directions).setFontSize(10));
+
+            // 推荐类型标签
+            String categoryLabel = switch (first.getCategory() != null ? first.getCategory() : 3) {
+                case 1 -> "冲刺推荐";
+                case 2 -> "求稳推荐";
+                default -> "兜底推荐";
+            };
+            Paragraph pCategory = new Paragraph(categoryLabel)
+                    .setFontSize(10).setFontColor(ColorConstants.BLUE);
+            card.add(pCategory);
+
+
 
             // 录取数据 (取第一条 MajorCode 查)
             String majorCode = null;
@@ -403,6 +423,70 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
                 card.add(listTable);
             }
             doc.add(card);
+        }
+    }
+
+    /**
+     * Add watermarks to every page:
+     * 1. Center watermark: hgy_shuban_mid.png (semi-transparent)
+     * 2. Top-right watermark: hgy_hengban_top.png (semi-transparent)
+     */
+    private void addWatermarks(PdfDocument pdf) {
+        try {
+            ImageData centerImgData = ImageDataFactory.create(
+                    Objects.requireNonNull(getClass().getClassLoader().getResource("logo/hgy_shuban_mid.png")));
+            ImageData topRightImgData = ImageDataFactory.create(
+                    Objects.requireNonNull(getClass().getClassLoader().getResource("logo/hgy_hengban_top.png")));
+
+            PdfExtGState gs = new PdfExtGState().setFillOpacity(0.08f);
+
+            float centerImgWidth = 300;
+            float centerImgHeight = centerImgWidth * centerImgData.getHeight() / centerImgData.getWidth();
+
+            float topRightImgWidth = 120;
+            float topRightImgHeight = topRightImgWidth * topRightImgData.getHeight() / topRightImgData.getWidth();
+
+            int totalPages = pdf.getNumberOfPages();
+            for (int i = 1; i <= totalPages; i++) {
+                PdfPage page = pdf.getPage(i);
+                Rectangle pageSize = page.getPageSize();
+                PdfCanvas canvas = new PdfCanvas(page.newContentStreamAfter(), page.getResources(), pdf);
+                canvas.saveState();
+                canvas.setExtGState(gs);
+
+                // 1. Center watermark
+                float centerX = (pageSize.getWidth() - centerImgWidth) / 2;
+                float centerY = (pageSize.getHeight() - centerImgHeight) / 2;
+                canvas.addImageAt(centerImgData, centerX, centerY, false);
+
+                // 2. Top-right watermark (with 10pt margin)
+                float topRightX = pageSize.getWidth() - topRightImgWidth - 10;
+                float topRightY = pageSize.getHeight() - topRightImgHeight - 10;
+                canvas.addImageAt(topRightImgData, topRightX, topRightY, false);
+
+                canvas.restoreState();
+            }
+        } catch (Exception e) {
+            log.warn("Failed to add watermarks to PDF", e);
+        }
+    }
+
+    private String getProvinceNames(String provinceCodesJson) {
+        if (StrUtil.isBlank(provinceCodesJson)) {
+            return "";
+        }
+        try {
+            List<String> codes = JSONUtil.toList(provinceCodesJson, String.class);
+            if (CollUtil.isEmpty(codes)) {
+                return "";
+            }
+            List<AreaDO> areas = areaMapper.selectBatchIds(codes);
+            if (CollUtil.isEmpty(areas)) {
+                return "";
+            }
+            return areas.stream().map(AreaDO::getName).collect(Collectors.joining("、"));
+        } catch (Exception e) {
+            return provinceCodesJson; // Fallback to raw json if parse fails
         }
     }
 

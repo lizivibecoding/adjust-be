@@ -87,7 +87,7 @@ public class UserCustomReportServiceImpl implements UserCustomReportService {
         int reportNo = userCustomReportMapper.selectMaxReportNoByUserId(userId) + 1;
         report.setReportNo(reportNo);
         String date = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE); // yyyyMMdd
-        report.setReportName(String.format("%s - 调剂报告 - %02d", date, reportNo));
+        report.setReportName(String.format("%s - 智能推荐调剂报告 - %02d", date, reportNo));
         userCustomReportMapper.insert(report);
         return report.getId();
     }
