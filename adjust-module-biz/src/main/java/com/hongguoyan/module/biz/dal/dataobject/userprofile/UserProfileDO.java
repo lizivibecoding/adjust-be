@@ -38,6 +38,12 @@ public class UserProfileDO extends BaseDO {
      * 用户ID
      */
     private Long userId;
+
+    /**
+     * 除一志愿外信息修改次数
+     */
+    @TableField("edit_num")
+    private Integer editNum;
     /**
      * 本科毕业院校ID(biz_school.id)
      */

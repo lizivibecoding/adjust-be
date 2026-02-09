@@ -207,8 +207,8 @@ public class VipAppServiceImpl implements VipAppService {
         Set<String> opened = vipBenefitService.getConsumedUniqueKeys(userId, BENEFIT_KEY_MAJOR_CATEGORY_OPEN);
         List<String> openedCodes;
         if (opened == null || opened.isEmpty()) {
-            // New user: do NOT persist. Just return a hardcoded default category for UI.
-            openedCodes = List.of(DEFAULT_MAJOR_CATEGORY_CODE);
+            // New user: do NOT persist or fake opened category codes.
+            openedCodes = List.of();
         } else {
             openedCodes = opened.stream().filter(Objects::nonNull)
                     .map(String::trim).filter(s -> !s.isEmpty()).sorted().toList();

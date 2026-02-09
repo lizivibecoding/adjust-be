@@ -26,12 +26,14 @@ import jakarta.annotation.Resource;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
+import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.USER_PROFILE_EDIT_EXCEEDED;
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_MAJOR_CATEGORY_OPEN;
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.REF_TYPE_MAJOR_CATEGORY_OPEN;
 
@@ -112,6 +114,7 @@ public class UserProfileServiceImpl implements UserProfileService {
 
         if (existing == null) {
             toSave.setId(null);
+            toSave.setEditNum(0);
             userProfileMapper.insert(toSave);
             // no1 empty then write + open major category
             syncNo1AndOpenMajorCategory(userId, toSave, reqVO);
@@ -130,10 +133,58 @@ public class UserProfileServiceImpl implements UserProfileService {
         // 目前不处理锁定/提交逻辑，这两个字段保持原值，避免被覆盖为 null
         toSave.setBasicLocked(existing.getBasicLocked());
         toSave.setSubmitTime(existing.getSubmitTime());
+
+        // Non-first-choice info can only be modified once.
+        boolean otherInfoChanged = hasOtherInfoChanged(existing, toSave);
+        int used = existing.getEditNum() != null ? existing.getEditNum() : 0;
+        if (otherInfoChanged) {
+            if (used >= 1) {
+                throw exception(USER_PROFILE_EDIT_EXCEEDED);
+            }
+            toSave.setEditNum(used + 1);
+        } else {
+            toSave.setEditNum(existing.getEditNum());
+        }
+
         userProfileMapper.updateById(toSave);
         // no1 empty then write + open major category
         syncNo1AndOpenMajorCategory(userId, toSave, reqVO);
         return existing.getId();
+    }
+
+    /**
+     * "Other info" means all fields except the first-choice target* group.
+     */
+    private boolean hasOtherInfoChanged(UserProfileDO existing, UserProfileDO toSave) {
+        if (existing == null || toSave == null) {
+            return false;
+        }
+        // Graduate/basic
+        if (!Objects.equals(existing.getGraduateSchoolId(), toSave.getGraduateSchoolId())) return true;
+        if (!Objects.equals(existing.getGraduateMajorId(), toSave.getGraduateMajorId())) return true;
+        if (!Objects.equals(existing.getGraduateAverageScore(), toSave.getGraduateAverageScore())) return true;
+        if (!Objects.equals(existing.getUndergraduateGpa(), toSave.getUndergraduateGpa())) return true;
+        if (!Objects.equals(existing.getCet4Score(), toSave.getCet4Score())) return true;
+        if (!Objects.equals(existing.getCet6Score(), toSave.getCet6Score())) return true;
+        if (!Objects.equals(existing.getUndergraduateAwards(), toSave.getUndergraduateAwards())) return true;
+        if (!Objects.equals(existing.getAwardCount(), toSave.getAwardCount())) return true;
+        if (!Objects.equals(existing.getIsNationalScholarship(), toSave.getIsNationalScholarship())) return true;
+        if (!Objects.equals(existing.getIsSchoolScholarship(), toSave.getIsSchoolScholarship())) return true;
+
+        // Scores & background
+        if (!Objects.equals(existing.getSubjectScore1(), toSave.getSubjectScore1())) return true;
+        if (!Objects.equals(existing.getSubjectScore2(), toSave.getSubjectScore2())) return true;
+        if (!Objects.equals(existing.getSubjectScore3(), toSave.getSubjectScore3())) return true;
+        if (!Objects.equals(existing.getSubjectScore4(), toSave.getSubjectScore4())) return true;
+        if (!Objects.equals(existing.getScoreTotal(), toSave.getScoreTotal())) return true;
+
+        if (!Objects.equals(existing.getSelfIntroduction(), toSave.getSelfIntroduction())) return true;
+        if (!Objects.equals(existing.getPaperCount(), toSave.getPaperCount())) return true;
+        if (!Objects.equals(existing.getCompetitionIds(), toSave.getCompetitionIds())) return true;
+        if (!Objects.equals(existing.getCompetitionCount(), toSave.getCompetitionCount())) return true;
+        if (!Objects.equals(existing.getSelfAssessedScore(), toSave.getSelfAssessedScore())) return true;
+
+        return false;
     }
 
     private void syncNo1AndOpenMajorCategory(Long userId, UserProfileDO toSave, AppUserProfileSaveReqVO reqVO) {
