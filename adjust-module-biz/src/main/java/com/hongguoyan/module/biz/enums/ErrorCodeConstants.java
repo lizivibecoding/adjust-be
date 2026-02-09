@@ -47,7 +47,6 @@ public interface ErrorCodeConstants {
     ErrorCode USER_PROFILE_NOT_EXISTS = new ErrorCode(40, "用户基础信息不存在");
     ErrorCode USER_NOT_QUALIFIED = new ErrorCode(41, "用户未过一志愿区域国家线");
     ErrorCode USER_PROFILE_EDIT_EXCEEDED = new ErrorCode(67, "除一志愿外信息仅允许修改一次");
-    ErrorCode USER_PREFERENCE_NOT_PARALLEL = new ErrorCode(68, "非平行志愿，无法加入志愿");
 
     // ========== Doubao / Ark Responses ==========
     ErrorCode DOUBAO_CONFIG_MISSING = new ErrorCode(42, "AI 配置缺失");
@@ -79,5 +78,5 @@ public interface ErrorCodeConstants {
     ErrorCode NO_RECOMMEND_RULE = new ErrorCode(63, "没有配置推荐规则");
     ErrorCode CRAWL_SOURCE_CONFIG_NOT_EXISTS = new ErrorCode(64, "爬虫配置不存在");
     ErrorCode CRAWL_TASK_NOT_EXISTS = new ErrorCode(65, "爬虫任务不存在");
-    ErrorCode PDF_GENERATE_ERROR = new ErrorCode(66, "PDF生成报错");;
+    ErrorCode PDF_GENERATE_ERROR = new ErrorCode(66, "PDF生成报错");
 }

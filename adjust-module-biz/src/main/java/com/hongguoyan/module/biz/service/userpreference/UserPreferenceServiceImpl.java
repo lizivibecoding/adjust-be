@@ -95,19 +95,6 @@ public class UserPreferenceServiceImpl implements UserPreferenceService {
 
         Integer preferenceNo = reqVO.getPreferenceNo();
 
-        // Parallel wish validation: within the same preferenceNo, majorCode prefix(4) must match.
-        String newPrefix4 = majorPrefix4(adjustment.getMajorCode());
-        if (newPrefix4 == null) {
-            throw exception(new com.hongguoyan.framework.common.exception.ErrorCode(400, "调剂专业代码缺失，无法加入志愿"));
-        }
-        List<UserPreferenceDO> existingItems = userPreferenceMapper.selectListByUserIdAndPreferenceNo(userId, preferenceNo);
-        if (existingItems != null && !existingItems.isEmpty()) {
-            String basePrefix4 = majorPrefix4(existingItems.get(0).getMajorCode());
-            if (basePrefix4 != null && !basePrefix4.equals(newPrefix4)) {
-                throw exception(USER_PREFERENCE_NOT_PARALLEL);
-            }
-        }
-
         UserPreferenceDO existing = userPreferenceMapper.selectByUserIdPreferenceNoAndDirectionId(userId, preferenceNo, adjustment.getDirectionId());
         UserPreferenceDO toSave = existing != null ? existing : new UserPreferenceDO();
         toSave.setUserId(userId);
@@ -133,17 +120,6 @@ public class UserPreferenceServiceImpl implements UserPreferenceService {
         } else {
             userPreferenceMapper.updateById(toSave);
         }
-    }
-
-    private String majorPrefix4(String majorCode) {
-        if (majorCode == null) {
-            return null;
-        }
-        String s = majorCode.trim();
-        if (s.length() < 4) {
-            return null;
-        }
-        return s.substring(0, 4);
     }
 
     @Override
