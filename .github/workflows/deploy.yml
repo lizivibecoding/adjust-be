@@ -84,11 +84,14 @@ jobs:
           script: |
             set -e
             cd ${{ vars.DEPLOY_PATH }}
+            mkdir -p logs
             docker rm -f adjust-server || true
             docker build -f Dockerfile.adjust-server -t adjust-server:${{ github.sha }} .
             docker run -d --name adjust-server \
               --restart unless-stopped \
               -e SPRING_PROFILES_ACTIVE=${{ vars.SPRING_PROFILE }} \
               -e JAVA_OPTS="${{ vars.JAVA_OPTS }}" \
+              -e LOG_PATH=/app/logs \
+              -v ${{ vars.DEPLOY_PATH }}/logs:/app/logs \
               -p 48080:48080 \
               adjust-server:${{ github.sha }}

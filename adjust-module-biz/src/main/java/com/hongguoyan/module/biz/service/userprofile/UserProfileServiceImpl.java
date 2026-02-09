@@ -14,12 +14,10 @@ import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
 import com.hongguoyan.module.biz.dal.dataobject.schoolcollege.SchoolCollegeDO;
 import com.hongguoyan.module.biz.dal.dataobject.schooldirection.SchoolDirectionDO;
 import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
-import com.hongguoyan.module.biz.dal.dataobject.userpreference.UserPreferenceDO;
 import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
 import com.hongguoyan.module.biz.dal.mysql.schoolcollege.SchoolCollegeMapper;
 import com.hongguoyan.module.biz.dal.mysql.schooldirection.SchoolDirectionMapper;
-import com.hongguoyan.module.biz.dal.mysql.userpreference.UserPreferenceMapper;
 import com.hongguoyan.module.biz.dal.mysql.userprofile.UserProfileMapper;
 import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 import jakarta.annotation.Resource;
@@ -56,8 +54,6 @@ public class UserProfileServiceImpl implements UserProfileService {
     private SchoolDirectionMapper schoolDirectionMapper;
     @Resource
     private SchoolCollegeMapper schoolCollegeMapper;
-    @Resource
-    private UserPreferenceMapper userPreferenceMapper;
     @Resource
     private VipBenefitService vipBenefitService;
 
@@ -116,8 +112,8 @@ public class UserProfileServiceImpl implements UserProfileService {
             toSave.setId(null);
             toSave.setEditNum(0);
             userProfileMapper.insert(toSave);
-            // no1 empty then write + open major category
-            syncNo1AndOpenMajorCategory(userId, toSave, reqVO);
+            // open major category (best-effort, idempotent)
+            openMajorCategory(userId, toSave);
             return toSave.getId();
         }
 
@@ -147,8 +143,8 @@ public class UserProfileServiceImpl implements UserProfileService {
         }
 
         userProfileMapper.updateById(toSave);
-        // no1 empty then write + open major category
-        syncNo1AndOpenMajorCategory(userId, toSave, reqVO);
+        // open major category (best-effort, idempotent)
+        openMajorCategory(userId, toSave);
         return existing.getId();
     }
 
@@ -187,43 +183,11 @@ public class UserProfileServiceImpl implements UserProfileService {
         return false;
     }
 
-    private void syncNo1AndOpenMajorCategory(Long userId, UserProfileDO toSave, AppUserProfileSaveReqVO reqVO) {
-        // 1) Ensure preferenceNo=1 exists (only when empty)
-        List<UserPreferenceDO> no1List = userPreferenceMapper.selectListByUserIdAndPreferenceNo(userId, 1);
-        UserPreferenceDO no1First = (no1List != null && !no1List.isEmpty()) ? no1List.get(0) : null;
-        if (no1First == null) {
-            // Build a preference row from profile snapshot (directionId comes from targetDirectionId)
-            Long directionId = toSave.getTargetDirectionId();
-            if (directionId == null) {
-                throw exception(new ErrorCode(400, "一志愿方向ID缺失，无法写入志愿表"));
-            }
-            SchoolDirectionDO direction = schoolDirectionMapper.selectById(directionId);
-            if (direction == null) {
-                throw exception(new ErrorCode(400, "一志愿方向不存在，无法写入志愿表"));
-            }
-            UserPreferenceDO pref = new UserPreferenceDO();
-            pref.setUserId(userId);
-            pref.setPreferenceNo(1);
-            pref.setSchoolId(toSave.getTargetSchoolId());
-            pref.setSchoolName(StrUtil.blankToDefault(toSave.getTargetSchoolName(), ""));
-            pref.setCollegeId(toSave.getTargetCollegeId());
-            pref.setCollegeName(StrUtil.blankToDefault(toSave.getTargetCollegeName(), ""));
-            pref.setMajorId(toSave.getTargetMajorId());
-            pref.setMajorCode(StrUtil.blankToDefault(toSave.getTargetMajorCode(), ""));
-            pref.setMajorName(StrUtil.blankToDefault(toSave.getTargetMajorName(), ""));
-            pref.setDirectionId(directionId);
-            pref.setDirectionCode(StrUtil.blankToDefault(toSave.getTargetDirectionCode(), ""));
-            pref.setDirectionName(StrUtil.blankToDefault(toSave.getTargetDirectionName(), ""));
-            pref.setStudyMode(direction.getStudyMode());
-            pref.setSourceAdjustmentId(null);
-            userPreferenceMapper.insert(pref);
-            no1First = pref;
-        }
-
-        // 2) Open major category for the first row of preferenceNo=1
-        String majorCode = no1First.getMajorCode() != null ? no1First.getMajorCode().trim() : "";
+    private void openMajorCategory(Long userId, UserProfileDO toSave) {
+        // Open major category by current profile's target major code (idempotent)
+        String majorCode = StrUtil.blankToDefault(toSave.getTargetMajorCode(), "").trim();
         if (majorCode.isEmpty() || majorCode.length() < 2) {
-            throw exception(new ErrorCode(400, "一志愿专业代码缺失，无法开通门类"));
+            throw exception(new ErrorCode(400, "目标专业代码缺失，无法开通门类"));
         }
         String majorCategoryCode = majorCode.substring(0, 2);
         // Idempotency safeguard: avoid repeated consumption on profile re-save

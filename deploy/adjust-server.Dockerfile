@@ -8,6 +8,9 @@ COPY adjust-server.jar app.jar
 ENV JAVA_OPTS="-Xms512m -Xmx512m"
 ENV SPRING_PROFILES_ACTIVE="local"
 ENV SERVER_PORT="48080"
+ENV LOG_PATH="/app/logs"
+
+RUN mkdir -p /app/logs
 
 EXPOSE 48080
 
