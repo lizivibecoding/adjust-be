@@ -14,8 +14,15 @@ public class AppUserPreferenceSaveReqVO {
     @Max(value = 3, message = "志愿序号必须在 1~3 之间")
     private Integer preferenceNo;
 
-    @Schema(description = "最低至方向ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "755")
-    @NotNull(message = "方向ID不能为空")
+    @Schema(description = "来源调剂ID(biz_adjustment.id)", requiredMode = Schema.RequiredMode.REQUIRED, example = "123456")
+    @NotNull(message = "来源调剂ID不能为空")
+    private Long adjustmentId;
+
+    /**
+     * Deprecated: directionId is no longer used in business logic.
+     * Keep the field for request compatibility during integration, but DO NOT validate or rely on it.
+     */
+    @Schema(description = "方向ID(废弃，后端不再使用)", example = "755")
     private Long directionId;
 
 }

@@ -36,7 +36,7 @@ public class AppUserPreferenceController {
 
     @GetMapping("/my-list")
     @Operation(summary = "我的志愿表")
-    public CommonResult<List<AppUserPreferenceRespVO>> getMyUserPreferenceList() {
+    public CommonResult<List<AppUserPreferenceGroupRespVO>> getMyUserPreferenceList() {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
         return success(userPreferenceService.getMyList(userId));
     }
@@ -63,29 +63,38 @@ public class AppUserPreferenceController {
     public CommonResult<List<AppUserPreferenceExportRespVO>> exportMyPreferences(@Valid AppUserPreferenceExportReqVO reqVO) {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
         vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_PREFERENCE_EXPORT);
-        List<AppUserPreferenceRespVO> list = userPreferenceService.getMyList(userId);
+        List<AppUserPreferenceGroupRespVO> list = userPreferenceService.getMyList(userId);
         Set<Integer> allowed = resolveAllowedPreferenceNos(reqVO);
-        List<AppUserPreferenceExportRespVO> exportList = new ArrayList<>(list.size());
-        for (AppUserPreferenceRespVO item : list) {
-            if (item == null || item.getPreferenceNo() == null) {
+        List<AppUserPreferenceExportRespVO> exportList = new ArrayList<>();
+        for (AppUserPreferenceGroupRespVO group : list) {
+            if (group == null || group.getPreferenceNo() == null) {
                 continue;
             }
-            if (allowed != null && !allowed.contains(item.getPreferenceNo())) {
+            if (allowed != null && !allowed.contains(group.getPreferenceNo())) {
                 continue;
             }
-            // only export selected (filled) preferences
-            if (isBlank(item.getSchoolName()) && isBlank(item.getMajorName()) && isBlank(item.getMajorCode())) {
+            List<AppUserPreferenceItemRespVO> items = group.getItems();
+            if (items == null || items.isEmpty()) {
                 continue;
             }
-            AppUserPreferenceExportRespVO vo = new AppUserPreferenceExportRespVO();
-            vo.setPreferenceNo(item.getPreferenceNo());
-            vo.setSchoolName(item.getSchoolName());
-            vo.setCollegeName(item.getCollegeName());
-            vo.setMajorCode(item.getMajorCode());
-            vo.setMajorName(item.getMajorName());
-            vo.setDirectionName(item.getDirectionName());
-            vo.setStudyMode(item.getStudyMode());
-            exportList.add(vo);
+            for (AppUserPreferenceItemRespVO item : items) {
+                if (item == null) {
+                    continue;
+                }
+                // only export selected (filled) preferences
+                if (isBlank(item.getSchoolName()) && isBlank(item.getMajorName()) && isBlank(item.getMajorCode())) {
+                    continue;
+                }
+                AppUserPreferenceExportRespVO vo = new AppUserPreferenceExportRespVO();
+                vo.setPreferenceNo(group.getPreferenceNo());
+                vo.setSchoolName(item.getSchoolName());
+                vo.setCollegeName(item.getCollegeName());
+                vo.setMajorCode(item.getMajorCode());
+                vo.setMajorName(item.getMajorName());
+                vo.setDirectionName(item.getDirectionName());
+                vo.setStudyMode(item.getStudyMode());
+                exportList.add(vo);
+            }
         }
         return success(exportList);
     }

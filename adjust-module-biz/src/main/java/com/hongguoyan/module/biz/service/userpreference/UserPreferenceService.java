@@ -14,7 +14,7 @@ public interface UserPreferenceService {
     /**
      * 我的志愿表
      */
-    List<AppUserPreferenceRespVO> getMyList(Long userId);
+    List<AppUserPreferenceGroupRespVO> getMyList(Long userId);
 
     /**
      * 保存志愿

@@ -14,20 +14,26 @@ import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
 import com.hongguoyan.module.biz.dal.dataobject.schoolcollege.SchoolCollegeDO;
 import com.hongguoyan.module.biz.dal.dataobject.schooldirection.SchoolDirectionDO;
 import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
+import com.hongguoyan.module.biz.dal.dataobject.userpreference.UserPreferenceDO;
 import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
 import com.hongguoyan.module.biz.dal.mysql.schoolcollege.SchoolCollegeMapper;
 import com.hongguoyan.module.biz.dal.mysql.schooldirection.SchoolDirectionMapper;
+import com.hongguoyan.module.biz.dal.mysql.userpreference.UserPreferenceMapper;
 import com.hongguoyan.module.biz.dal.mysql.userprofile.UserProfileMapper;
+import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 import jakarta.annotation.Resource;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
+import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_MAJOR_CATEGORY_OPEN;
+import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.REF_TYPE_MAJOR_CATEGORY_OPEN;
 
 /**
  * 用户基础档案表(含成绩与软背景) Service 实现类
@@ -48,6 +54,10 @@ public class UserProfileServiceImpl implements UserProfileService {
     private SchoolDirectionMapper schoolDirectionMapper;
     @Resource
     private SchoolCollegeMapper schoolCollegeMapper;
+    @Resource
+    private UserPreferenceMapper userPreferenceMapper;
+    @Resource
+    private VipBenefitService vipBenefitService;
 
     @Override
     public Long createUserProfile(UserProfileSaveReqVO createReqVO) {
@@ -95,6 +105,7 @@ public class UserProfileServiceImpl implements UserProfileService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Long saveUserProfileByUserId(Long userId, AppUserProfileSaveReqVO reqVO) {
         UserProfileDO existing = getUserProfileByUserId(userId);
         UserProfileDO toSave = buildToSave(userId, reqVO);
@@ -102,6 +113,8 @@ public class UserProfileServiceImpl implements UserProfileService {
         if (existing == null) {
             toSave.setId(null);
             userProfileMapper.insert(toSave);
+            // no1 empty then write + open major category
+            syncNo1AndOpenMajorCategory(userId, toSave, reqVO);
             return toSave.getId();
         }
 
@@ -118,7 +131,62 @@ public class UserProfileServiceImpl implements UserProfileService {
         toSave.setBasicLocked(existing.getBasicLocked());
         toSave.setSubmitTime(existing.getSubmitTime());
         userProfileMapper.updateById(toSave);
+        // no1 empty then write + open major category
+        syncNo1AndOpenMajorCategory(userId, toSave, reqVO);
         return existing.getId();
+    }
+
+    private void syncNo1AndOpenMajorCategory(Long userId, UserProfileDO toSave, AppUserProfileSaveReqVO reqVO) {
+        // 1) Ensure preferenceNo=1 exists (only when empty)
+        List<UserPreferenceDO> no1List = userPreferenceMapper.selectListByUserIdAndPreferenceNo(userId, 1);
+        UserPreferenceDO no1First = (no1List != null && !no1List.isEmpty()) ? no1List.get(0) : null;
+        if (no1First == null) {
+            // Build a preference row from profile snapshot (directionId comes from targetDirectionId)
+            Long directionId = toSave.getTargetDirectionId();
+            if (directionId == null) {
+                throw exception(new ErrorCode(400, "一志愿方向ID缺失，无法写入志愿表"));
+            }
+            SchoolDirectionDO direction = schoolDirectionMapper.selectById(directionId);
+            if (direction == null) {
+                throw exception(new ErrorCode(400, "一志愿方向不存在，无法写入志愿表"));
+            }
+            UserPreferenceDO pref = new UserPreferenceDO();
+            pref.setUserId(userId);
+            pref.setPreferenceNo(1);
+            pref.setSchoolId(toSave.getTargetSchoolId());
+            pref.setSchoolName(StrUtil.blankToDefault(toSave.getTargetSchoolName(), ""));
+            pref.setCollegeId(toSave.getTargetCollegeId());
+            pref.setCollegeName(StrUtil.blankToDefault(toSave.getTargetCollegeName(), ""));
+            pref.setMajorId(toSave.getTargetMajorId());
+            pref.setMajorCode(StrUtil.blankToDefault(toSave.getTargetMajorCode(), ""));
+            pref.setMajorName(StrUtil.blankToDefault(toSave.getTargetMajorName(), ""));
+            pref.setDirectionId(directionId);
+            pref.setDirectionCode(StrUtil.blankToDefault(toSave.getTargetDirectionCode(), ""));
+            pref.setDirectionName(StrUtil.blankToDefault(toSave.getTargetDirectionName(), ""));
+            pref.setStudyMode(direction.getStudyMode());
+            pref.setSourceAdjustmentId(null);
+            userPreferenceMapper.insert(pref);
+            no1First = pref;
+        }
+
+        // 2) Open major category for the first row of preferenceNo=1
+        String majorCode = no1First.getMajorCode() != null ? no1First.getMajorCode().trim() : "";
+        if (majorCode.isEmpty() || majorCode.length() < 2) {
+            throw exception(new ErrorCode(400, "一志愿专业代码缺失，无法开通门类"));
+        }
+        String majorCategoryCode = majorCode.substring(0, 2);
+        // Idempotency safeguard: avoid repeated consumption on profile re-save
+        try {
+            Set<String> opened = vipBenefitService.getConsumedUniqueKeys(userId, BENEFIT_KEY_MAJOR_CATEGORY_OPEN);
+            // If user has opened ANY major category before, do NOT auto-open on profile save.
+            if (opened != null && !opened.isEmpty()) {
+                return;
+            }
+        } catch (Exception ignore) {
+            // best-effort: fall through to consume
+        }
+        vipBenefitService.consumeQuotaOrThrowReturnConsumed(userId, BENEFIT_KEY_MAJOR_CATEGORY_OPEN, 1,
+                REF_TYPE_MAJOR_CATEGORY_OPEN, majorCategoryCode, majorCategoryCode);
     }
 
     private UserProfileDO buildToSave(Long userId, AppUserProfileSaveReqVO reqVO) {

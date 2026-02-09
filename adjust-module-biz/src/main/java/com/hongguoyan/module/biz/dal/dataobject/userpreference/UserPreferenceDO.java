@@ -80,5 +80,10 @@ public class UserPreferenceDO extends BaseDO {
      */
     private Integer studyMode;
 
+    /**
+     * 来源调剂ID
+     */
+    private Long sourceAdjustmentId;
+
 
 }
