@@ -4,30 +4,35 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil;
+import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.hongguoyan.module.biz.controller.app.recommend.vo.AppRecommendSchoolListReqVO;
 import com.hongguoyan.module.biz.controller.app.recommend.vo.AppRecommendSchoolRespVO;
-import com.hongguoyan.module.biz.dal.dataobject.schoolrank.SchoolRankDO;
-import com.hongguoyan.module.biz.dal.dataobject.majorrank.SchoolMajorRankDO;
-import com.hongguoyan.module.biz.dal.dataobject.major.MajorDO;
 import com.hongguoyan.module.biz.dal.dataobject.adjustment.AdjustmentDO;
+import com.hongguoyan.module.biz.dal.dataobject.major.MajorDO;
+import com.hongguoyan.module.biz.dal.dataobject.majorrank.SchoolMajorRankDO;
+import com.hongguoyan.module.biz.dal.dataobject.majorsimilarity.MajorSimilarityDO;
 import com.hongguoyan.module.biz.dal.dataobject.nationalscore.NationalScoreDO;
+import com.hongguoyan.module.biz.dal.dataobject.recommend.RecommendRuleDO;
 import com.hongguoyan.module.biz.dal.dataobject.recommend.UserRecommendSchoolDO;
 import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
+import com.hongguoyan.module.biz.dal.dataobject.schoolrank.SchoolRankDO;
 import com.hongguoyan.module.biz.dal.dataobject.schoolscore.SchoolScoreDO;
 import com.hongguoyan.module.biz.dal.dataobject.usercustomreport.UserCustomReportDO;
 import com.hongguoyan.module.biz.dal.dataobject.userintention.UserIntentionDO;
 import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.AdjustmentMapper;
-import com.hongguoyan.module.biz.dal.mysql.schoolrank.SchoolRankMapper;
-import com.hongguoyan.module.biz.dal.mysql.majorrank.SchoolMajorRankMapper;
+import com.hongguoyan.module.biz.dal.mysql.adjustmentadmit.AdjustmentAdmitMapper;
 import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
+import com.hongguoyan.module.biz.dal.mysql.majorrank.SchoolMajorRankMapper;
+import com.hongguoyan.module.biz.dal.mysql.majorsimilarity.MajorSimilarityMapper;
 import com.hongguoyan.module.biz.dal.mysql.nationalscore.NationalScoreMapper;
+import com.hongguoyan.module.biz.dal.mysql.recommend.RecommendRuleMapper;
 import com.hongguoyan.module.biz.dal.mysql.recommend.UserRecommendSchoolMapper;
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
+import com.hongguoyan.module.biz.dal.mysql.schoolrank.SchoolRankMapper;
 import com.hongguoyan.module.biz.dal.mysql.schoolscore.SchoolScoreMapper;
 import com.hongguoyan.module.biz.dal.mysql.usercustomreport.UserCustomReportMapper;
 import com.hongguoyan.module.biz.dal.mysql.userintention.UserIntentionMapper;
@@ -52,17 +57,8 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_USER_REPORT;
-import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_TYPE_QUOTA;
-import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.REF_TYPE_CUSTOM_REPORT;
 import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.VIP_BENEFIT_QUOTA_EXCEEDED;
-
-import com.hongguoyan.module.biz.dal.dataobject.majorsimilarity.MajorSimilarityDO;
-import com.hongguoyan.module.biz.dal.mysql.majorsimilarity.MajorSimilarityMapper;
-
-import com.hongguoyan.module.biz.dal.dataobject.recommend.RecommendRuleDO;
-import com.hongguoyan.module.biz.dal.mysql.recommend.RecommendRuleMapper;
-import com.hongguoyan.module.biz.dal.mysql.adjustmentadmit.AdjustmentAdmitMapper;
+import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.*;
 
 /**
  * 智能推荐 Service 实现类
@@ -701,8 +697,11 @@ public class RecommendServiceImpl implements RecommendService {
             input.put("intention", null);
         } else {
             Map<String, Object> intentionMap = new LinkedHashMap<>();
-            intentionMap.put("schoolLevel", intention.getSchoolLevel());
-            intentionMap.put("schoolLevelName", schoolLevelName(intention.getSchoolLevel()));
+            List<String> schoolLevels = StrUtil.isNotBlank(intention.getSchoolLevel())
+                ? JSONUtil.toList(intention.getSchoolLevel(), String.class)
+                : Collections.emptyList();
+            intentionMap.put("schoolLevels", schoolLevels);
+            intentionMap.put("schoolLevelNames", schoolLevelNames(schoolLevels));
             intentionMap.put("studyMode", intention.getStudyMode());
             intentionMap.put("studyModeName", studyModeName(intention.getStudyMode()));
             intentionMap.put("degreeType", intention.getDegreeType());
@@ -823,17 +822,28 @@ public class RecommendServiceImpl implements RecommendService {
         };
     }
 
-    private String schoolLevelName(Integer schoolLevel) {
-        if (schoolLevel == null) {
+    private String schoolLevelName(String schoolLevel) {
+        if (StrUtil.isBlank(schoolLevel)) {
             return null;
         }
         return switch (schoolLevel) {
-            case 1 -> "985";
-            case 2 -> "211";
-            case 3 -> "双一流";
-            case 4 -> "普通";
+            case "985" -> "985";
+            case "211" -> "211";
+            case "syl" -> "双一流";
+            case "ordinary" -> "普通院校";
             default -> "未知";
         };
+    }
+
+    private String schoolLevelNames(List<String> schoolLevels) {
+        if (CollUtil.isEmpty(schoolLevels)) {
+            return null;
+        }
+        return schoolLevels.stream()
+            .map(this::schoolLevelName)
+            .filter(StrUtil::isNotBlank)
+            .distinct()
+            .collect(Collectors.joining("、"));
     }
 
     private String adjustPriorityName(Integer adjustPriority) {
@@ -1476,7 +1486,9 @@ public class RecommendServiceImpl implements RecommendService {
         List<String> provinceCodes = StrUtil.isNotBlank(intention.getProvinceCodes())
             ? JSONUtil.toList(intention.getProvinceCodes(), String.class) : Collections.emptyList();
         List<Long> majorIds = parseJsonLongList(intention.getMajorIds()); // Use existing helper
-        Integer schoolLevel = intention.getSchoolLevel();
+        List<String> schoolLevels = StrUtil.isNotBlank(intention.getSchoolLevel())
+            ? JSONUtil.toList(intention.getSchoolLevel(), String.class)
+            : Collections.emptyList();
         Integer studyMode = intention.getStudyMode(); // 0-不限 1-全 2-非
         Integer degreeType = intention.getDegreeType(); // 0-不限 1-学 2-专
         Boolean isSpecialPlan = intention.getIsSpecialPlan();
@@ -1495,26 +1507,9 @@ public class RecommendServiceImpl implements RecommendService {
                 }
             }
             // 2. School Level Filter (Intention: 1-985, 2-211, 3-Syl, 4-Ordinary)
-            if (schoolLevel != null && schoolLevel > 0) {
-                boolean match = false;
-                switch (schoolLevel) {
-                    case 1: // 985
-                        match = Boolean.TRUE.equals(school.getIs985());
-                        break;
-                    case 2: // 211
-                        match = Boolean.TRUE.equals(school.getIs211()) || Boolean.TRUE.equals(school.getIs985());
-                        break;
-                    case 3: // 双一流
-                        match = Boolean.TRUE.equals(school.getIsSyl()) || Boolean.TRUE.equals(school.getIs211()) || Boolean.TRUE.equals(
-                            school.getIs985());
-                        break;
-                    case 4: // 普通
-                        match = true;
-                        break;
-                    default:
-                        match = true;
-                }
-                if (!match) {
+            if (CollUtil.isNotEmpty(schoolLevels)) {
+                String schoolLevel = inferSchoolLevelCode(school);
+                if (StrUtil.isBlank(schoolLevel) || !schoolLevels.contains(schoolLevel)) {
                     continue;
                 }
             }
@@ -1552,6 +1547,22 @@ public class RecommendServiceImpl implements RecommendService {
             result.add(adj);
         }
         return result;
+    }
+
+    private String inferSchoolLevelCode(SchoolDO school) {
+        if (school == null) {
+            return null;
+        }
+        if (Boolean.TRUE.equals(school.getIs985())) {
+            return "985";
+        }
+        if (Boolean.TRUE.equals(school.getIs211())) {
+            return "211";
+        }
+        if (Boolean.TRUE.equals(school.getIsSyl())) {
+            return "syl";
+        }
+        return "ordinary";
     }
 
 }

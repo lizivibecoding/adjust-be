@@ -44,9 +44,9 @@ public class UserIntentionDO extends BaseDO {
      */
     private String excludeProvinceCodes;
     /**
-     * 意向院校层次
+     * 意向院校层次 code 列表（985/211/syl/ordinary），JSON 存储
      */
-    private Integer schoolLevel;
+    private String schoolLevel;
     /**
      * 意向调剂专业/一级学科ID列表
      */

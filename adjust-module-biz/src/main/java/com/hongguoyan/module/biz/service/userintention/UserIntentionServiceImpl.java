@@ -45,6 +45,7 @@ public class UserIntentionServiceImpl implements UserIntentionService {
         UserIntentionDO userIntention = BeanUtils.toBean(createReqVO, UserIntentionDO.class);
         userIntention.setProvinceCodes(toJsonOrNullString(createReqVO.getProvinceCodes()));
         userIntention.setExcludeProvinceCodes(toJsonOrNullString(createReqVO.getExcludeProvinceCodes()));
+        userIntention.setSchoolLevel(toJsonOrNullString(createReqVO.getSchoolLevels()));
         userIntention.setMajorIds(toJsonOrNullLong(createReqVO.getMajorIds()));
         userIntentionMapper.insert(userIntention);
         return userIntention.getId();
@@ -56,6 +57,7 @@ public class UserIntentionServiceImpl implements UserIntentionService {
         UserIntentionDO updateObj = BeanUtils.toBean(updateReqVO, UserIntentionDO.class);
         updateObj.setProvinceCodes(toJsonOrNullString(updateReqVO.getProvinceCodes()));
         updateObj.setExcludeProvinceCodes(toJsonOrNullString(updateReqVO.getExcludeProvinceCodes()));
+        updateObj.setSchoolLevel(toJsonOrNullString(updateReqVO.getSchoolLevels()));
         updateObj.setMajorIds(toJsonOrNullLong(updateReqVO.getMajorIds()));
         userIntentionMapper.updateById(updateObj);
     }
@@ -101,7 +103,7 @@ public class UserIntentionServiceImpl implements UserIntentionService {
         respVO.setUserId(userIntention.getUserId());
         respVO.setProvinceCodes(parseJsonStringList(userIntention.getProvinceCodes()));
         respVO.setExcludeProvinceCodes(parseJsonStringList(userIntention.getExcludeProvinceCodes()));
-        respVO.setSchoolLevel(userIntention.getSchoolLevel());
+        respVO.setSchoolLevels(parseJsonStringList(userIntention.getSchoolLevel()));
         respVO.setMajorIds(parseJsonLongList(userIntention.getMajorIds()));
         respVO.setStudyMode(userIntention.getStudyMode());
         respVO.setDegreeType(userIntention.getDegreeType());
@@ -123,7 +125,7 @@ public class UserIntentionServiceImpl implements UserIntentionService {
         toSave.setUserId(userId);
         toSave.setProvinceCodes(toJsonOrNullString(reqVO.getProvinceCodes()));
         toSave.setExcludeProvinceCodes(toJsonOrNullString(reqVO.getExcludeProvinceCodes()));
-        toSave.setSchoolLevel(reqVO.getSchoolLevel());
+        toSave.setSchoolLevel(toJsonOrNullString(reqVO.getSchoolLevels()));
         toSave.setMajorIds(toJsonOrNullLong(reqVO.getMajorIds()));
         toSave.setStudyMode(reqVO.getStudyMode());
         toSave.setDegreeType(reqVO.getDegreeType());

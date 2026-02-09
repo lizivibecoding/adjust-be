@@ -79,6 +79,7 @@ public class UserIntentionController {
         UserIntentionRespVO resp = BeanUtils.toBean(bean, UserIntentionRespVO.class);
         resp.setProvinceCodes(JSONUtil.toList(bean.getProvinceCodes(), String.class));
         resp.setExcludeProvinceCodes(JSONUtil.toList(bean.getExcludeProvinceCodes(), String.class));
+        resp.setSchoolLevels(JSONUtil.toList(bean.getSchoolLevel(), String.class));
         resp.setMajorIds(JSONUtil.toList(bean.getMajorIds(), Long.class));
         return resp;
     }

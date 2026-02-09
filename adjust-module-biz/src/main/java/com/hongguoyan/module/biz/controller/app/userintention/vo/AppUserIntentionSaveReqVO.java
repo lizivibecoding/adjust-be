@@ -3,8 +3,9 @@ package com.hongguoyan.module.biz.controller.app.userintention.vo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.util.List;
 import lombok.Data;
+
+import java.util.List;
 
 @Schema(description = "用户调剂意向-保存-请求")
 @Data
@@ -21,9 +22,11 @@ public class AppUserIntentionSaveReqVO {
     @Schema(description = "屏蔽/一定不去的省份 code 列表(来源 biz_area.code)")
     private List<String> excludeProvinceCodes;
 
-    @Schema(description = "意向院校层次: 1-优先考虑985/211高校 2-优先考虑双一流学科高校 3-没有要求", requiredMode = Schema.RequiredMode.REQUIRED, example = "3")
+    @Schema(description = "意向院校层次 code 列表（985/211/syl/ordinary）", requiredMode = Schema.RequiredMode.REQUIRED,
+            example = "[\"985\",\"211\",\"syl\",\"ordinary\"]")
     @NotNull(message = "意向院校层次不能为空")
-    private Integer schoolLevel;
+    @Size(min = 1, message = "意向院校层次至少选择1个")
+    private List<String> schoolLevels;
 
     @Schema(description = "意向调剂专业/一级学科ID列表(至少1个)", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "意向专业ID列表不能为空")
@@ -43,7 +46,6 @@ public class AppUserIntentionSaveReqVO {
     private Boolean isSpecialPlan;
 
     @Schema(description = "是否接受科研院所: 0-否 1-是", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotNull(message = "是否接受科研院所: 0-否 1-是不能为空")
     private Boolean isAcceptResearchInst;
 
     @Schema(description = "是否接受跨专业调剂: 0-否 1-是", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -55,7 +57,6 @@ public class AppUserIntentionSaveReqVO {
     private Boolean isAcceptCrossExam;
 
     @Schema(description = "调剂优先级: 1-优先院校层次 2-优先专业匹配度", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotNull(message = "调剂优先级: 1-优先院校层次 2-优先专业匹配度不能为空")
     private Integer adjustPriority;
 
 }

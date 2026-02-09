@@ -28,9 +28,9 @@ public class AppUserIntentionRespVO {
     @ExcelProperty("屏蔽省份 code 列表")
     private List<String> excludeProvinceCodes;
 
-    @Schema(description = "意向院校层次")
+    @Schema(description = "意向院校层次 code 列表（985/211/syl/ordinary）")
     @ExcelProperty("意向院校层次")
-    private Integer schoolLevel;
+    private List<String> schoolLevels;
 
     @Schema(description = "意向调剂专业/一级学科ID列表")
     @ExcelProperty("意向调剂专业/一级学科ID列表")

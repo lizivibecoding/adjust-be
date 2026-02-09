@@ -3,6 +3,7 @@ package com.hongguoyan.module.biz.controller.app.userintention.vo;
 import com.hongguoyan.framework.common.pojo.PageParam;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -21,8 +22,8 @@ public class AppUserIntentionPageReqVO extends PageParam {
     @Schema(description = "屏蔽省份 code 列表(JSON 字符串)")
     private String excludeProvinceCodes;
 
-    @Schema(description = "意向院校层次")
-    private Integer schoolLevel;
+    @Schema(description = "意向院校层次 code 列表（985/211/syl/ordinary）")
+    private List<String> schoolLevels;
 
     @Schema(description = "意向调剂专业/一级学科ID列表")
     private String majorIds;

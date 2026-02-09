@@ -208,7 +208,7 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
                 addCell(intentTable, StrUtil.blankToDefault(provinceNames, "不限"), false);
 
                 addCell(intentTable, "意向院校层次", true);
-                addCell(intentTable, getSchoolLevelName(userIntention.getSchoolLevel()), false);
+                addCell(intentTable, getSchoolLevelNames(userIntention.getSchoolLevel()), false);
 
                 // 意向调剂专业 (JSON String of IDs -> Names)
                 String majorNames = getMajorNames(userIntention.getMajorIds());
@@ -519,13 +519,30 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
         };
     }
 
-    private String getSchoolLevelName(Integer level) {
-        if (level == null) return "未知";
+    private String getSchoolLevelNames(String schoolLevelsJson) {
+        if (StrUtil.isBlank(schoolLevelsJson)) {
+            return "不限";
+        }
+        try {
+            List<String> levels = JSONUtil.toList(schoolLevelsJson, String.class);
+            if (CollUtil.isEmpty(levels)) {
+                return "不限";
+            }
+            return levels.stream().map(this::getSchoolLevelName).filter(StrUtil::isNotBlank).distinct().collect(Collectors.joining("、"));
+        } catch (Exception ignore) {
+            return "不限";
+        }
+    }
+
+    private String getSchoolLevelName(String level) {
+        if (StrUtil.isBlank(level)) {
+            return null;
+        }
         return switch (level) {
-            case 1 -> "985";
-            case 2 -> "211";
-            case 3 -> "双一流";
-            case 4 -> "普通院校";
+            case "985" -> "985";
+            case "211" -> "211";
+            case "syl" -> "双一流";
+            case "ordinary" -> "普通院校";
             default -> "其他";
         };
     }

@@ -22,8 +22,8 @@ public class UserIntentionSaveReqVO {
     @Schema(description = "屏蔽省份 code 列表")
     private List<String> excludeProvinceCodes;
 
-    @Schema(description = "意向院校层次")
-    private Integer schoolLevel;
+    @Schema(description = "意向院校层次 code 列表（985/211/syl/ordinary）")
+    private List<String> schoolLevels;
 
     @Schema(description = "意向专业ID列表")
     private List<Long> majorIds;
