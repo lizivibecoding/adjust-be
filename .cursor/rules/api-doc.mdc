@@ -40,6 +40,7 @@ alwaysApply: false
 @Operation(summary = "保存我的调剂意向与偏好设置")
 ```
 
+
 ```java
 // ✅ GOOD (keep enums, concise)
 @Schema(description = "学位类型（0-不区分 1-学硕 2-专硕）", example = "1")
