@@ -62,4 +62,10 @@ public class AppSchoolController {
         return success(schoolService.getSchoolSimpleAll());
     }
 
+    @GetMapping("/tree")
+    @Operation(summary = "获得学校树")
+    public CommonResult<List<AppSchoolTreeAreaRespVO>> getSchoolTree() {
+        return success(schoolService.getSchoolTree());
+    }
+
 }

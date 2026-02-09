@@ -74,4 +74,11 @@ public interface SchoolService {
      */
     List<AppSchoolSimpleOptionRespVO> getSchoolSimpleAll();
 
+    /**
+     * 获得学校树（A/B -> 省份 -> 学校）
+     *
+     * @return 学校树
+     */
+    List<AppSchoolTreeAreaRespVO> getSchoolTree();
+
 }
