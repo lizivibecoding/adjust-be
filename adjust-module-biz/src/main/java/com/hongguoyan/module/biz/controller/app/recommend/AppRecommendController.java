@@ -19,6 +19,7 @@ import com.hongguoyan.module.biz.service.recommend.RecommendService;
 import com.hongguoyan.module.biz.service.usercustomreport.UserCustomReportService;
 import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 import com.hongguoyan.module.infra.service.file.FileService;
+import com.hongguoyan.module.infra.service.file.bo.FileCreateRespBO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
@@ -109,11 +110,10 @@ public class AppRecommendController {
         byte[] pdfBytes = recommendPdfService.generateReportPdf(userId, reportId);
         // 3. 上传 OSS
         String fileName = (report != null ? report.getReportName() : "report") + ".pdf";
-        fileService.createFile(pdfBytes, fileName, "user-report/" + userId, "application/pdf");
+        FileCreateRespBO fileWithPath = fileService.createFileWithPath(pdfBytes, fileName, "user-report/" + userId, "application/pdf");
         // 4. 回写 URL 到 UserCustomReportDO
-        String url = "user-report/"+fileName;
-        userCustomReportService.updateReportPdfUrl(userId, reportId, url);
-        return success(url);
+        userCustomReportService.updateReportPdfUrl(userId, reportId, fileWithPath.getPath());
+        return success(fileWithPath.getPath());
     }
 
 

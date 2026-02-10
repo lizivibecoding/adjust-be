@@ -91,9 +91,6 @@ jobs:
               --restart unless-stopped \
               -e SPRING_PROFILES_ACTIVE=${{ vars.SPRING_PROFILE }} \
               -e JAVA_OPTS="${{ vars.JAVA_OPTS }}" \
-              -e TZ=Asia/Shanghai \
-              -e JAVA_TOOL_OPTIONS="-Duser.timezone=Asia/Shanghai" \
-              -e LOG_PATH=/app/logs \
-              -v ${{ vars.DEPLOY_PATH }}/logs:/app/logs \
+              -v ${{ vars.DEPLOY_PATH }}/logs:/app/adjust \
               -p 48080:48080 \
               adjust-server:${{ github.sha }}
