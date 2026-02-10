@@ -3,6 +3,7 @@ package com.hongguoyan.module.biz.service.recommend;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.dfa.SensitiveUtil;
 import cn.hutool.json.JSONUtil;
 import com.google.common.collect.Lists;
 import com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil;
@@ -289,7 +290,7 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
             ByteArrayOutputStream destBaos = new ByteArrayOutputStream();
             PdfDocument pdfDoc = new PdfDocument(new PdfReader(new java.io.ByteArrayInputStream(srcPdfBytes)), new PdfWriter(destBaos));
 
-            PdfExtGState gs = new PdfExtGState().setFillOpacity(0.3f);
+            PdfExtGState gs = new PdfExtGState().setFillOpacity(1f);
 
             int numberOfPages = pdfDoc.getNumberOfPages();
             for (int i = 1; i <= numberOfPages; i++) {
@@ -310,7 +311,7 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
                 // 2. 右上角水印（横版 logo，10pt 边距）
                 float topRightImgWidth = 80;
                 float topRightImgHeight = topRightImgWidth * topRightImgData.getHeight() / topRightImgData.getWidth();
-                float topRightX = pageSize.getWidth() - topRightImgWidth - 10;
+                float topRightX = pageSize.getWidth() - topRightImgWidth - 40;
                 float topRightY = pageSize.getHeight() - topRightImgHeight - 10;
                 canvas.addImageFittedIntoRectangle(topRightImgData,
                         new Rectangle(topRightX, topRightY, topRightImgWidth, topRightImgHeight), false);
@@ -357,11 +358,6 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
             return;
         }
 
-        // 按学校-学院-专业聚合
-        // Map<SchoolName, Map<CollegeName, Map<MajorName, List<Rec>>>>
-        // 这里简化展示逻辑：直接列表，或简单聚合
-        // 需求：学校、学院、专业维度，方向以逗号拼接
-        
         // 分组 key: schoolId + collegeId + majorId
         Map<String, List<UserRecommendSchoolDO>> groupedRecs = list.stream()
                 .collect(Collectors.groupingBy(r -> r.getSchoolId() + "_" + r.getCollegeId() + "_" + r.getMajorId()));
@@ -464,7 +460,7 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
                 listTable.addHeaderCell("一志愿院校");
 
                 for (AdjustmentAdmitDO admit : admitList) {
-                    listTable.addCell(StrUtil.blankToDefault(admit.getCandidateName(), "-"));
+                    listTable.addCell(StrUtil.isBlank(admit.getCandidateName()) ? "-" : maskCandidateName(admit.getCandidateName()));
                     listTable.addCell(admit.getFirstScore() != null ? admit.getFirstScore().toString() : "-");
                     listTable.addCell(StrUtil.blankToDefault(admit.getFirstSchoolName(), "-"));
                 }
@@ -536,5 +532,19 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
     private String getStudyModeName(Integer mode) {
         if (mode == null) return "未知";
         return mode == 1 ? "全日制" : (mode == 2 ? "非全日制" : "不限");
+    }
+
+    /**
+     * Mask candidate name: keep first char, replace the rest with *.
+     * e.g. 张三 -> 张*, 王老三 -> 王**
+     */
+    private String maskCandidateName(String name) {
+        String trimmed = name.trim();
+        int[] cps = trimmed.codePoints().toArray();
+        int n = cps.length;
+        if (n <= 1) {
+            return "*";
+        }
+        return new String(cps, 0, 1) + "*".repeat(n - 1);
     }
 }

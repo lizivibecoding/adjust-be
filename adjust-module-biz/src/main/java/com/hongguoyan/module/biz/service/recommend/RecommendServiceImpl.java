@@ -502,13 +502,13 @@ public class RecommendServiceImpl implements RecommendService {
         String prompt = buildAssessmentPrompt(currentYear, userProfile, userIntention, firstChoiceArea, matchedLine, ruanke,
             schoolMap, intentionMajorNameMap, openAdjustmentCountByMajorId);
 
-//        AiTextResult aiResult = aiTextService.generateText(AiTextRequest.builder()
-//            .provider("doubao")
-//            .prompt(prompt)
-//            .timeoutMs(60_000L)
-//            .build());
+        AiTextResult aiResult = aiTextService.generateText(AiTextRequest.builder()
+            .provider("doubao")
+            .prompt(prompt)
+            .timeoutMs(60_000L)
+            .build());
 
-        StudentAssessmentAiReport aiReport = parseAssessmentAiJson(null);
+        StudentAssessmentAiReport aiReport = parseAssessmentAiJson(Optional.of(aiResult).get().getText());
 
         // 5. Persist result
         UserCustomReportDO toUpdate = new UserCustomReportDO();
