@@ -10,6 +10,7 @@ import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderCreateRespVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderPageReqVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderRespVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipPlanRespVO;
+import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipRefundNotifyReqVO;
 import com.hongguoyan.module.biz.service.vip.VipAppService;
 import com.hongguoyan.module.pay.api.notify.dto.PayOrderNotifyReqDTO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -62,6 +63,13 @@ public class AppVipController {
     @PermitAll
     public CommonResult<Boolean> payNotify(@Valid @RequestBody PayOrderNotifyReqDTO notifyReqDTO) {
         return success(vipAppService.payNotify(notifyReqDTO));
+    }
+
+    @PostMapping("/refund/notify")
+    @Operation(summary = "会员退款成功回调")
+    @PermitAll
+    public CommonResult<Boolean> refundNotify(@Valid @RequestBody AppVipRefundNotifyReqVO notifyReqVO) {
+        return success(vipAppService.refundNotify(notifyReqVO));
     }
 
     @PostMapping("/coupon/redeem")

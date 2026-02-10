@@ -61,6 +61,12 @@ public interface ErrorCodeConstants {
     ErrorCode VIP_PAY_NOTIFY_PAY_ORDER_NOT_SUCCESS = new ErrorCode(49, "支付回调失败：支付未成功");
     ErrorCode VIP_PAY_NOTIFY_PAY_PRICE_NOT_MATCH = new ErrorCode(50, "支付回调失败：支付金额不匹配");
     ErrorCode VIP_PAY_NOTIFY_MERCHANT_ORDER_ID_NOT_MATCH = new ErrorCode(51, "支付回调失败：商户订单号不匹配");
+
+    // ========== VIP Refund Notify ==========
+    ErrorCode VIP_REFUND_NOTIFY_ORDER_NOT_FOUND = new ErrorCode(68, "退款回调失败：会员订单不存在");
+    ErrorCode VIP_REFUND_NOTIFY_REFUND_ID_MISMATCH = new ErrorCode(69, "退款回调失败：退款单号不匹配");
+    ErrorCode VIP_REFUND_NOTIFY_ORDER_STATUS_INVALID = new ErrorCode(70, "退款回调失败：订单状态异常");
+    ErrorCode VIP_REFUND_NOTIFY_REFUND_PRICE_INVALID = new ErrorCode(71, "退款回调失败：退款金额不合法");
     ErrorCode NO_MATCHING_SCHOOLS = new ErrorCode(52, "没有匹配的学校");
     ErrorCode NO_MATCHING_SCHOOLS_ADJUSTS = new ErrorCode(53, "没有匹配的调剂专业");
 

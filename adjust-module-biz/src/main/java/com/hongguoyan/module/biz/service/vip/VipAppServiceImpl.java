@@ -1,6 +1,7 @@
 package com.hongguoyan.module.biz.service.vip;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -14,6 +15,7 @@ import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderPageReqVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderRespVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipPlanBenefitRespVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipPlanRespVO;
+import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipRefundNotifyReqVO;
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.module.biz.dal.dataobject.vipcouponbatch.VipCouponBatchDO;
 import com.hongguoyan.module.biz.dal.dataobject.vipcouponcode.VipCouponCodeDO;
@@ -64,6 +66,7 @@ public class VipAppServiceImpl implements VipAppService {
 
     private static final int VIP_ORDER_STATUS_WAIT_PAY = 1;
     private static final int VIP_ORDER_STATUS_PAID = 2;
+    private static final int VIP_ORDER_STATUS_REFUNDED = 4;
 
     private static final int VIP_COUPON_STATUS_UNUSED = 1;
     private static final int VIP_COUPON_STATUS_USED = 2;
@@ -326,6 +329,70 @@ public class VipAppServiceImpl implements VipAppService {
         // 5. 续期/开通订阅 + 写流水
         applySubscriptionByPay(order, payOrder);
         return Boolean.TRUE;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean refundNotify(AppVipRefundNotifyReqVO notifyReqVO) {
+        String merchantOrderId = StrUtil.trim(notifyReqVO.getMerchantOrderId());
+        Long payRefundId = notifyReqVO.getPayRefundId();
+        Integer refundPrice = notifyReqVO.getRefundPrice();
+
+        // 1. 校验业务订单是否存在
+        VipOrderDO order = vipOrderMapper.selectOne(new LambdaQueryWrapperX<VipOrderDO>()
+                .eq(VipOrderDO::getOrderNo, merchantOrderId));
+        if (order == null) {
+            throw exception(VIP_REFUND_NOTIFY_ORDER_NOT_FOUND);
+        }
+
+        // 2. 幂等：已退款直接返回；若退款单号不一致，提示异常便于排查
+        if (Objects.equals(order.getStatus(), VIP_ORDER_STATUS_REFUNDED)) {
+            if (order.getPayRefundId() != null && Objects.equals(order.getPayRefundId(), payRefundId)) {
+                return Boolean.TRUE;
+            }
+            throw exception(VIP_REFUND_NOTIFY_REFUND_ID_MISMATCH);
+        }
+
+        // 3. 状态校验：只允许对已支付订单退款（最小闭环：暂不支持部分/多次退款）
+        if (!Objects.equals(order.getStatus(), VIP_ORDER_STATUS_PAID)) {
+            throw exception(VIP_REFUND_NOTIFY_ORDER_STATUS_INVALID);
+        }
+
+        // 4. 金额校验：最小闭环，要求整单退款
+        if (refundPrice == null || refundPrice <= 0 || !Objects.equals(refundPrice, order.getAmount())) {
+            throw exception(VIP_REFUND_NOTIFY_REFUND_PRICE_INVALID);
+        }
+
+        // 5. 更新订单为已退款（并发安全：只从已支付改为已退款）
+        LocalDateTime refundTime = parseNotifyTimeOrNow(notifyReqVO.getSuccessTime());
+        int updated = vipOrderMapper.update(null, new LambdaUpdateWrapper<VipOrderDO>()
+                .set(VipOrderDO::getStatus, VIP_ORDER_STATUS_REFUNDED)
+                .set(VipOrderDO::getPayRefundId, payRefundId)
+                .set(VipOrderDO::getRefundAmount, refundPrice)
+                .set(VipOrderDO::getRefundTime, refundTime)
+                .eq(VipOrderDO::getOrderNo, order.getOrderNo())
+                .eq(VipOrderDO::getStatus, VIP_ORDER_STATUS_PAID));
+        if (updated == 0) {
+            VipOrderDO latest = vipOrderMapper.selectOne(new LambdaQueryWrapperX<VipOrderDO>()
+                    .eq(VipOrderDO::getOrderNo, order.getOrderNo()));
+            if (latest != null && Objects.equals(latest.getStatus(), VIP_ORDER_STATUS_REFUNDED)
+                    && latest.getPayRefundId() != null && Objects.equals(latest.getPayRefundId(), payRefundId)) {
+                return Boolean.TRUE;
+            }
+            throw exception(VIP_REFUND_NOTIFY_ORDER_STATUS_INVALID);
+        }
+        return Boolean.TRUE;
+    }
+
+    private LocalDateTime parseNotifyTimeOrNow(String timeStr) {
+        if (StrUtil.isBlank(timeStr)) {
+            return LocalDateTime.now();
+        }
+        try {
+            return DateUtil.parse(timeStr).toLocalDateTime();
+        } catch (Exception ignored) {
+            return LocalDateTime.now();
+        }
     }
 
     private void applySubscriptionByPay(VipOrderDO order, PayOrderRespDTO payOrder) {
