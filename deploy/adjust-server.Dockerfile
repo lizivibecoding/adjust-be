@@ -9,6 +9,8 @@ ENV JAVA_OPTS="-Xms512m -Xmx512m"
 ENV SPRING_PROFILES_ACTIVE="local"
 ENV SERVER_PORT="48080"
 
+RUN mkdir -p /app/adjust
+
 EXPOSE 48080
 
 ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar /app/app.jar --spring.profiles.active=${SPRING_PROFILES_ACTIVE} --server.port=${SERVER_PORT}"]
