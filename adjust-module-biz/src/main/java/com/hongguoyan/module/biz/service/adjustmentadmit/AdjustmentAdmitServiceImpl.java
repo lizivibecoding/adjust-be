@@ -121,8 +121,9 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
                 .eq(AdjustmentAdmitDO::getCollegeId, reqVO.getCollegeId())
                 .eq(AdjustmentAdmitDO::getMajorId, reqVO.getMajorId())
                 .eq(AdjustmentAdmitDO::getYear, reqVO.getYear())
-                .eq(AdjustmentAdmitDO::getStudyMode, reqVO.getStudyMode())
-                .eqIfPresent(AdjustmentAdmitDO::getDirectionId, reqVO.getDirectionId());
+                .eq(AdjustmentAdmitDO::getStudyMode, reqVO.getStudyMode());
+        // TODO 先忽略
+        // wrapper.eqIfPresent(AdjustmentAdmitDO::getDirectionId, reqVO.getDirectionId());
         wrapper.orderByDesc(AdjustmentAdmitDO::getTotalScore)
                 .orderByDesc(AdjustmentAdmitDO::getFirstScore)
                 .orderByDesc(AdjustmentAdmitDO::getId);
@@ -154,8 +155,9 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
                 .eq(AdjustmentAdmitDO::getCollegeId, reqVO.getCollegeId())
                 .eq(AdjustmentAdmitDO::getMajorId, reqVO.getMajorId())
                 .eq(AdjustmentAdmitDO::getYear, reqVO.getYear())
-                .eq(AdjustmentAdmitDO::getStudyMode, reqVO.getStudyMode())
-                .eqIfPresent(AdjustmentAdmitDO::getDirectionId, reqVO.getDirectionId());
+                .eq(AdjustmentAdmitDO::getStudyMode, reqVO.getStudyMode());
+        // TODO: 先忽略
+        // wrapper.eqIfPresent(AdjustmentAdmitDO::getDirectionId, reqVO.getDirectionId());
         List<AdjustmentAdmitDO> list = adjustmentAdmitMapper.selectList(wrapper);
 
         AppAdjustmentAnalysisRespVO respVO = new AppAdjustmentAnalysisRespVO();
