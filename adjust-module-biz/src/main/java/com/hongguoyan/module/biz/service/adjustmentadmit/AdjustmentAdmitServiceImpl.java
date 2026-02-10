@@ -134,7 +134,7 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
         List<AppAdjustmentAdmitListItemRespVO> resp = new ArrayList<>(list.size());
         for (AdjustmentAdmitDO item : list) {
             AppAdjustmentAdmitListItemRespVO vo = new AppAdjustmentAdmitListItemRespVO();
-            vo.setCandidateName(item.getCandidateName());
+            vo.setCandidateName(maskCandidateName(item.getCandidateName()));
             vo.setFirstSchoolName(item.getFirstSchoolName());
             vo.setFirstScore(item.getFirstScore());
             vo.setRetestScore(item.getRetestScore());
@@ -405,6 +405,45 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
         item.setSubName(subName);
         item.setValue(value);
         return item;
+    }
+
+    /**
+     * Mask candidate name for admit list display.
+     * <p>
+     * Rules:
+     * - 2 chars: mask last char (e.g. 张三 -> 张*)
+     * - 3 chars: mask middle char (e.g. 王小明 -> 王*明)
+     * - 4 chars: mask middle two chars (e.g. 欧阳娜娜 -> 欧**娜)
+     * - other lengths: keep first & last, mask the rest
+     */
+    private String maskCandidateName(String name) {
+        if (name == null) {
+            return null;
+        }
+        String trimmed = name.trim();
+        if (trimmed.isEmpty()) {
+            return trimmed;
+        }
+        int[] cps = trimmed.codePoints().toArray();
+        int n = cps.length;
+        if (n <= 0) {
+            return trimmed;
+        }
+        if (n == 1) {
+            return "*";
+        }
+        String first = new String(cps, 0, 1);
+        String last = new String(cps, n - 1, 1);
+        if (n == 2) {
+            return first + "*";
+        }
+        if (n == 3) {
+            return first + "*" + last;
+        }
+        if (n == 4) {
+            return first + "**" + last;
+        }
+        return first + "*".repeat(n - 2) + last;
     }
 
 }
