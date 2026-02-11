@@ -13,15 +13,13 @@ import com.hongguoyan.module.infra.api.file.FileApi;
 import com.hongguoyan.module.member.api.user.MemberUserApi;
 import com.hongguoyan.module.member.api.user.dto.MemberUserRespDTO;
 import jakarta.annotation.Resource;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
+
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.VIP_SUBSCRIPTION_NOT_EXISTS;
 
@@ -36,6 +34,7 @@ public class VipSubscriptionServiceImpl implements VipSubscriptionService {
 
     private static final int MEMBER_STATUS_EFFECTIVE = 1;
     private static final int MEMBER_STATUS_EXPIRED = 2;
+    private static final String PLAN_CODE_SVIP = "SVIP";
 
     @Resource
     private VipSubscriptionMapper vipSubscriptionMapper;
@@ -61,9 +60,61 @@ public class VipSubscriptionServiceImpl implements VipSubscriptionService {
         applyKeywordFilter(pageReqVO);
         PageResult<VipSubscriptionDO> pageResult = vipSubscriptionMapper.selectPage(pageReqVO);
         PageResult<VipSubscriptionRespVO> result = BeanUtils.toBean(pageResult, VipSubscriptionRespVO.class);
+        result.setList(deduplicateByUser(result.getList()));
         result.getList().forEach(this::setMemberStatus);
         fillUserInfo(result.getList());
         return result;
+    }
+
+    private List<VipSubscriptionRespVO> deduplicateByUser(List<VipSubscriptionRespVO> list) {
+        if (list == null || list.isEmpty()) {
+            return list;
+        }
+        Map<Long, VipSubscriptionRespVO> selectedByUserId = new HashMap<>();
+        Map<Long, LocalDateTime> maxEndTimeByUserId = new HashMap<>();
+        List<VipSubscriptionRespVO> ordered = new ArrayList<>();
+        for (VipSubscriptionRespVO item : list) {
+            Long userId = item.getUserId();
+            if (userId == null) {
+                ordered.add(item);
+                continue;
+            }
+            maxEndTimeByUserId.merge(userId, item.getEndTime(), this::maxEndTime);
+            VipSubscriptionRespVO selected = selectedByUserId.get(userId);
+            if (selected == null) {
+                selectedByUserId.put(userId, item);
+                ordered.add(item);
+                continue;
+            }
+            if (!isSvip(selected) && isSvip(item)) {
+                int index = ordered.indexOf(selected);
+                selectedByUserId.put(userId, item);
+                if (index >= 0) {
+                    ordered.set(index, item);
+                }
+            }
+        }
+        for (VipSubscriptionRespVO item : ordered) {
+            Long userId = item.getUserId();
+            if (userId != null) {
+                item.setEndTime(maxEndTimeByUserId.get(userId));
+            }
+        }
+        return ordered;
+    }
+
+    private boolean isSvip(VipSubscriptionRespVO item) {
+        return item != null && Objects.equals(PLAN_CODE_SVIP, item.getPlanCode());
+    }
+
+    private LocalDateTime maxEndTime(LocalDateTime a, LocalDateTime b) {
+        if (a == null) {
+            return b;
+        }
+        if (b == null) {
+            return a;
+        }
+        return a.isAfter(b) ? a : b;
     }
 
     @Override
