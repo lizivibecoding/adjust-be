@@ -24,12 +24,16 @@ import com.hongguoyan.module.pay.dal.dataobject.order.PayOrderExtensionDO;
 import com.hongguoyan.module.pay.dal.mysql.order.PayOrderExtensionMapper;
 import com.hongguoyan.module.pay.dal.mysql.order.PayOrderMapper;
 import com.hongguoyan.module.pay.dal.redis.no.PayNoRedisDAO;
+import com.hongguoyan.module.pay.enums.PayChannelEnum;
 import com.hongguoyan.module.pay.enums.notify.PayNotifyTypeEnum;
 import com.hongguoyan.module.pay.enums.order.PayOrderStatusEnum;
 import com.hongguoyan.module.pay.framework.pay.config.PayProperties;
 import com.hongguoyan.module.pay.service.app.PayAppService;
 import com.hongguoyan.module.pay.service.channel.PayChannelService;
 import com.hongguoyan.module.pay.service.notify.PayNotifyService;
+import com.hongguoyan.module.system.api.social.SocialUserApi;
+import com.hongguoyan.module.system.api.social.dto.SocialUserRespDTO;
+import com.hongguoyan.module.system.enums.social.SocialTypeEnum;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -40,6 +44,7 @@ import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
@@ -73,6 +78,9 @@ public class PayOrderServiceImpl implements PayOrderService {
     private PayChannelService channelService;
     @Resource
     private PayNotifyService notifyService;
+
+    @Resource
+    private SocialUserApi socialUserApi;
 
     @Override
     public PayOrderDO getOrder(Long id) {
@@ -142,6 +150,8 @@ public class PayOrderServiceImpl implements PayOrderService {
     public PayOrderSubmitRespVO submitOrder(PayOrderSubmitReqVO reqVO, String userIp) {
         // 1.1 获得 PayOrderDO ，并校验其是否存在
         PayOrderDO order = validateOrderCanSubmit(reqVO.getId());
+        // 1.2 wx_lite 场景：如果前端无法传 openid，则通过 userId 从社交绑定中兜底获取
+        fillWxLiteOpenidIfMissing(reqVO, order);
         // 1.32 校验支付渠道是否有效
         PayChannelDO channel = validateChannelCanSubmit(order.getAppId(), reqVO.getChannelCode());
         PayClient<?> client = channelService.getPayClient(channel.getId());
@@ -184,6 +194,28 @@ public class PayOrderServiceImpl implements PayOrderService {
             order = orderMapper.selectById(order.getId());
         }
         return PayOrderConvert.INSTANCE.convert(order, unifiedOrderResp);
+    }
+
+    private void fillWxLiteOpenidIfMissing(PayOrderSubmitReqVO reqVO, PayOrderDO order) {
+        if (!Objects.equals(reqVO.getChannelCode(), PayChannelEnum.WX_LITE.getCode())) {
+            return;
+        }
+        String openid = reqVO.getChannelExtras() != null ? reqVO.getChannelExtras().get("openid") : null;
+        if (StrUtil.isNotBlank(openid)) {
+            return;
+        }
+        if (order.getUserId() == null || order.getUserType() == null) {
+            throw exception(PAY_ORDER_SUBMIT_OPENID_NOT_FOUND);
+        }
+        SocialUserRespDTO socialUser = socialUserApi.getSocialUserByUserId(order.getUserType(), order.getUserId(),
+                SocialTypeEnum.WECHAT_MINI_PROGRAM.getType());
+        if (socialUser == null || StrUtil.isBlank(socialUser.getOpenid())) {
+            throw exception(PAY_ORDER_SUBMIT_OPENID_NOT_FOUND);
+        }
+        if (reqVO.getChannelExtras() == null) {
+            reqVO.setChannelExtras(new HashMap<>(1));
+        }
+        reqVO.getChannelExtras().put("openid", socialUser.getOpenid());
     }
 
     private PayOrderDO validateOrderCanSubmit(Long id) {

@@ -205,8 +205,11 @@ wx:
       key-prefix: wx # Redis Key 的前缀
       http-client-type: HttpClient # 采用 HttpClient 请求微信公众号平台
   miniapp: # 小程序配置（必填），参见 https://github.com/Wechat-Group/WxJava/blob/develop/spring-boot-starters/wx-java-miniapp-spring-boot-starter/README.md 文档
-    appid: wx2c173b9a3384e084
-    secret: 0979fde25889b42ac911b1b720a66611
+# 未备案
+#    appid: wx2c173b9a3384e084
+#    secret: 0979fde25889b42ac911b1b720a66611
+    appid: wx8acea57a8eaf1bb7
+    secret: 77b0bc3c96f9bde00972d93c077608b5
 
     config-storage:
       type: RedisTemplate # 采用 RedisTemplate 操作 Redis，会自动从 Spring 中获取
@@ -221,9 +224,9 @@ adjust:
   security:
     mock-enable: true
   pay:
-    order-notify-url: https://yutou.mynatapp.cc/admin-api/pay/notify/order # 支付渠道的【支付】回调地址
-    refund-notify-url: https://yutou.mynatapp.cc/admin-api/pay/notify/refund # 支付渠道的【退款】回调地址
-    transfer-notify-url: https://yutou.mynatapp.cc/admin-api/pay/notify/transfer # 支付渠道的【转账】回调地址
+    order-notify-url: https://adjust.hongguoyan.com/admin-api/pay/notify/order # 支付渠道的【支付】回调地址
+    refund-notify-url: https://adjust.hongguoyan.com/admin-api/pay/notify/refund # 支付渠道的【退款】回调地址
+    transfer-notify-url: https://adjust.hongguoyan.com/admin-api/pay/notify/transfer # 支付渠道的【转账】回调地址
   access-log: # 访问日志的配置项
     enable: false
   demo: false # 关闭演示模式

@@ -2,6 +2,10 @@ FROM eclipse-temurin:21-jre
 
 WORKDIR /app
 
+# Timezone: make both OS and JVM use Asia/Shanghai (UTC+8)
+ENV TZ=Asia/Shanghai
+ENV JAVA_TOOL_OPTIONS="-Duser.timezone=Asia/Shanghai"
+
 # The jar is delivered by CI to the build context directory
 COPY adjust-server.jar app.jar
 
@@ -11,6 +15,8 @@ ENV SERVER_PORT="48080"
 ENV LOG_PATH="/app/logs"
 
 RUN mkdir -p /app/logs
+
+RUN mkdir -p /app/adjust
 
 EXPOSE 48080
 
