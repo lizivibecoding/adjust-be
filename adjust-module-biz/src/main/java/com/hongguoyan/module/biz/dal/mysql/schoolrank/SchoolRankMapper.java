@@ -25,7 +25,7 @@ public interface SchoolRankMapper extends BaseMapperX<SchoolRankDO> {
                 .eqIfPresent(SchoolRankDO::getSchoolId, reqVO.getSchoolId())
                 .eqIfPresent(SchoolRankDO::getScore, reqVO.getScore())
                 .betweenIfPresent(SchoolRankDO::getCreateTime, reqVO.getCreateTime())
-                .orderByDesc(SchoolRankDO::getId));
+                .orderByAsc(SchoolRankDO::getId));
     }
 
     default SchoolRankDO selectLatestBySchoolId(Long schoolId) {

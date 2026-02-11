@@ -34,7 +34,7 @@ public interface SchoolScoreMapper extends BaseMapperX<SchoolScoreDO> {
                 .eqIfPresent(SchoolScoreDO::getScoreTotal, reqVO.getScoreTotal())
                 .eqIfPresent(SchoolScoreDO::getRemark, reqVO.getRemark())
                 .betweenIfPresent(SchoolScoreDO::getCreateTime, reqVO.getCreateTime())
-                .orderByDesc(SchoolScoreDO::getId));
+                .orderByAsc(SchoolScoreDO::getId));
     }
 
 }

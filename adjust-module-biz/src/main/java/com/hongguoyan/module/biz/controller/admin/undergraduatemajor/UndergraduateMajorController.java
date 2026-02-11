@@ -29,7 +29,7 @@ import com.hongguoyan.module.biz.controller.admin.undergraduatemajor.vo.*;
 import com.hongguoyan.module.biz.dal.dataobject.undergraduatemajor.UndergraduateMajorDO;
 import com.hongguoyan.module.biz.service.undergraduatemajor.UndergraduateMajorService;
 
-@Tag(name = "管理后台 - 学科专业")
+@Tag(name = "管理后台 - 本科专业")
 @RestController
 @RequestMapping("/biz/undergraduate-major")
 @Validated

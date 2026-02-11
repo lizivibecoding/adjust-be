@@ -25,7 +25,7 @@ public interface UndergraduateMajorMapper extends BaseMapperX<UndergraduateMajor
                 .likeIfPresent(UndergraduateMajorDO::getName, reqVO.getName())
                 .eqIfPresent(UndergraduateMajorDO::getStatus, reqVO.getStatus())
                 .betweenIfPresent(UndergraduateMajorDO::getCreateTime, reqVO.getCreateTime())
-                .orderByAsc(UndergraduateMajorDO::getSort));
+                .orderByAsc(UndergraduateMajorDO::getId));
     }
 
 }
