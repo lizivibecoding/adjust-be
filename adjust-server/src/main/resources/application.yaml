@@ -351,3 +351,5 @@ adjust:
       type: redis # 消息总线的类型
 
 debug: false
+
+LOG_PATH: ./logs

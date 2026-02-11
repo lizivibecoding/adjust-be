@@ -19,9 +19,6 @@ public class AppUserIntentionSaveReqVO {
     @Size(min = 3, message = "意向省份至少选择3个")
     private List<String> provinceCodes;
 
-    @Schema(description = "屏蔽/一定不去的省份 code 列表(来源 biz_area.code)")
-    private List<String> excludeProvinceCodes;
-
     @Schema(description = "意向院校层次 code 列表（985/211/syl/ordinary）", requiredMode = Schema.RequiredMode.REQUIRED,
             example = "[\"985\",\"211\",\"syl\",\"ordinary\"]")
     @NotNull(message = "意向院校层次不能为空")
@@ -45,9 +42,6 @@ public class AppUserIntentionSaveReqVO {
     @NotNull(message = "是否包含专项计划: 0-否 1-是不能为空")
     private Boolean isSpecialPlan;
 
-    @Schema(description = "是否接受科研院所: 0-否 1-是", requiredMode = Schema.RequiredMode.REQUIRED)
-    private Boolean isAcceptResearchInst;
-
     @Schema(description = "是否接受跨专业调剂: 0-否 1-是", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "是否接受跨专业调剂: 0-否 1-是不能为空")
     private Boolean isAcceptCrossMajor;
@@ -55,9 +49,6 @@ public class AppUserIntentionSaveReqVO {
     @Schema(description = "是否接受跨考: 0-否 1-是", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "是否接受跨考: 0-否 1-是不能为空")
     private Boolean isAcceptCrossExam;
-
-    @Schema(description = "调剂优先级: 1-优先院校层次 2-优先专业匹配度", requiredMode = Schema.RequiredMode.REQUIRED)
-    private Integer adjustPriority;
 
 }
 

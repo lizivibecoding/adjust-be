@@ -86,4 +86,6 @@ public interface ErrorCodeConstants {
     ErrorCode CRAWL_TASK_NOT_EXISTS = new ErrorCode(65, "爬虫任务不存在");
     ErrorCode PDF_GENERATE_ERROR = new ErrorCode(66, "PDF生成报错");
     ErrorCode INTENT_NO_FOUND = new ErrorCode(67, "未填写需求表");
+    ErrorCode UNDERGRADUATE_MAJOR_NOT_EXISTS = new ErrorCode(72, "学科专业不存在");
+    ErrorCode SCHOOL_RANK_NOT_EXISTS = new ErrorCode(73, "软科排名不存在");
 }

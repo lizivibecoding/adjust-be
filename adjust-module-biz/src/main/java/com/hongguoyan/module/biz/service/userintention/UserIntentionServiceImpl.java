@@ -124,16 +124,16 @@ public class UserIntentionServiceImpl implements UserIntentionService {
         UserIntentionDO toSave = new UserIntentionDO();
         toSave.setUserId(userId);
         toSave.setProvinceCodes(toJsonOrNullString(reqVO.getProvinceCodes()));
-        toSave.setExcludeProvinceCodes(toJsonOrNullString(reqVO.getExcludeProvinceCodes()));
+//        toSave.setExcludeProvinceCodes(toJsonOrNullString(reqVO.getExcludeProvinceCodes()));
         toSave.setSchoolLevel(toJsonOrNullString(reqVO.getSchoolLevels()));
         toSave.setMajorIds(toJsonOrNullLong(reqVO.getMajorIds()));
         toSave.setStudyMode(reqVO.getStudyMode());
         toSave.setDegreeType(reqVO.getDegreeType());
         toSave.setIsSpecialPlan(reqVO.getIsSpecialPlan());
-        toSave.setIsAcceptResearchInst(reqVO.getIsAcceptResearchInst());
+//        toSave.setIsAcceptResearchInst(reqVO.getIsAcceptResearchInst());
         toSave.setIsAcceptCrossMajor(reqVO.getIsAcceptCrossMajor());
         toSave.setIsAcceptCrossExam(reqVO.getIsAcceptCrossExam());
-        toSave.setAdjustPriority(reqVO.getAdjustPriority());
+//        toSave.setAdjustPriority(reqVO.getAdjustPriority());
 
         if (existing == null) {
             toSave.setId(null);

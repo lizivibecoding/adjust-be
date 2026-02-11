@@ -48,7 +48,6 @@ import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 import com.hongguoyan.module.biz.service.vipbenefit.model.VipResolvedBenefit;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.dromara.hutool.core.text.split.SplitUtil;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -619,23 +618,9 @@ public class RecommendServiceImpl implements RecommendService {
             return Collections.emptyList();
         }
         try {
-            List<Object> raw = JSONUtil.parseArray(json).toList(Object.class);
-            if (raw == null || raw.isEmpty()) {
-                return Collections.emptyList();
-            }
-            List<Long> result = new ArrayList<>(raw.size());
-            for (Object item : raw) {
-                if (item == null) {
-                    continue;
-                }
-                try {
-                    result.add(Long.parseLong(String.valueOf(item)));
-                } catch (NumberFormatException ignore) {
-                    // ignore invalid items
-                }
-            }
-            return result;
-        } catch (Exception ignore) {
+            return JSONUtil.parseArray(json).toList(Long.class);
+        } catch (Exception e) {
+            log.warn("parseJsonLongList error {}", e.getMessage());
             return Collections.emptyList();
         }
     }
@@ -1489,7 +1474,7 @@ public class RecommendServiceImpl implements RecommendService {
 
         // 1. Parse Intention Fields
         List<String> provinceCodes = StrUtil.isNotBlank(intention.getProvinceCodes())
-            ? SplitUtil.splitTo(intention.getProvinceCodes(),",", List.class) : Collections.emptyList();
+            ? JSONUtil.toList(intention.getProvinceCodes(), String.class) : Collections.emptyList();
         List<Long> majorIds = parseJsonLongList(intention.getMajorIds()); // Use existing helper
         List<String> schoolLevels = StrUtil.isNotBlank(intention.getSchoolLevel())
             ? JSONUtil.toList(intention.getSchoolLevel(), String.class)
