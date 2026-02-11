@@ -5,12 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.hongguoyan.framework.mybatis.core.dataobject.BaseDO;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
 import java.math.BigDecimal;
 
@@ -22,12 +17,16 @@ import java.math.BigDecimal;
 @TableName("biz_school_rank")
 @KeySequence("biz_school_rank_seq")
 @Data
+@EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SchoolRankDO {
+public class SchoolRankDO extends BaseDO {
 
+    /**
+     * 软科排名ID
+     */
     @TableId
     private Long id;
 
@@ -42,19 +41,19 @@ public class SchoolRankDO {
     private Integer ranking;
 
     /**
-     * 学校名称（来源数据）
+     * 学校名称
      */
     @TableField("school_name")
     private String schoolName;
 
     /**
-     * 学校 ID（biz_school.id）
+     * 学校ID（biz_school.id）
      */
     @TableField("school_id")
     private Long schoolId;
 
     /**
-     * 软科得分（可空）
+     * 软科得分
      */
     private BigDecimal score;
 }
