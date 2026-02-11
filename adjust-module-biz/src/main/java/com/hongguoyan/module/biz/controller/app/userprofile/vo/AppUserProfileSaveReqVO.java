@@ -5,6 +5,7 @@ import com.hongguoyan.module.biz.framework.jackson.LongListOrCommaSeparatedDeser
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import java.math.BigDecimal;
 import java.util.List;
 import lombok.Data;
@@ -26,6 +27,12 @@ public class AppUserProfileSaveReqVO {
 
     @Schema(description = "本科绩点 (GPA)")
     private BigDecimal undergraduateGpa;
+
+    @Schema(description = "本科专业学科排名：A+/A/A-/B+/B/B-/C+/C", example = "A")
+    @Pattern(
+            regexp = "^(A\\+|A|A-|B\\+|B|B-|C\\+|C)$",
+            message = "本科专业学科排名仅支持 A+、A、A-、B+、B、B-、C+、C")
+    private String graduateMajorRank;
 
     @Schema(description = "英语四级分数(空代表未填/未过)")
     private Integer cet4Score;

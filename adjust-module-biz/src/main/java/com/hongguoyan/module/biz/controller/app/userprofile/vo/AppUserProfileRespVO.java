@@ -44,6 +44,10 @@ public class AppUserProfileRespVO {
     @ExcelProperty("本科绩点 (GPA)")
     private BigDecimal undergraduateGpa;
 
+    @Schema(description = "本科专业学科排名：A+/A/A-/B+/B/B-/C+/C")
+    @ExcelProperty("本科专业学科排名")
+    private String graduateMajorRank;
+
     @Schema(description = "英语四级分数(空代表未填/未过)")
     @ExcelProperty("英语四级分数(空代表未填/未过)")
     private Integer cet4Score;

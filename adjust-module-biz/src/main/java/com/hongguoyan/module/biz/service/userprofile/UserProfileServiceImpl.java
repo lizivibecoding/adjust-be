@@ -160,6 +160,7 @@ public class UserProfileServiceImpl implements UserProfileService {
         if (!Objects.equals(existing.getGraduateMajorId(), toSave.getGraduateMajorId())) return true;
         if (!Objects.equals(existing.getGraduateAverageScore(), toSave.getGraduateAverageScore())) return true;
         if (!Objects.equals(existing.getUndergraduateGpa(), toSave.getUndergraduateGpa())) return true;
+        if (!Objects.equals(existing.getGraduateMajorRank(), toSave.getGraduateMajorRank())) return true;
         if (!Objects.equals(existing.getCet4Score(), toSave.getCet4Score())) return true;
         if (!Objects.equals(existing.getCet6Score(), toSave.getCet6Score())) return true;
         if (!Objects.equals(existing.getUndergraduateAwards(), toSave.getUndergraduateAwards())) return true;
@@ -245,6 +246,7 @@ public class UserProfileServiceImpl implements UserProfileService {
         // base score & background
         toSave.setGraduateAverageScore(reqVO.getGraduateAverageScore());
         toSave.setUndergraduateGpa(reqVO.getUndergraduateGpa());
+        toSave.setGraduateMajorRank(reqVO.getGraduateMajorRank());
         toSave.setCet4Score(reqVO.getCet4Score());
         toSave.setCet6Score(reqVO.getCet6Score());
         toSave.setUndergraduateAwards(reqVO.getUndergraduateAwards());

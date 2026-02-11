@@ -74,6 +74,11 @@ public class UserProfileDO extends BaseDO {
      */
     private BigDecimal undergraduateGpa;
     /**
+     * 本科专业学科排名：A+/A/A-/B+/B/B-/C+/C
+     */
+    @TableField("graduate_major_rank")
+    private String graduateMajorRank;
+    /**
      * 英语四级分数(空代表未填/未过)
      */
     private Integer cet4Score;
