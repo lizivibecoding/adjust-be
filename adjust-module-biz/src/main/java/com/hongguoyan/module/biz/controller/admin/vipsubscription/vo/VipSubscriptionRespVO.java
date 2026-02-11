@@ -20,6 +20,12 @@ public class VipSubscriptionRespVO {
     @ExcelProperty("用户ID")
     private Long userId;
 
+    @Schema(description = "用户昵称")
+    private String userNickname;
+
+    @Schema(description = "用户头像")
+    private String userAvatar;
+
     @Schema(description = "套餐编码", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("套餐编码")
     private String planCode;
@@ -35,6 +41,9 @@ public class VipSubscriptionRespVO {
     @Schema(description = "最近一次续期来源：1 支付，2 券码，3 后台", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("最近一次续期来源：1 支付，2 券码，3 后台")
     private Integer source;
+
+    @Schema(description = "会员状态：1有效 2过期", example = "1")
+    private Integer memberStatus;
 
     @Schema(description = "创建时间", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("创建时间")

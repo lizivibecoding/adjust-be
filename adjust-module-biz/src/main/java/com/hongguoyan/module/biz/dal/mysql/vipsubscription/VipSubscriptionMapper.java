@@ -20,6 +20,7 @@ public interface VipSubscriptionMapper extends BaseMapperX<VipSubscriptionDO> {
     default PageResult<VipSubscriptionDO> selectPage(VipSubscriptionPageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<VipSubscriptionDO>()
                 .eqIfPresent(VipSubscriptionDO::getUserId, reqVO.getUserId())
+                .inIfPresent(VipSubscriptionDO::getUserId, reqVO.getUserIds())
                 .eqIfPresent(VipSubscriptionDO::getPlanCode, reqVO.getPlanCode())
                 .betweenIfPresent(VipSubscriptionDO::getStartTime, reqVO.getStartTime())
                 .betweenIfPresent(VipSubscriptionDO::getEndTime, reqVO.getEndTime())

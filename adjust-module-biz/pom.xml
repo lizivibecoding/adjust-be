@@ -28,6 +28,11 @@
             <artifactId>adjust-module-pay</artifactId>
             <version>${revision}</version>
         </dependency>
+        <dependency>
+            <groupId>com.hongguoyan</groupId>
+            <artifactId>adjust-module-member</artifactId>
+            <version>${revision}</version>
+        </dependency>
 
         <!-- Web 相关 -->
         <dependency>
