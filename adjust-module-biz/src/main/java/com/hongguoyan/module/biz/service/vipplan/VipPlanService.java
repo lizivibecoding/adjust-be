@@ -59,4 +59,14 @@ public interface VipPlanService {
      */
     PageResult<VipPlanDO> getVipPlanPage(VipPlanPageReqVO pageReqVO);
 
+    /**
+     * 获得套餐卡片数据
+     */
+    List<VipPlanCardRespVO> getVipPlanCards();
+
+    /**
+     * 更新套餐卡片可编辑项
+     */
+    void updateVipPlanCard(@Valid VipPlanCardUpdateReqVO updateReqVO);
+
 }

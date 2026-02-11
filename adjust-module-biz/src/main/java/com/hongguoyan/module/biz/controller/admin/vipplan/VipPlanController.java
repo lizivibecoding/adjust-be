@@ -46,10 +46,10 @@ public class VipPlanController {
     }
 
     @PutMapping("/update")
-    @Operation(summary = "更新会员套餐")
+    @Operation(summary = "更新套餐卡片")
     @PreAuthorize("@ss.hasPermission('biz:vip-plan:update')")
-    public CommonResult<Boolean> updateVipPlan(@Valid @RequestBody VipPlanSaveReqVO updateReqVO) {
-        vipPlanService.updateVipPlan(updateReqVO);
+    public CommonResult<Boolean> updateVipPlanCard(@Valid @RequestBody VipPlanCardUpdateReqVO updateReqVO) {
+        vipPlanService.updateVipPlanCard(updateReqVO);
         return success(true);
     }
 
@@ -86,6 +86,13 @@ public class VipPlanController {
     public CommonResult<PageResult<VipPlanRespVO>> getVipPlanPage(@Valid VipPlanPageReqVO pageReqVO) {
         PageResult<VipPlanDO> pageResult = vipPlanService.getVipPlanPage(pageReqVO);
         return success(BeanUtils.toBean(pageResult, VipPlanRespVO.class));
+    }
+
+    @GetMapping("/cards")
+    @Operation(summary = "获得套餐卡片")
+    @PreAuthorize("@ss.hasPermission('biz:vip-plan:query')")
+    public CommonResult<List<VipPlanCardRespVO>> getVipPlanCards() {
+        return success(vipPlanService.getVipPlanCards());
     }
 
     @GetMapping("/export-excel")
