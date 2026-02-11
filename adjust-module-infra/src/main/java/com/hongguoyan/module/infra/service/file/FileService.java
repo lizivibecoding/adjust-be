@@ -68,6 +68,14 @@ public interface FileService {
     String presignGetUrl(String url, Integer expirationSeconds);
 
     /**
+     * 将文件 path 转换为静态访问 URL
+     *
+     * @param path 文件对象 path
+     * @return 静态访问 URL
+     */
+    String buildStaticUrl(String path);
+
+    /**
      * 创建文件
      *
      * @param createReqVO 创建信息

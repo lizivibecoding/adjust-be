@@ -9,6 +9,7 @@ import com.hongguoyan.module.biz.controller.admin.vipsubscription.vo.VipSubscrip
 import com.hongguoyan.module.biz.controller.admin.vipsubscription.vo.VipSubscriptionSummaryRespVO;
 import com.hongguoyan.module.biz.dal.dataobject.vipsubscription.VipSubscriptionDO;
 import com.hongguoyan.module.biz.dal.mysql.vipsubscription.VipSubscriptionMapper;
+import com.hongguoyan.module.infra.api.file.FileApi;
 import com.hongguoyan.module.member.api.user.MemberUserApi;
 import com.hongguoyan.module.member.api.user.dto.MemberUserRespDTO;
 import jakarta.annotation.Resource;
@@ -40,6 +41,8 @@ public class VipSubscriptionServiceImpl implements VipSubscriptionService {
     private VipSubscriptionMapper vipSubscriptionMapper;
     @Resource
     private MemberUserApi memberUserApi;
+    @Resource
+    private FileApi fileApi;
 
     @Override
     public VipSubscriptionRespVO getVipSubscription(Long id) {
@@ -142,7 +145,7 @@ public class VipSubscriptionServiceImpl implements VipSubscriptionService {
             MemberUserRespDTO user = userMap.get(item.getUserId());
             if (user != null) {
                 item.setUserNickname(user.getNickname());
-                item.setUserAvatar(user.getAvatar());
+                item.setUserAvatar(fileApi.buildStaticUrl(user.getAvatar()));
             }
         });
     }

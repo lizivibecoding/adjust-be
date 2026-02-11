@@ -27,4 +27,9 @@ public class FileApiImpl implements FileApi {
         return fileService.presignGetUrl(url, expirationSeconds);
     }
 
+    @Override
+    public String buildStaticUrl(String path) {
+        return fileService.buildStaticUrl(path);
+    }
+
 }

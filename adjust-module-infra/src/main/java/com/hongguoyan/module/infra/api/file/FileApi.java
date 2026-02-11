@@ -52,4 +52,12 @@ public interface FileApi {
     String presignGetUrl(@NotEmpty(message = "URL 不能为空") String url,
                          Integer expirationSeconds);
 
+    /**
+     * 将文件 path 转换为静态访问 URL
+     *
+     * @param path 文件对象 path
+     * @return 静态访问 URL
+     */
+    String buildStaticUrl(String path);
+
 }

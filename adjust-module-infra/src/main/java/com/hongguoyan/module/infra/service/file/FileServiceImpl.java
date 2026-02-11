@@ -35,6 +35,8 @@ import static com.hongguoyan.module.infra.enums.ErrorCodeConstants.FILE_NOT_EXIS
 @Service
 public class FileServiceImpl implements FileService {
 
+    private static final String STATIC_FILE_BASE_URL = "http://pic.adjust.hongguoyan.com/";
+
     /**
      * 上传文件的前缀，是否包含日期（yyyyMMdd）
      *
@@ -150,6 +152,18 @@ public class FileServiceImpl implements FileService {
     public String presignGetUrl(String url, Integer expirationSeconds) {
         FileClient fileClient = fileConfigService.getMasterFileClient();
         return fileClient.presignGetUrl(url, expirationSeconds);
+    }
+
+    @Override
+    public String buildStaticUrl(String path) {
+        if (StrUtil.isBlank(path)) {
+            return path;
+        }
+        if (StrUtil.startWithAny(path, "http://", "https://")) {
+            return path;
+        }
+        String normalizedPath = StrUtil.removePrefix(path, StrUtil.SLASH);
+        return STATIC_FILE_BASE_URL + normalizedPath;
     }
 
     @Override

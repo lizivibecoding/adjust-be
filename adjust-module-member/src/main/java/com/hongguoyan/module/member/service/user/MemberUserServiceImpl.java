@@ -142,8 +142,27 @@ public class MemberUserServiceImpl implements MemberUserService {
 
     @Override
     public void updateUser(Long userId, AppMemberUserUpdateReqVO reqVO) {
+        reqVO.setAvatar(normalizeAvatarPath(reqVO.getAvatar()));
         MemberUserDO updateObj = BeanUtils.toBean(reqVO, MemberUserDO.class).setId(userId);
         memberUserMapper.updateById(updateObj);
+    }
+
+    private String normalizeAvatarPath(String avatar) {
+        if (StrUtil.isBlank(avatar)) {
+            return avatar;
+        }
+        String normalized = avatar.trim();
+        // 移除 URL 查询参数（例如临时签名参数）
+        normalized = StrUtil.subBefore(normalized, "?", false);
+        // 如果是完整链接，仅保留 path 部分
+        if (StrUtil.startWithAny(normalized, "http://", "https://")) {
+            try {
+                normalized = URLUtil.url(normalized).getPath();
+            } catch (Exception e) {
+                log.warn("Failed to parse avatar url, use original trimmed value. avatar={}", avatar, e);
+            }
+        }
+        return StrUtil.removePrefix(normalized, StrUtil.SLASH);
     }
 
     @Override

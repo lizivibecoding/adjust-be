@@ -53,10 +53,9 @@ public class AppMemberUserController {
             return avatar;
         }
         try {
-            // 7 天有效期
-            return fileApi.presignGetUrl(avatar, 3 * 24 * 60 * 60);
+            return fileApi.buildStaticUrl(avatar);
         } catch (Exception e) {
-            log.warn("Failed to presign avatar, return original. avatar={}", avatar, e);
+            log.warn("Failed to build avatar static url, return original. avatar={}", avatar, e);
             return avatar;
         }
     }
