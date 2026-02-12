@@ -626,9 +626,10 @@ public class VipAppServiceImpl implements VipAppService {
         List<AppVipOrderRespVO> respList = new ArrayList<>(orders.size());
         for (VipOrderDO order : orders) {
             AppVipOrderRespVO resp = new AppVipOrderRespVO();
-            resp.setOrderNo(order.getOrderNo());
+            resp.setOrderNo(order.getPayOrderId() == null ? "" : String.valueOf(order.getPayOrderId()));
             resp.setPlanCode(order.getPlanCode());
-            resp.setStatus(order.getStatus());
+            Integer effectiveStatus = resolveEffectiveStatus(order.getStatus(), order.getExpireTime(), now);
+            resp.setStatus(effectiveStatus);
             resp.setExpireTime(order.getExpireTime());
 
             VipPlanDO plan = planMap.get(order.getPlanCode());
@@ -642,14 +643,22 @@ public class VipAppServiceImpl implements VipAppService {
                 endTime = order.getPayTime().plusDays(plan.getDurationDays());
             }
             resp.setEndTime(endTime);
-            resp.setDisplayStatus(buildDisplayStatus(order.getStatus(), order.getExpireTime(), endTime, now));
+            resp.setDisplayStatus(buildDisplayStatus(effectiveStatus, endTime, now));
             respList.add(resp);
         }
 
         return new PageResult<>(respList, pageResult.getTotal());
     }
 
-    private String buildDisplayStatus(Integer status, LocalDateTime expireTime, LocalDateTime endTime, LocalDateTime now) {
+    private Integer resolveEffectiveStatus(Integer status, LocalDateTime expireTime, LocalDateTime now) {
+        if (Objects.equals(status, VipOrderStatusEnum.WAIT_PAY.getCode())
+                && expireTime != null && (expireTime.isBefore(now) || expireTime.isEqual(now))) {
+            return VipOrderStatusEnum.EXPIRED.getCode();
+        }
+        return status;
+    }
+
+    private String buildDisplayStatus(Integer status, LocalDateTime endTime, LocalDateTime now) {
         if (Objects.equals(status, VipOrderStatusEnum.PAID.getCode())) {
             if (endTime != null && (endTime.isAfter(now) || endTime.isEqual(now))) {
                 return "生效中";
@@ -657,9 +666,6 @@ public class VipAppServiceImpl implements VipAppService {
             return "已失效";
         }
         if (Objects.equals(status, VipOrderStatusEnum.WAIT_PAY.getCode())) {
-            if (expireTime != null && expireTime.isBefore(now)) {
-                return "已过期";
-            }
             return "待支付";
         }
         if (Objects.equals(status, VipOrderStatusEnum.EXPIRED.getCode())) {
