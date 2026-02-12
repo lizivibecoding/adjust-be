@@ -1,28 +1,27 @@
 package com.hongguoyan.module.biz.service.useradjustmentapply;
 
 import cn.hutool.core.util.StrUtil;
-import org.springframework.stereotype.Service;
+import com.hongguoyan.framework.common.pojo.PageResult;
+import com.hongguoyan.framework.common.util.object.BeanUtils;
+import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
+import com.hongguoyan.module.biz.controller.app.useradjustment.vo.AppUserAdjustmentListRespVO;
+import com.hongguoyan.module.biz.controller.app.useradjustmentapply.vo.*;
+import com.hongguoyan.module.biz.dal.dataobject.major.MajorDO;
+import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
+import com.hongguoyan.module.biz.dal.dataobject.useradjustment.UserAdjustmentDO;
+import com.hongguoyan.module.biz.dal.dataobject.useradjustmentapply.UserAdjustmentApplyDO;
+import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
+import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
+import com.hongguoyan.module.biz.dal.mysql.useradjustment.UserAdjustmentMapper;
+import com.hongguoyan.module.biz.dal.mysql.useradjustmentapply.UserAdjustmentApplyMapper;
+import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 import jakarta.annotation.Resource;
-import org.springframework.validation.annotation.Validated;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 import java.math.BigDecimal;
 import java.util.*;
-import com.hongguoyan.module.biz.controller.app.useradjustmentapply.vo.*;
-import com.hongguoyan.module.biz.controller.app.useradjustment.vo.AppUserAdjustmentListRespVO;
-import com.hongguoyan.module.biz.dal.dataobject.major.MajorDO;
-import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
-import com.hongguoyan.module.biz.dal.dataobject.useradjustmentapply.UserAdjustmentApplyDO;
-import com.hongguoyan.framework.common.pojo.PageResult;
-import com.hongguoyan.framework.common.util.object.BeanUtils;
-
-import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
-import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
-import com.hongguoyan.module.biz.dal.mysql.useradjustmentapply.UserAdjustmentApplyMapper;
-import com.hongguoyan.module.biz.dal.dataobject.useradjustment.UserAdjustmentDO;
-import com.hongguoyan.module.biz.dal.mysql.useradjustment.UserAdjustmentMapper;
-import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
-import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.*;
@@ -51,7 +50,7 @@ public class UserAdjustmentApplyServiceImpl implements UserAdjustmentApplyServic
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long createUserAdjustmentApply(Long userId, AppUserAdjustmentApplyCreateReqVO createReqVO) {
-        vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_ADJUSTMENT_APPLY);
+//        vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_ADJUSTMENT_APPLY);
         UserAdjustmentDO userAdjustment = userAdjustmentMapper.selectById(createReqVO.getUserAdjustmentId());
         if (userAdjustment == null) {
             throw exception(USER_ADJUSTMENT_NOT_EXISTS);

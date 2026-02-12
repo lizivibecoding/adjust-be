@@ -54,7 +54,7 @@ public class AppUserAdjustmentDetailRespVO {
     @Schema(description = "查看人数/浏览次数")
     private Integer viewCount;
 
-    @Schema(description = "是否已申请该调剂")
+    @Schema(description = "申请按钮状态：true-不展示申请按钮")
     private Boolean applied;
 }
 

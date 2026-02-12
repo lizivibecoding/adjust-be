@@ -152,7 +152,8 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
                 .set(UserAdjustmentDO::getViewCount, current + 1));
 
         boolean isOwner = viewerUserId != null && viewerUserId.equals(userAdjustment.getUserId());
-        boolean applied = hasApplied(id, viewerUserId);
+        // applied 用作申请按钮状态：true 表示不展示申请按钮（本人或已申请）
+        boolean applied = isOwner || hasApplied(id, viewerUserId);
         boolean canViewContact = isOwner || applied;
 
         AppUserAdjustmentDetailRespVO respVO = BeanUtils.toBean(userAdjustment, AppUserAdjustmentDetailRespVO.class);
