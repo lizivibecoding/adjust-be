@@ -56,5 +56,11 @@ public class SchoolRankDO extends BaseDO {
      * 软科得分
      */
     private BigDecimal score;
+
+    /**
+     * 归一化分数
+     */
+    @TableField("nl_score")
+    private BigDecimal nlScore;
 }
 

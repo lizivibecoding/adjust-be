@@ -79,6 +79,10 @@ public class AppUserCustomReportRespVO {
     @ExcelProperty("总分维度分析文案")
     private String analysisTotal;
 
+    @Schema(description = "生成状态（0-生成中 1-已完成）", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+    @ExcelProperty("生成状态")
+    private Integer generateStatus;
+
     @Schema(description = "创建时间", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("创建时间")
     private LocalDateTime createTime;

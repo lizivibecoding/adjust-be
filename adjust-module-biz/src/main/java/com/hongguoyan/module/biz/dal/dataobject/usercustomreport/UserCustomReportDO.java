@@ -107,6 +107,10 @@ public class UserCustomReportDO extends BaseDO {
      * 报告PDF文件URL
      */
     private String reportPdfUrl;
+    /**
+     * 生成状态：0-生成中，1-已完成
+     */
+    private Integer generateStatus;
 
 }
 

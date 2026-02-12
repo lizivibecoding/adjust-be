@@ -35,8 +35,9 @@ public class RecommendReportController {
     @Operation(summary = "创建调剂报告")
     @PreAuthorize("@ss.hasPermission('biz:recommend-report:create')")
     public CommonResult<Long> createUserCustomReport(@Valid @RequestBody UserCustomReportSaveReqVO createReqVO) {
-        recommendService.generateAssessmentReport(createReqVO.getUserId());
-        return success(0L);
+        Long reportId = userCustomReportService.createNewVersionByUserId(createReqVO.getUserId());
+        recommendService.generateAssessmentReport(createReqVO.getUserId(),reportId);
+        return success(reportId);
     }
 
     @GetMapping("/page")

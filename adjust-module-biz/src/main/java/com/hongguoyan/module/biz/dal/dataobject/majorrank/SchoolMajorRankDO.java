@@ -86,28 +86,5 @@ public class SchoolMajorRankDO {
      */
     @TableField("level_raw")
     private String levelRaw;
-
-    /**
-     * 获取计算后的等级（A+/A/A-/B+/B/B-）
-     */
-    public String getCalculatedLevel() {
-        if (level == null) {
-            return null;
-        }
-        if (level <= 3) {
-            return "A+";
-        } else if (level <= 7) {
-            return "A";
-        } else if (level <= 12) {
-            return "A-";
-        } else if (level <= 20) {
-            return "B+";
-        } else if (level <= 30) {
-            return "B";
-        } else if (level <= 40) {
-            return "B-";
-        }
-        return null;
-    }
 }
 

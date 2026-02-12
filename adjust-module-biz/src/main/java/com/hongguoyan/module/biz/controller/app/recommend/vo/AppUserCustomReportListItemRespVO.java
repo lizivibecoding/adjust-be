@@ -24,6 +24,10 @@ public class AppUserCustomReportListItemRespVO {
     @ExcelProperty("报告名称")
     private String reportName;
 
+    @Schema(description = "生成状态（0-生成中 1-已完成）", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+    @ExcelProperty("生成状态")
+    private Integer generateStatus;
+
     @Schema(description = "创建时间", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("创建时间")
     private LocalDateTime createTime;

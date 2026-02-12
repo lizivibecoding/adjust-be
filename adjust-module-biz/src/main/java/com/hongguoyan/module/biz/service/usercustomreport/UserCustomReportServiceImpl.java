@@ -88,8 +88,16 @@ public class UserCustomReportServiceImpl implements UserCustomReportService {
         report.setReportNo(reportNo);
         String date = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE); // yyyyMMdd
         report.setReportName(String.format("%s - 智能推荐调剂报告 - %02d", date, reportNo));
+        report.setGenerateStatus(0); // 0-生成中
         userCustomReportMapper.insert(report);
         return report.getId();
+    }
+
+    @Override
+    public void updateGenerateStatus(Long reportId, Integer generateStatus) {
+        userCustomReportMapper.update(null, new LambdaUpdateWrapper<UserCustomReportDO>()
+                .eq(UserCustomReportDO::getId, reportId)
+                .set(UserCustomReportDO::getGenerateStatus, generateStatus));
     }
 
     @Override

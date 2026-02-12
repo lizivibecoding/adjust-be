@@ -13,11 +13,13 @@ import com.hongguoyan.module.biz.dal.dataobject.major.MajorDO;
 import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
 import com.hongguoyan.module.biz.dal.dataobject.schoolcollege.SchoolCollegeDO;
 import com.hongguoyan.module.biz.dal.dataobject.schooldirection.SchoolDirectionDO;
+import com.hongguoyan.module.biz.dal.dataobject.undergraduatemajor.UndergraduateMajorDO;
 import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
 import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
 import com.hongguoyan.module.biz.dal.mysql.schoolcollege.SchoolCollegeMapper;
 import com.hongguoyan.module.biz.dal.mysql.schooldirection.SchoolDirectionMapper;
+import com.hongguoyan.module.biz.dal.mysql.undergraduatemajor.UndergraduateMajorMapper;
 import com.hongguoyan.module.biz.dal.mysql.userprofile.UserProfileMapper;
 import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 import jakarta.annotation.Resource;
@@ -56,6 +58,8 @@ public class UserProfileServiceImpl implements UserProfileService {
     private SchoolCollegeMapper schoolCollegeMapper;
     @Resource
     private VipBenefitService vipBenefitService;
+    @Resource
+    private UndergraduateMajorMapper undergraduateMajorMapper;
 
     @Override
     public Long createUserProfile(UserProfileSaveReqVO createReqVO) {
@@ -223,25 +227,12 @@ public class UserProfileServiceImpl implements UserProfileService {
 
         // graduate major (id -> name snapshot)
         Long graduateMajorId = reqVO.getGraduateMajorId();
-        MajorDO graduateMajor = majorMapper.selectById(graduateMajorId);
+        UndergraduateMajorDO graduateMajor = undergraduateMajorMapper.selectById(graduateMajorId);
         if (graduateMajor == null || Boolean.TRUE.equals(graduateMajor.getDeleted())) {
             throw exception(new ErrorCode(400, "graduateMajorId not exists: " + graduateMajorId));
         }
         toSave.setGraduateMajorId(graduateMajorId);
         toSave.setGraduateMajorName(StrUtil.blankToDefault(graduateMajor.getName(), ""));
-        // best-effort: fill major class by parent major name (if exists), otherwise empty
-        String majorClass = "";
-        if (StrUtil.isNotBlank(graduateMajor.getParentCode())) {
-            MajorDO parent = majorMapper.selectOne(new LambdaQueryWrapperX<MajorDO>()
-                    .select(MajorDO::getName)
-                    .eq(MajorDO::getCode, graduateMajor.getParentCode())
-                    .eq(MajorDO::getDeleted, false)
-                    .last("LIMIT 1"));
-            if (parent != null) {
-                majorClass = StrUtil.blankToDefault(parent.getName(), "");
-            }
-        }
-        toSave.setGraduateMajorClass(majorClass);
 
         // base score & background
         toSave.setGraduateAverageScore(reqVO.getGraduateAverageScore());

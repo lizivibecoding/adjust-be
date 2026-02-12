@@ -42,6 +42,14 @@ public interface UserCustomReportService {
     Long createNewVersionByUserId(Long userId);
 
     /**
+     * 更新报告生成状态
+     *
+     * @param reportId       报告ID
+     * @param generateStatus 生成状态：0-生成中，1-已完成
+     */
+    void updateGenerateStatus(Long reportId, Integer generateStatus);
+
+    /**
      * 删除报告
      */
     void deleteUserCustomReport(Long id);

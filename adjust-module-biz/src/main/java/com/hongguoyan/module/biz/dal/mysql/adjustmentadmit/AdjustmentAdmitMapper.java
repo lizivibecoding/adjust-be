@@ -84,6 +84,21 @@ public interface AdjustmentAdmitMapper extends BaseMapperX<AdjustmentAdmitDO> {
         @Param("majorCode") String majorCode,
         @Param("year") Integer year);
 
+    /**
+     * 批量查询（school_id, college_id, major_code, year）维度的初试平均分，
+     * 用于替代循环内逐条调用 selectAvgFirstScore。
+     */
+    @Select("<script>" +
+        "SELECT school_id, college_id, major_code, year, AVG(first_score) as avg_score " +
+        "FROM biz_adjustment_admit " +
+        "WHERE deleted = 0 " +
+        "AND school_id IN <foreach item='id' collection='schoolIds' open='(' separator=',' close=')'> #{id} </foreach> " +
+        "AND year IN <foreach item='y' collection='years' open='(' separator=',' close=')'> #{y} </foreach> " +
+        "GROUP BY school_id, college_id, major_code, year" +
+        "</script>")
+    List<Map<String, Object>> selectBatchAvgFirstScore(@Param("schoolIds") Collection<Long> schoolIds,
+                                                       @Param("years") List<Integer> years);
+
     Map<String, Object> selectAdmitStats(@Param("schoolId") Long schoolId,
                                          @Param("collegeId") Long collegeId,
                                          @Param("majorCode") String majorCode,
