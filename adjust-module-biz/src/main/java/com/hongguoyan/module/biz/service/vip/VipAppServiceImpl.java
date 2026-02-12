@@ -24,6 +24,7 @@ import com.hongguoyan.module.biz.dal.dataobject.viporder.VipOrderDO;
 import com.hongguoyan.module.biz.dal.dataobject.vipplan.VipPlanDO;
 import com.hongguoyan.module.biz.dal.dataobject.vipplanbenefit.VipPlanBenefitDO;
 import com.hongguoyan.module.biz.dal.dataobject.vipsubscription.VipSubscriptionDO;
+import com.hongguoyan.module.biz.enums.vip.VipOrderStatusEnum;
 import com.hongguoyan.module.biz.dal.mysql.vipcouponbatch.VipCouponBatchMapper;
 import com.hongguoyan.module.biz.dal.mysql.vipcouponcode.VipCouponCodeMapper;
 import com.hongguoyan.module.biz.dal.mysql.vipsubscriptionlog.VipSubscriptionLogMapper;
@@ -64,9 +65,9 @@ public class VipAppServiceImpl implements VipAppService {
 
     private static final int COMMON_STATUS_ENABLE = 1;
 
-    private static final int VIP_ORDER_STATUS_WAIT_PAY = 1;
-    private static final int VIP_ORDER_STATUS_PAID = 2;
-    private static final int VIP_ORDER_STATUS_REFUNDED = 4;
+    private static final int VIP_ORDER_STATUS_WAIT_PAY = VipOrderStatusEnum.WAIT_PAY.getCode();
+    private static final int VIP_ORDER_STATUS_PAID = VipOrderStatusEnum.PAID.getCode();
+    private static final int VIP_ORDER_STATUS_REFUNDED = VipOrderStatusEnum.REFUNDED.getCode();
 
     private static final int VIP_COUPON_STATUS_UNUSED = 1;
     private static final int VIP_COUPON_STATUS_USED = 2;
@@ -628,6 +629,7 @@ public class VipAppServiceImpl implements VipAppService {
             resp.setOrderNo(order.getOrderNo());
             resp.setPlanCode(order.getPlanCode());
             resp.setStatus(order.getStatus());
+            resp.setExpireTime(order.getExpireTime());
 
             VipPlanDO plan = planMap.get(order.getPlanCode());
             resp.setPlanName(plan != null ? plan.getPlanName() : order.getPlanCode());
@@ -640,30 +642,33 @@ public class VipAppServiceImpl implements VipAppService {
                 endTime = order.getPayTime().plusDays(plan.getDurationDays());
             }
             resp.setEndTime(endTime);
-            resp.setDisplayStatus(buildDisplayStatus(order.getStatus(), endTime, now));
+            resp.setDisplayStatus(buildDisplayStatus(order.getStatus(), order.getExpireTime(), endTime, now));
             respList.add(resp);
         }
 
         return new PageResult<>(respList, pageResult.getTotal());
     }
 
-    private String buildDisplayStatus(Integer status, LocalDateTime endTime, LocalDateTime now) {
-        if (Objects.equals(status, 2)) {
+    private String buildDisplayStatus(Integer status, LocalDateTime expireTime, LocalDateTime endTime, LocalDateTime now) {
+        if (Objects.equals(status, VipOrderStatusEnum.PAID.getCode())) {
             if (endTime != null && (endTime.isAfter(now) || endTime.isEqual(now))) {
                 return "生效中";
             }
             return "已失效";
         }
-        if (Objects.equals(status, 1)) {
+        if (Objects.equals(status, VipOrderStatusEnum.WAIT_PAY.getCode())) {
+            if (expireTime != null && expireTime.isBefore(now)) {
+                return "已过期";
+            }
             return "待支付";
         }
-        if (Objects.equals(status, 3)) {
+        if (Objects.equals(status, VipOrderStatusEnum.EXPIRED.getCode())) {
             return "已过期";
         }
-        if (Objects.equals(status, 4)) {
+        if (Objects.equals(status, VipOrderStatusEnum.REFUNDED.getCode())) {
             return "已退款";
         }
-        if (Objects.equals(status, 5)) {
+        if (Objects.equals(status, VipOrderStatusEnum.CANCELED.getCode())) {
             return "已取消";
         }
         return "已失效";

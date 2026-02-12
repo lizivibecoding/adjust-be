@@ -1,6 +1,7 @@
 package com.hongguoyan.module.biz.dal.mysql.viporder;
 
-import java.util.*;
+import java.time.LocalDateTime;
+import java.util.List;
 
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
@@ -44,6 +45,13 @@ public interface VipOrderMapper extends BaseMapperX<VipOrderDO> {
                 .eqIfPresent(VipOrderDO::getStatus, reqVO.getStatus())
                 .eq(VipOrderDO::getDeleted, false)
                 .orderByDesc(VipOrderDO::getId));
+    }
+
+    default List<VipOrderDO> selectListByStatusAndExpireTimeLt(Integer status, LocalDateTime maxExpireTime) {
+        return selectList(new LambdaQueryWrapperX<VipOrderDO>()
+                .eq(VipOrderDO::getStatus, status)
+                .lt(VipOrderDO::getExpireTime, maxExpireTime)
+                .orderByAsc(VipOrderDO::getId));
     }
 
 }

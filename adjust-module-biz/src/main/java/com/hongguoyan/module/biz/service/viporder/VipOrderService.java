@@ -59,4 +59,11 @@ public interface VipOrderService {
      */
     PageResult<VipOrderDO> getVipOrderPage(VipOrderPageReqVO pageReqVO);
 
+    /**
+     * 关闭已过期的待支付会员订单
+     *
+     * @return 处理数量
+     */
+    int expireOrder();
+
 }

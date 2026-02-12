@@ -5,10 +5,13 @@ import org.springframework.stereotype.Service;
 import jakarta.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.transaction.annotation.Transactional;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import com.hongguoyan.module.biz.controller.admin.viporder.vo.*;
 import com.hongguoyan.module.biz.dal.dataobject.viporder.VipOrderDO;
+import com.hongguoyan.module.biz.enums.vip.VipOrderStatusEnum;
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.framework.common.pojo.PageParam;
 import com.hongguoyan.framework.common.util.object.BeanUtils;
@@ -80,6 +83,26 @@ public class VipOrderServiceImpl implements VipOrderService {
     @Override
     public PageResult<VipOrderDO> getVipOrderPage(VipOrderPageReqVO pageReqVO) {
         return vipOrderMapper.selectPage(pageReqVO);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int expireOrder() {
+        List<VipOrderDO> orders = vipOrderMapper.selectListByStatusAndExpireTimeLt(
+                VipOrderStatusEnum.WAIT_PAY.getCode(), LocalDateTime.now());
+        if (CollUtil.isEmpty(orders)) {
+            return 0;
+        }
+        int count = 0;
+        for (VipOrderDO order : orders) {
+            int updated = vipOrderMapper.update(null, new LambdaUpdateWrapper<VipOrderDO>()
+                    .set(VipOrderDO::getStatus, VipOrderStatusEnum.EXPIRED.getCode())
+                    .eq(VipOrderDO::getId, order.getId())
+                    .eq(VipOrderDO::getStatus, VipOrderStatusEnum.WAIT_PAY.getCode())
+                    .le(VipOrderDO::getExpireTime, LocalDateTime.now()));
+            count += updated;
+        }
+        return count;
     }
 
 }

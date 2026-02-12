@@ -30,5 +30,8 @@ public class AppVipOrderRespVO {
     @Schema(description = "到期时间")
     private LocalDateTime endTime;
 
+    @Schema(description = "支付过期时间")
+    private LocalDateTime expireTime;
+
 }
 
