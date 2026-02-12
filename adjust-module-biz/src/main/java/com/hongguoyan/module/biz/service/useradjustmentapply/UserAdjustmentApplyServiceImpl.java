@@ -195,7 +195,7 @@ public class UserAdjustmentApplyServiceImpl implements UserAdjustmentApplyServic
             throw exception(USER_ADJUSTMENT_APPLY_NOT_EXISTS);
         }
         AppUserAdjustmentApplicantDetailRespVO vo = BeanUtils.toBean(apply, AppUserAdjustmentApplicantDetailRespVO.class);
-        vo.setContact(maskContact(apply.getContact()));
+        vo.setContact(apply.getContact());
         return vo;
     }
 
@@ -288,20 +288,6 @@ public class UserAdjustmentApplyServiceImpl implements UserAdjustmentApplyServic
             result.put(majorId, cur != null && cur.getLevel() != null && cur.getLevel() == 1 ? cur.getName() : "");
         }
         return result;
-    }
-
-    private String maskContact(String contact) {
-        if (StrUtil.isBlank(contact)) {
-            return "******";
-        }
-        String s = contact.trim();
-        if (s.matches("^1\\d{10}$")) {
-            return s.substring(0, 3) + "****" + s.substring(7);
-        }
-        if (s.length() <= 2) {
-            return "*";
-        }
-        return s.substring(0, 2) + "****" + s.substring(Math.max(s.length() - 2, 0));
     }
 
 }

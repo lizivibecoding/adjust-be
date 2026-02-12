@@ -151,17 +151,27 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
                 .eq(UserAdjustmentDO::getId, id)
                 .set(UserAdjustmentDO::getViewCount, current + 1));
 
-        boolean canViewContact = viewerUserId != null && (viewerUserId.equals(userAdjustment.getUserId())
-                || userAdjustmentApplyMapper.selectCount(new LambdaQueryWrapperX<com.hongguoyan.module.biz.dal.dataobject.useradjustmentapply.UserAdjustmentApplyDO>()
-                        .eq(com.hongguoyan.module.biz.dal.dataobject.useradjustmentapply.UserAdjustmentApplyDO::getUserAdjustmentId, id)
-                        .eq(com.hongguoyan.module.biz.dal.dataobject.useradjustmentapply.UserAdjustmentApplyDO::getUserId, viewerUserId)) > 0);
+        boolean isOwner = viewerUserId != null && viewerUserId.equals(userAdjustment.getUserId());
+        boolean applied = hasApplied(id, viewerUserId);
+        boolean canViewContact = isOwner || applied;
 
         AppUserAdjustmentDetailRespVO respVO = BeanUtils.toBean(userAdjustment, AppUserAdjustmentDetailRespVO.class);
         respVO.setViewCount(current + 1);
+        respVO.setApplied(applied);
         if (!canViewContact) {
             respVO.setContact("******（申请调剂后可查看）");
         }
         return respVO;
+    }
+
+    private boolean hasApplied(Long userAdjustmentId, Long userId) {
+        if (userId == null) {
+            return false;
+        }
+        Long count = userAdjustmentApplyMapper.selectCount(new LambdaQueryWrapperX<com.hongguoyan.module.biz.dal.dataobject.useradjustmentapply.UserAdjustmentApplyDO>()
+                .eq(com.hongguoyan.module.biz.dal.dataobject.useradjustmentapply.UserAdjustmentApplyDO::getUserAdjustmentId, userAdjustmentId)
+                .eq(com.hongguoyan.module.biz.dal.dataobject.useradjustmentapply.UserAdjustmentApplyDO::getUserId, userId));
+        return count != null && count > 0;
     }
 
     private UserAdjustmentDO validateUserAdjustmentExists(Long id) {
