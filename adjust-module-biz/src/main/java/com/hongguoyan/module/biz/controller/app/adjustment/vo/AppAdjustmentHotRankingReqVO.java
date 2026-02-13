@@ -19,5 +19,6 @@ public class AppAdjustmentHotRankingReqVO extends PageParam {
 
     @Schema(description = "学习方式：1-全日制 2-非全日制", example = "1")
     private Integer studyMode;
+
 }
 

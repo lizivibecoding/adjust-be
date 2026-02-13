@@ -42,6 +42,7 @@ import com.hongguoyan.module.biz.dal.mysql.area.AreaMapper;
 import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
 import com.hongguoyan.module.biz.dal.mysql.schoolmajor.SchoolMajorMapper;
+import com.hongguoyan.module.biz.framework.config.AdjustProperties;
 import com.hongguoyan.module.biz.service.userprofile.UserProfileService;
 import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 import jakarta.annotation.Resource;
@@ -88,6 +89,8 @@ public class AdjustmentServiceImpl implements AdjustmentService {
     private UserProfileService userProfileService;
     @Resource
     private ObjectMapper objectMapper;
+    @Resource
+    private AdjustProperties adjustProperties;
 
     private static final Pattern SPLIT_PATTERN = Pattern.compile("[\\n;,，；]+");
     private static final int DEFAULT_STATS_YEAR = 2025;
@@ -358,8 +361,9 @@ public class AdjustmentServiceImpl implements AdjustmentService {
         int limit = 10;
         LinkedHashSet<String> suggestions = new LinkedHashSet<>();
         suggestions.addAll(schoolMapper.selectSuggestSchoolNames(keyword, limit));
-        suggestions.addAll(majorMapper.selectSuggestMajorCodes(keyword, limit));
-        suggestions.addAll(majorMapper.selectSuggestMajorNames(keyword, limit));
+        Integer activeYear = adjustProperties.getActiveYear();
+        suggestions.addAll(majorMapper.selectSuggestMajorCodes(keyword, limit, activeYear));
+        suggestions.addAll(majorMapper.selectSuggestMajorNames(keyword, limit, activeYear));
         List<String> result = new ArrayList<>();
         for (String suggestion : suggestions) {
             result.add(suggestion);
@@ -393,7 +397,7 @@ public class AdjustmentServiceImpl implements AdjustmentService {
         level2MajorGroup.setName("一级学科");
         List<AppAdjustmentFilterConfigRespVO.Option> level2MajorOptions = new ArrayList<>();
         if (StrUtil.isNotBlank(majorCode)) {
-            List<MajorDO> level2List = majorMapper.selectListByLevelAndParentCode(majorCode, 2, null);
+            List<MajorDO> level2List = majorMapper.selectListByLevelAndParentCode(majorCode, 2, null, adjustProperties.getActiveYear());
             if (level2List != null && !level2List.isEmpty()) {
                 for (MajorDO item : level2List) {
                     if (item == null || StrUtil.isBlank(item.getCode()) || StrUtil.isBlank(item.getName())) {

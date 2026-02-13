@@ -52,6 +52,10 @@ public class SchoolDirectionDO extends BaseDO {
      */
     private String directionName;
     /**
+     * 考试科目 JSON（同 biz_adjustment.subjects 结构）
+     */
+    private String subjects;
+    /**
      * 学年/业务年（字典当前有效年）
      */
     private Integer year;

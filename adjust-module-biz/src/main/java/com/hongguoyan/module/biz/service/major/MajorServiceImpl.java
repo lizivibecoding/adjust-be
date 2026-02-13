@@ -22,6 +22,7 @@ import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUti
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertList;
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.diffList;
 import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.*;
+import com.hongguoyan.module.biz.framework.config.AdjustProperties;
 
 /**
  * 专业 Service 实现类
@@ -34,6 +35,8 @@ public class MajorServiceImpl implements MajorService {
 
     @Resource
     private MajorMapper majorMapper;
+    @Resource
+    private AdjustProperties adjustProperties;
 
     @Override
     public Long createMajor(AppMajorSaveReqVO createReqVO) {
@@ -87,7 +90,7 @@ public class MajorServiceImpl implements MajorService {
 
     @Override
     public List<AppMajorLevel1RespVO> getMajorLevel1List() {
-        return majorMapper.selectLevel1List();
+        return majorMapper.selectLevel1List(adjustProperties.getActiveYear());
     }
 
     @Override
@@ -105,7 +108,7 @@ public class MajorServiceImpl implements MajorService {
         if ((level == 2 || level == 3) && degreeType != null && degreeType != 0) {
             degreeTypeFilter = degreeType;
         }
-        List<MajorDO> children = majorMapper.selectListByLevelAndParentCode(pc, level, degreeTypeFilter);
+        List<MajorDO> children = majorMapper.selectListByLevelAndParentCode(pc, level, degreeTypeFilter, adjustProperties.getActiveYear());
         if (children == null || children.isEmpty()) {
             return Collections.emptyList();
         }
@@ -163,6 +166,7 @@ public class MajorServiceImpl implements MajorService {
                 MajorDO::getDegreeType, MajorDO::getParentCode);
         qw.isNotNull(MajorDO::getCode);
         qw.ne(MajorDO::getCode, "");
+        qw.eq(MajorDO::getYear, adjustProperties.getActiveYear());
         qw.eq(MajorDO::getDeleted, false);
         qw.orderByAsc(MajorDO::getCode);
         List<MajorDO> list = majorMapper.selectList(qw);

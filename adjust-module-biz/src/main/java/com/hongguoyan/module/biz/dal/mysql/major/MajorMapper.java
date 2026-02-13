@@ -31,22 +31,26 @@ public interface MajorMapper extends BaseMapperX<MajorDO> {
                 .orderByDesc(MajorDO::getId));
     }
 
-    List<AppMajorLevel1RespVO> selectLevel1List();
+    List<AppMajorLevel1RespVO> selectLevel1List(@Param("year") Integer year);
 
     List<String> selectSuggestMajorCodes(@Param("keyword") String keyword,
-                                         @Param("limit") Integer limit);
+                                         @Param("limit") Integer limit,
+                                         @Param("year") Integer year);
 
     List<String> selectSuggestMajorNames(@Param("keyword") String keyword,
-                                         @Param("limit") Integer limit);
+                                         @Param("limit") Integer limit,
+                                         @Param("year") Integer year);
 
     default List<MajorDO> selectListByLevelAndParentCode(@Param("parentCode") String parentCode,
                                                          @Param("level") Integer level,
-                                                         @Param("degreeType") Integer degreeType) {
+                                                         @Param("degreeType") Integer degreeType,
+                                                         @Param("year") Integer year) {
         // NOTE: do not chain eqIfPresent after select(), because select() returns MP wrapper type
         LambdaQueryWrapperX<MajorDO> qw = new LambdaQueryWrapperX<>();
         qw.select(MajorDO::getId, MajorDO::getCode, MajorDO::getName, MajorDO::getLevel, MajorDO::getDegreeType);
         qw.eqIfPresent(MajorDO::getParentCode, parentCode);
         qw.eq(MajorDO::getLevel, level);
+        qw.eqIfPresent(MajorDO::getYear, year);
         // degreeType: null means no filter; when specified, include "both/not applicable"(0) as well
         if (degreeType != null) {
             qw.and(w -> w.eq(MajorDO::getDegreeType, 0).or().eq(MajorDO::getDegreeType, degreeType));

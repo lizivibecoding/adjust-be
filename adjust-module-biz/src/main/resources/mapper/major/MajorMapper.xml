@@ -13,6 +13,7 @@
         SELECT DISTINCT code
         FROM biz_major
         WHERE code LIKE CONCAT(#{keyword}, '%')
+          AND year = #{year}
         ORDER BY code
         LIMIT #{limit}
     </select>
@@ -21,6 +22,7 @@
         SELECT DISTINCT name
         FROM biz_major
         WHERE name LIKE CONCAT(#{keyword}, '%')
+          AND year = #{year}
         ORDER BY name
         LIMIT #{limit}
     </select>
@@ -30,6 +32,7 @@
         SELECT code, name
         FROM biz_major
         WHERE level = 1
+          AND year = #{year}
         ORDER BY code
     </select>
 

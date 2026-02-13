@@ -2,9 +2,12 @@ package com.hongguoyan.module.biz.service.adjustment;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hongguoyan.framework.common.exception.ErrorCode;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSchoolSpecialOptionsReqVO;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSchoolSpecialOptionsRespVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentSubjectsRespVO;
 import com.hongguoyan.module.biz.dal.dataobject.major.MajorDO;
 import com.hongguoyan.module.biz.dal.dataobject.nationalscore.NationalScoreDO;
 import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
@@ -19,6 +22,7 @@ import com.hongguoyan.module.biz.dal.mysql.schoolcollege.SchoolCollegeMapper;
 import com.hongguoyan.module.biz.dal.mysql.schooldirection.SchoolDirectionMapper;
 import com.hongguoyan.module.biz.dal.mysql.schoolmajor.SchoolMajorMapper;
 import com.hongguoyan.module.biz.dal.mysql.schoolscore.SchoolScoreMapper;
+import com.hongguoyan.module.biz.framework.config.AdjustProperties;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -52,6 +56,10 @@ public class SchoolSpecialOptionsServiceImpl implements SchoolSpecialOptionsServ
     private SchoolMapper schoolMapper;
     @Resource
     private MajorMapper majorMapper;
+    @Resource
+    private AdjustProperties adjustProperties;
+    @Resource
+    private ObjectMapper objectMapper;
 
     @Override
     public AppSchoolSpecialOptionsRespVO getOptions(AppSchoolSpecialOptionsReqVO reqVO) {
@@ -85,9 +93,11 @@ public class SchoolSpecialOptionsServiceImpl implements SchoolSpecialOptionsServ
         if (schoolId == null) {
             throw exception(new ErrorCode(400, "schoolId is required"));
         }
+        Integer activeYear = adjustProperties.getActiveYear();
         List<SchoolCollegeDO> list = schoolCollegeMapper.selectList(new LambdaQueryWrapper<SchoolCollegeDO>()
                 .select(SchoolCollegeDO::getId, SchoolCollegeDO::getName)
                 .eq(SchoolCollegeDO::getSchoolId, schoolId)
+                .eq(SchoolCollegeDO::getYear, activeYear)
                 .eq(SchoolCollegeDO::getDeleted, false)
                 .orderByAsc(SchoolCollegeDO::getName));
         List<AppSchoolSpecialOptionsRespVO.Option> options = new ArrayList<>();
@@ -110,11 +120,13 @@ public class SchoolSpecialOptionsServiceImpl implements SchoolSpecialOptionsServ
         if (collegeId == null) {
             throw exception(new ErrorCode(400, "collegeId is required"));
         }
+        Integer activeYear = adjustProperties.getActiveYear();
 
         List<SchoolMajorDO> majors = schoolMajorMapper.selectList(new LambdaQueryWrapper<SchoolMajorDO>()
                 .select(SchoolMajorDO::getMajorId, SchoolMajorDO::getCode, SchoolMajorDO::getName)
                 .eq(SchoolMajorDO::getSchoolId, schoolId)
                 .eq(SchoolMajorDO::getCollegeId, collegeId)
+                .eq(SchoolMajorDO::getYear, activeYear)
                 .eq(SchoolMajorDO::getDeleted, false)
                 .orderByAsc(SchoolMajorDO::getCode));
 
@@ -144,6 +156,7 @@ public class SchoolSpecialOptionsServiceImpl implements SchoolSpecialOptionsServ
                 .eq(SchoolDirectionDO::getSchoolId, schoolId)
                 .eq(SchoolDirectionDO::getCollegeId, collegeId)
                 .in(SchoolDirectionDO::getMajorId, majorIds)
+                .eq(SchoolDirectionDO::getYear, activeYear)
                 .eq(SchoolDirectionDO::getDeleted, false)
                 .groupBy(SchoolDirectionDO::getMajorId, SchoolDirectionDO::getStudyMode));
 
@@ -183,13 +196,16 @@ public class SchoolSpecialOptionsServiceImpl implements SchoolSpecialOptionsServ
         if (majorId == null) {
             throw exception(new ErrorCode(400, "majorId is required"));
         }
+        Integer activeYear = adjustProperties.getActiveYear();
 
         LambdaQueryWrapper<SchoolDirectionDO> qw = new LambdaQueryWrapper<SchoolDirectionDO>()
                 .select(SchoolDirectionDO::getId, SchoolDirectionDO::getDirectionCode,
-                        SchoolDirectionDO::getDirectionName, SchoolDirectionDO::getStudyMode)
+                        SchoolDirectionDO::getDirectionName, SchoolDirectionDO::getStudyMode,
+                        SchoolDirectionDO::getSubjects)
                 .eq(SchoolDirectionDO::getSchoolId, schoolId)
                 .eq(SchoolDirectionDO::getCollegeId, collegeId)
                 .eq(SchoolDirectionDO::getMajorId, majorId)
+                .eq(SchoolDirectionDO::getYear, activeYear)
                 .eq(SchoolDirectionDO::getDeleted, false)
                 .orderByAsc(SchoolDirectionDO::getDirectionCode)
                 .orderByAsc(SchoolDirectionDO::getDirectionName);
@@ -205,9 +221,56 @@ public class SchoolSpecialOptionsServiceImpl implements SchoolSpecialOptionsServ
             opt.setDirectionCode(StrUtil.blankToDefault(item.getDirectionCode(), ""));
             opt.setDirectionName(StrUtil.blankToDefault(item.getDirectionName(), ""));
             opt.setStudyMode(item.getStudyMode());
+            opt.setSubjects(parseSubjectsFirstOnly(item.getSubjects()));
             directions.add(opt);
         }
         return directions;
+    }
+
+    /**
+     * Parse subjects JSON and return names only; for each s1~s4, keep at most 1 item (the first).
+     * Accept both ["name"] and [{"name": "..."}] array forms.
+     */
+    private AppAdjustmentSubjectsRespVO parseSubjectsFirstOnly(String subjectsJson) {
+        AppAdjustmentSubjectsRespVO vo = new AppAdjustmentSubjectsRespVO();
+        vo.setS1(Collections.emptyList());
+        vo.setS2(Collections.emptyList());
+        vo.setS3(Collections.emptyList());
+        vo.setS4(Collections.emptyList());
+        if (StrUtil.isBlank(subjectsJson)) {
+            return vo;
+        }
+        try {
+            JsonNode root = objectMapper.readTree(subjectsJson);
+            vo.setS1(extractFirstSubjectName(root, "s1"));
+            vo.setS2(extractFirstSubjectName(root, "s2"));
+            vo.setS3(extractFirstSubjectName(root, "s3"));
+            vo.setS4(extractFirstSubjectName(root, "s4"));
+            return vo;
+        } catch (Exception ignore) {
+            return vo;
+        }
+    }
+
+    private List<String> extractFirstSubjectName(JsonNode root, String key) {
+        if (root == null || StrUtil.isBlank(key)) {
+            return Collections.emptyList();
+        }
+        JsonNode arr = root.get(key);
+        if (arr == null || !arr.isArray() || arr.isEmpty()) {
+            return Collections.emptyList();
+        }
+        JsonNode first = arr.get(0);
+        if (first == null || first.isNull()) {
+            return Collections.emptyList();
+        }
+        String name;
+        if (first.isObject()) {
+            name = StrUtil.trimToNull(first.path("name").asText(null));
+        } else {
+            name = StrUtil.trimToNull(first.asText(null));
+        }
+        return name != null ? Collections.singletonList(name) : Collections.emptyList();
     }
 
     private AppSchoolSpecialOptionsRespVO.ScoreLimit buildScoreLimit(AppSchoolSpecialOptionsReqVO reqVO) {

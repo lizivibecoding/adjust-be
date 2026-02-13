@@ -57,6 +57,9 @@ public class AppSchoolSpecialOptionsRespVO {
         @Schema(description = "学习方式", example = "全日制", type = "string")
         @JsonSerialize(using = StudyModeNameSerializer.class)
         private Integer studyMode;
+
+        @Schema(description = "考试科目(仅名称，每项最多取 1 个)")
+        private AppAdjustmentSubjectsRespVO subjects;
     }
 
     @Data

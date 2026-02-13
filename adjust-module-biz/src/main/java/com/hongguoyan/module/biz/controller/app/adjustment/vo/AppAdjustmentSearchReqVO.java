@@ -83,4 +83,5 @@ public class AppAdjustmentSearchReqVO extends PageParam {
 
     @Schema(description = "调剂类型(1=校内调剂,2=校外调剂)")
     private Integer adjustType;
+
 }
