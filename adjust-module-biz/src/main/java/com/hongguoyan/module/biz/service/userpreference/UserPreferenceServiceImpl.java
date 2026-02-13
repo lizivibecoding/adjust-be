@@ -95,6 +95,12 @@ public class UserPreferenceServiceImpl implements UserPreferenceService {
 
         Integer preferenceNo = reqVO.getPreferenceNo();
 
+        // Prevent duplicates across 1/2/3 preferences: same directionId can only exist once per user
+        UserPreferenceDO duplicate = userPreferenceMapper.selectFirstByUserIdAndDirectionId(userId, adjustment.getDirectionId());
+        if (duplicate != null && duplicate.getPreferenceNo() != null && !duplicate.getPreferenceNo().equals(preferenceNo)) {
+            throw exception(USER_PREFERENCE_DUPLICATE);
+        }
+
         UserPreferenceDO existing = userPreferenceMapper.selectByUserIdPreferenceNoAndDirectionId(userId, preferenceNo, adjustment.getDirectionId());
         UserPreferenceDO toSave = existing != null ? existing : new UserPreferenceDO();
         toSave.setUserId(userId);

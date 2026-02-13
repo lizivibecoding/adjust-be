@@ -95,20 +95,25 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
 
     @Override
     public PageResult<AppUserAdjustmentListRespVO> getUserAdjustmentPublicPage(Long userId, AppUserAdjustmentPublicPageReqVO pageReqVO) {
-        // Publish list preview limit (FREE limited; VIP/SVIP unlimited)
-        int limit = vipBenefitService.resolveLimitValue(userId, BENEFIT_KEY_PUBLISH_LIST_PREVIEW_LIMIT);
-        // limit > 0 means preview limited; -1 means unlimited
-        if (limit > 0) {
-            // If user requests page > 1, return empty list and cap total to limit (avoid leaking full count)
-            if (pageReqVO != null && pageReqVO.getPageNo() != null && pageReqVO.getPageNo() > 1) {
-                return new PageResult<AppUserAdjustmentListRespVO>(Collections.emptyList(), (long) limit);
-            }
-            if (pageReqVO != null && pageReqVO.getPageSize() != null) {
-                pageReqVO.setPageSize(Math.min(pageReqVO.getPageSize(), limit));
-            } else if (pageReqVO != null) {
-                pageReqVO.setPageSize(limit);
-            }
-        }
+        /*
+         * VIP 权益校验：暂时关闭「发布调剂列表预览条数限制」。
+         * 原逻辑通过 benefit_key = publish_list_preview_limit 对 FREE/VIP/SVIP 做差异化限制。
+         *
+         * // Publish list preview limit (FREE limited; VIP/SVIP unlimited)
+         * int limit = vipBenefitService.resolveLimitValue(userId, BENEFIT_KEY_PUBLISH_LIST_PREVIEW_LIMIT);
+         * // limit > 0 means preview limited; -1 means unlimited
+         * if (limit > 0) {
+         *     // If user requests page > 1, return empty list and cap total to limit (avoid leaking full count)
+         *     if (pageReqVO != null && pageReqVO.getPageNo() != null && pageReqVO.getPageNo() > 1) {
+         *         return new PageResult<AppUserAdjustmentListRespVO>(Collections.emptyList(), (long) limit);
+         *     }
+         *     if (pageReqVO != null && pageReqVO.getPageSize() != null) {
+         *         pageReqVO.setPageSize(Math.min(pageReqVO.getPageSize(), limit));
+         *     } else if (pageReqVO != null) {
+         *         pageReqVO.setPageSize(limit);
+         *     }
+         * }
+         */
 
         PageResult<UserAdjustmentDO> pageResult = userAdjustmentMapper.selectPublicPage(pageReqVO);
         List<UserAdjustmentDO> records = pageResult.getList();
@@ -118,14 +123,7 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
         for (UserAdjustmentDO item : records) {
             list.add(toListResp(item, schoolLogoMap, majorLevel1NameMap));
         }
-        long total = pageResult.getTotal();
-        if (limit > 0) {
-            total = Math.min(total, (long) limit);
-            if (list.size() > limit) {
-                list = list.subList(0, limit);
-            }
-        }
-        return new PageResult<>(list, total);
+        return new PageResult<>(list, pageResult.getTotal());
     }
 
     @Override

@@ -115,7 +115,11 @@ public class UserAdjustmentApplyServiceImpl implements UserAdjustmentApplyServic
 
     @Override
     public PageResult<AppUserAdjustmentApplyMyItemRespVO> getMyAppliedPage(Long userId, AppUserAdjustmentApplyMyPageReqVO pageReqVO) {
-        vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_ADJUSTMENT_APPLY);
+        /*
+         * VIP 权益校验：暂时关闭「已申请的调剂」查看限制。
+         *
+         * vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_ADJUSTMENT_APPLY);
+         */
         PageResult<UserAdjustmentApplyDO> pageResult = userAdjustmentApplyMapper.selectMyAppliedPage(userId, pageReqVO);
         List<UserAdjustmentApplyDO> applies = pageResult.getList();
         if (applies == null || applies.isEmpty()) {

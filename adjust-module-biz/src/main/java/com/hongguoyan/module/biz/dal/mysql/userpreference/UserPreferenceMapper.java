@@ -57,4 +57,17 @@ public interface UserPreferenceMapper extends BaseMapperX<UserPreferenceDO> {
                 .eq(UserPreferenceDO::getDirectionId, directionId));
     }
 
+    /**
+     * Find any preference row for (userId, directionId) across all preferenceNo.
+     * Used to prevent duplicates across 1/2/3 preferences.
+     */
+    default UserPreferenceDO selectFirstByUserIdAndDirectionId(Long userId, Long directionId) {
+        return selectOne(new LambdaQueryWrapperX<UserPreferenceDO>()
+                .eq(UserPreferenceDO::getUserId, userId)
+                .eq(UserPreferenceDO::getDirectionId, directionId)
+                .orderByAsc(UserPreferenceDO::getPreferenceNo)
+                .orderByAsc(UserPreferenceDO::getId)
+                .last("LIMIT 1"));
+    }
+
 }

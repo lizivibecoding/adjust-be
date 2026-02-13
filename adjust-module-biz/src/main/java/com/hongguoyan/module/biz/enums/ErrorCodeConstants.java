@@ -42,6 +42,7 @@ public interface ErrorCodeConstants {
     ErrorCode USER_ADJUSTMENT_ALREADY_APPLIED = new ErrorCode(35, "已申请过该调剂");
     ErrorCode USER_PREFERENCE_NOT_EXISTS = new ErrorCode(36, "用户志愿不存在");
     ErrorCode USER_PREFERENCE_NO_INVALID = new ErrorCode(37, "志愿序号不合法");
+    ErrorCode USER_PREFERENCE_DUPLICATE = new ErrorCode(74, "该调剂方向已添加到其他志愿");
     ErrorCode USER_SUBSCRIPTION_NOT_EXISTS = new ErrorCode(38, "用户调剂订阅不存在");
     ErrorCode CANDIDATE_SCORE_TOTAL_NOT_EXISTS = new ErrorCode(39, "考生初试总分未填写");
     ErrorCode USER_PROFILE_NOT_EXISTS = new ErrorCode(40, "用户基础信息不存在");
