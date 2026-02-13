@@ -55,6 +55,10 @@ public class MajorDO extends BaseDO {
      * 学位类型(0=两者/不适用,1=学硕,2=专硕)
      */
     private Integer degreeType;
+    /**
+     * 学年/业务年（字典当前有效年）
+     */
+    private Integer year;
 
 
 }

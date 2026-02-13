@@ -51,6 +51,10 @@ public class SchoolDirectionDO extends BaseDO {
      * 方向名称
      */
     private String directionName;
+    /**
+     * 学年/业务年（字典当前有效年）
+     */
+    private Integer year;
 
 
 }

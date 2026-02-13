@@ -265,11 +265,3 @@ justauth:
     type: REDIS
     prefix: "social_auth_state:" # 缓存前缀，目前只对 Redis 缓存生效，默认 JUSTAUTH::STATE::
     timeout: 24h # 超时时长，目前只对 Redis 缓存生效，默认 3 分钟
-
-biz:
-  ai:
-    doubao:
-      base-url: https://ark.cn-beijing.volces.com/api
-      api-key: 793aff10-1637-47bc-b0f8-2d2c4b9c4578
-      default-model: doubao-seed-1-6-250615
-      default-timeout-ms: 60000

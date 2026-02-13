@@ -52,6 +52,10 @@ public class SchoolMajorDO extends BaseDO {
      */
     private Integer degreeType;
     /**
+     * 学年/业务年（字典当前有效年）
+     */
+    private Integer year;
+    /**
      * View count (used for legacy heat/display)
      */
     private Integer viewCount;

@@ -215,49 +215,13 @@ spring:
           enabled: false # TODO @芋艿：有 bug https://github.com/spring-projects/spring-ai/issues/4917 需要官方修复
 
 adjust:
+  active-year: 2026
   ai:
-    gemini: # 谷歌 Gemini
-      enable: true
-      api-key: AIzaSyAVoBxgoFvvte820vEQMma2LKBnC98bqMQ
-      model: gemini-2.5-flash
-    doubao: # 字节豆包
-      enable: true
-      api-key: 5c1b5747-26d2-4ebd-a4e0-dd0e8d8b4272
-      model: doubao-1-5-lite-32k-250115
-    hunyuan: # 腾讯混元
-      enable: true
-      api-key: sk-abc
-      model: hunyuan-turbo
-    siliconflow: # 硅基流动
-      enable: true
-      api-key: sk-epsakfenqnyzoxhmbucsxlhkdqlcbnimslqoivkshalvdozz
-      model: deepseek-ai/DeepSeek-R1-Distill-Qwen-7B
-    xinghuo: # 讯飞星火
-      enable: true
-      appKey: 75b161ed2aef4719b275d6e7f2a4d4cd
-      secretKey: YWYxYWI2MTA4ODI2NGZlYTQyNjAzZTcz
-      model: x1
-    baichuan: # 百川智能
-      enable: true
-      api-key: sk-abc
-      model: Baichuan4-Turbo
-    midjourney:
-      enable: true
-  #    base-url: https://api.holdai.top/mj-relax/mj
-      base-url: https://api.holdai.top/mj
-      api-key: sk-dZEPiVaNcT3FHhef51996bAa0bC74806BeAb620dA5Da10Bf
-      notify-url: http://java.nat300.top/admin-api/ai/image/midjourney/notify
-    suno:
-      enable: true
-  #    base-url: https://suno-55ishh05u-status2xxs-projects.vercel.app
-      base-url: http://127.0.0.1:3001
-    web-search:
-      enable: true
-      api-key: sk-40500e52840f4d24b956d0b1d80d9abe
-
---- #################### 芋道相关配置 ####################
-
-adjust:
+    doubao:
+      base-url: https://ark.cn-beijing.volces.com/api
+      api-key: 793aff10-1637-47bc-b0f8-2d2c4b9c4578
+      default-model: doubao-seed-1-6-250615
+      default-timeout-ms: 60000
   info:
     version: 1.0.0
     base-package: com.hongguoyan

@@ -9,15 +9,15 @@ import org.springframework.stereotype.Component;
  *
  * <p>Bind from:
  * <ul>
- *   <li>biz.ai.doubao.base-url</li>
- *   <li>biz.ai.doubao.api-key</li>
- *   <li>biz.ai.doubao.default-model</li>
- *   <li>biz.ai.doubao.default-timeout-ms</li>
+ *   <li>adjust.ai.doubao.base-url</li>
+ *   <li>adjust.ai.doubao.api-key</li>
+ *   <li>adjust.ai.doubao.default-model</li>
+ *   <li>adjust.ai.doubao.default-timeout-ms</li>
  * </ul>
  */
 @Data
 @Component
-@ConfigurationProperties(prefix = "biz.ai.doubao")
+@ConfigurationProperties(prefix = "adjust.ai.doubao")
 public class DoubaoProperties {
 
     /**

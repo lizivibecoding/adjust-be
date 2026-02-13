@@ -39,6 +39,10 @@ public class SchoolCollegeDO extends BaseDO {
      * 院系名称
      */
     private String name;
+    /**
+     * 学年/业务年（字典当前有效年）
+     */
+    private Integer year;
 
 
 }
