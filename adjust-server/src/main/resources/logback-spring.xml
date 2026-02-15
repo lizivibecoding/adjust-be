@@ -7,7 +7,7 @@
     -->
 
     <springProperty scope="context" name="APP_NAME" source="spring.application.name" defaultValue="adjust-server"/>
-    <springProperty scope="context" name="LOG_PATH" source="LOG_PATH" defaultValue="/app/adjust"/>
+    <springProperty scope="context" name="LOG_PATH" source="LOG_PATH" defaultValue="/app/logs"/>
 
     <!-- Patterns: console has colors, file is plain -->
     <property name="CONSOLE_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %highlight(%-5level) %cyan(%logger{50}:%L) - %msg%n"/>

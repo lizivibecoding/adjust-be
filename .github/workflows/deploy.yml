@@ -91,6 +91,6 @@ jobs:
               --restart unless-stopped \
               -e SPRING_PROFILES_ACTIVE=${{ vars.SPRING_PROFILE }} \
               -e JAVA_OPTS="${{ vars.JAVA_OPTS }}" \
-              -v ${{ vars.DEPLOY_PATH }}/logs:/app/adjust \
+              -v ${{ vars.DEPLOY_PATH }}/logs:/app/logs \
               -p 48080:48080 \
               adjust-server:${{ github.sha }}
