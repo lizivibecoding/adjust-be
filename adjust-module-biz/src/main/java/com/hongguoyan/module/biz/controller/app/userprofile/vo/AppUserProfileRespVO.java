@@ -112,17 +112,33 @@ public class AppUserProfileRespVO {
     @ExcelProperty("一志愿研究方向名称")
     private String targetDirectionName;
 
+    @Schema(description = "科目1名称")
+    @ExcelProperty("科目1名称")
+    private String subjectName1;
+
     @Schema(description = "科目1分数")
     @ExcelProperty("科目1分数")
     private BigDecimal subjectScore1;
+
+    @Schema(description = "科目2名称")
+    @ExcelProperty("科目2名称")
+    private String subjectName2;
 
     @Schema(description = "科目2分数")
     @ExcelProperty("科目2分数")
     private BigDecimal subjectScore2;
 
+    @Schema(description = "科目3名称")
+    @ExcelProperty("科目3名称")
+    private String subjectName3;
+
     @Schema(description = "科目3分数")
     @ExcelProperty("科目3分数")
     private BigDecimal subjectScore3;
+
+    @Schema(description = "科目4名称")
+    @ExcelProperty("科目4名称")
+    private String subjectName4;
 
     @Schema(description = "科目4分数")
     @ExcelProperty("科目4分数")

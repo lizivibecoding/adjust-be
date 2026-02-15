@@ -48,6 +48,8 @@ public interface ErrorCodeConstants {
     ErrorCode USER_PROFILE_NOT_EXISTS = new ErrorCode(40, "用户基础信息不存在");
     ErrorCode USER_NOT_QUALIFIED = new ErrorCode(41, "用户未过一志愿区域国家线");
     ErrorCode USER_PROFILE_EDIT_EXCEEDED = new ErrorCode(67, "除一志愿外信息仅允许修改一次");
+    ErrorCode USER_PROFILE_SUBJECT_SCORE12_EXCEEDED_100 = new ErrorCode(75, "科目一/科目二分数不能超过 100");
+    ErrorCode USER_PROFILE_SUBJECT_SCORE34_EXCEEDED_300 = new ErrorCode(76, "科目三/科目四分数不能超过 300");
 
     // ========== Doubao / Ark Responses ==========
     ErrorCode DOUBAO_CONFIG_MISSING = new ErrorCode(42, "AI 配置缺失");

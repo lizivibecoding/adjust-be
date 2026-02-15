@@ -1,6 +1,8 @@
 package com.hongguoyan.module.biz.service.userprofile;
 
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.hongguoyan.framework.common.exception.ErrorCode;
 import com.hongguoyan.framework.common.pojo.PageResult;
@@ -34,6 +36,8 @@ import org.springframework.validation.annotation.Validated;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.USER_PROFILE_EDIT_EXCEEDED;
+import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.USER_PROFILE_SUBJECT_SCORE12_EXCEEDED_100;
+import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.USER_PROFILE_SUBJECT_SCORE34_EXCEEDED_300;
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_MAJOR_CATEGORY_OPEN;
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.REF_TYPE_MAJOR_CATEGORY_OPEN;
 
@@ -109,6 +113,7 @@ public class UserProfileServiceImpl implements UserProfileService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long saveUserProfileByUserId(Long userId, AppUserProfileSaveReqVO reqVO) {
+        validateSubjectScores(reqVO);
         UserProfileDO existing = getUserProfileByUserId(userId);
         UserProfileDO toSave = buildToSave(userId, reqVO);
 
@@ -150,6 +155,22 @@ public class UserProfileServiceImpl implements UserProfileService {
         // open major category (best-effort, idempotent)
         openMajorCategory(userId, toSave);
         return existing.getId();
+    }
+
+    private void validateSubjectScores(AppUserProfileSaveReqVO reqVO) {
+        if (reqVO == null) {
+            return;
+        }
+        // 科目一/二 上限 100
+        if ((reqVO.getSubjectScore1() != null && reqVO.getSubjectScore1().compareTo(new java.math.BigDecimal("100")) > 0)
+                || (reqVO.getSubjectScore2() != null && reqVO.getSubjectScore2().compareTo(new java.math.BigDecimal("100")) > 0)) {
+            throw exception(USER_PROFILE_SUBJECT_SCORE12_EXCEEDED_100);
+        }
+        // 科目三/四 上限 300
+        if ((reqVO.getSubjectScore3() != null && reqVO.getSubjectScore3().compareTo(new java.math.BigDecimal("300")) > 0)
+                || (reqVO.getSubjectScore4() != null && reqVO.getSubjectScore4().compareTo(new java.math.BigDecimal("300")) > 0)) {
+            throw exception(USER_PROFILE_SUBJECT_SCORE34_EXCEEDED_300);
+        }
     }
 
     /**
@@ -274,18 +295,12 @@ public class UserProfileServiceImpl implements UserProfileService {
             toSave.setTargetDegreeType(0);
         }
 
-        // subjects: only keep scores, clear codes/names
-        toSave.setSubjectCode1("");
-        toSave.setSubjectName1("");
+        // subjects: snapshot from direction.subjects JSON; each sx is an array, take the first item
+        fillSubjectsFromDirectionSubjects(toSave, direction.getSubjects());
+
         toSave.setSubjectScore1(reqVO.getSubjectScore1());
-        toSave.setSubjectCode2("");
-        toSave.setSubjectName2("");
         toSave.setSubjectScore2(reqVO.getSubjectScore2());
-        toSave.setSubjectCode3("");
-        toSave.setSubjectName3("");
         toSave.setSubjectScore3(reqVO.getSubjectScore3());
-        toSave.setSubjectCode4("");
-        toSave.setSubjectName4("");
         toSave.setSubjectScore4(reqVO.getSubjectScore4());
         toSave.setScoreTotal(reqVO.getScoreTotal());
 
@@ -314,6 +329,67 @@ public class UserProfileServiceImpl implements UserProfileService {
 
         toSave.setSelfAssessedScore(reqVO.getSelfAssessedScore() != null ? reqVO.getSelfAssessedScore() : 0);
         return toSave;
+    }
+
+    private void fillSubjectsFromDirectionSubjects(UserProfileDO toSave, String subjectsJson) {
+        if (toSave == null) {
+            return;
+        }
+        // Default to empty to avoid stale values
+        toSave.setSubjectCode1("");
+        toSave.setSubjectName1("");
+        toSave.setSubjectCode2("");
+        toSave.setSubjectName2("");
+        toSave.setSubjectCode3("");
+        toSave.setSubjectName3("");
+        toSave.setSubjectCode4("");
+        toSave.setSubjectName4("");
+
+        if (StrUtil.isBlank(subjectsJson)) {
+            return;
+        }
+        try {
+            JSONObject obj = JSONUtil.parseObj(subjectsJson);
+            fillOneSubject(toSave, 1, obj.getJSONArray("s1"));
+            fillOneSubject(toSave, 2, obj.getJSONArray("s2"));
+            fillOneSubject(toSave, 3, obj.getJSONArray("s3"));
+            fillOneSubject(toSave, 4, obj.getJSONArray("s4"));
+        } catch (Exception ignore) {
+            // best-effort: if parsing fails, keep empty names/codes
+        }
+    }
+
+    private void fillOneSubject(UserProfileDO toSave, int no, JSONArray arr) {
+        if (toSave == null || arr == null || arr.isEmpty()) {
+            return;
+        }
+        Object first = arr.get(0);
+        if (!(first instanceof JSONObject)) {
+            return;
+        }
+        JSONObject item = (JSONObject) first;
+        String code = StrUtil.blankToDefault(item.getStr("code"), "");
+        String name = StrUtil.blankToDefault(item.getStr("name"), "");
+        switch (no) {
+            case 1 -> {
+                toSave.setSubjectCode1(code);
+                toSave.setSubjectName1(name);
+            }
+            case 2 -> {
+                toSave.setSubjectCode2(code);
+                toSave.setSubjectName2(name);
+            }
+            case 3 -> {
+                toSave.setSubjectCode3(code);
+                toSave.setSubjectName3(name);
+            }
+            case 4 -> {
+                toSave.setSubjectCode4(code);
+                toSave.setSubjectName4(name);
+            }
+            default -> {
+            }
+        }
     }
 
 }
