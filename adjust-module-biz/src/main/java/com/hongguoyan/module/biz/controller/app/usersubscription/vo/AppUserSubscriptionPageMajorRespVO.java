@@ -12,6 +12,9 @@ public class AppUserSubscriptionPageMajorRespVO {
     @Schema(description = "学校ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "5")
     private Long schoolId;
 
+    @Schema(description = "学院ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "95")
+    private Long collegeId;
+
     @Schema(description = "专业ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "2810")
     private Long majorId;
 
@@ -23,6 +26,12 @@ public class AppUserSubscriptionPageMajorRespVO {
 
     @Schema(description = "查看用调剂ID", example = "1024")
     private Long adjustmentId;
+
+    @Schema(description = "调剂年份", requiredMode = Schema.RequiredMode.REQUIRED, example = "2025")
+    private Integer year;
+
+    @Schema(description = "学习方式：1-全日制 2-非全日制", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+    private Integer studyMode;
 
     @Schema(description = "更新时间")
     private LocalDateTime updateTime;

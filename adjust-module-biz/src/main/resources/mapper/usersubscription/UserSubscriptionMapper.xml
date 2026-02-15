@@ -43,7 +43,7 @@
         LEFT JOIN biz_major m3 ON m3.id = us.major_id
         LEFT JOIN biz_major m2 ON m2.code = m3.parent_code AND m2.level = 2
         LEFT JOIN biz_major m1 ON m1.code = m2.parent_code AND m1.level = 1
-        LEFT JOIN biz_adjustment a ON a.school_id = us.school_id AND a.major_id = us.major_id
+        LEFT JOIN biz_adjustment a ON a.school_id = us.school_id AND a.college_id = us.college_id AND a.major_id = us.major_id
         <include refid="BaseWhere" />
         GROUP BY
             s.id, s.school_name, s.school_logo, s.province_name, s.is_985, s.is_211, s.is_syl
@@ -70,7 +70,7 @@
         LEFT JOIN biz_major m3 ON m3.id = us.major_id
         LEFT JOIN biz_major m2 ON m2.code = m3.parent_code AND m2.level = 2
         LEFT JOIN biz_major m1 ON m1.code = m2.parent_code AND m1.level = 1
-        LEFT JOIN biz_adjustment a ON a.school_id = us.school_id AND a.major_id = us.major_id
+        LEFT JOIN biz_adjustment a ON a.school_id = us.school_id AND a.college_id = us.college_id AND a.major_id = us.major_id
         <include refid="BaseWhere" />
         GROUP BY
             s.id, s.school_name, s.school_logo, s.province_name, s.is_985, s.is_211, s.is_syl
@@ -84,6 +84,7 @@
             resultType="com.hongguoyan.module.biz.controller.app.usersubscription.vo.AppUserSubscriptionPageMajorRespVO">
         SELECT
             us.school_id AS schoolId,
+            us.college_id AS collegeId,
             us.major_id AS majorId,
             m3.code AS majorCode,
             m3.name AS majorName,
@@ -91,6 +92,7 @@
                 SELECT a1.id
                 FROM biz_adjustment a1
                 WHERE a1.school_id = us.school_id
+                  AND a1.college_id = us.college_id
                   AND a1.major_id = us.major_id
                 ORDER BY a1.update_time DESC, a1.id DESC
                 LIMIT 1
@@ -99,13 +101,33 @@
                 SELECT MAX(a2.update_time)
                 FROM biz_adjustment a2
                 WHERE a2.school_id = us.school_id
+                  AND a2.college_id = us.college_id
                   AND a2.major_id = us.major_id
             ) AS updateTime,
+            (
+                SELECT a3.year
+                FROM biz_adjustment a3
+                WHERE a3.school_id = us.school_id
+                  AND a3.college_id = us.college_id
+                  AND a3.major_id = us.major_id
+                ORDER BY a3.update_time DESC, a3.id DESC
+                LIMIT 1
+            ) AS year,
+            (
+                SELECT a4.study_mode
+                FROM biz_adjustment a4
+                WHERE a4.school_id = us.school_id
+                  AND a4.college_id = us.college_id
+                  AND a4.major_id = us.major_id
+                ORDER BY a4.update_time DESC, a4.id DESC
+                LIMIT 1
+            ) AS studyMode,
             CASE
                 WHEN IFNULL((
                     SELECT MAX(a2.update_time)
                     FROM biz_adjustment a2
                     WHERE a2.school_id = us.school_id
+                      AND a2.college_id = us.college_id
                       AND a2.major_id = us.major_id
                 ), '1970-01-01 00:00:00') > COALESCE(us.last_read_time, us.create_time) THEN 1
                 ELSE 0
@@ -135,6 +157,7 @@
                     SELECT MAX(a2.update_time)
                     FROM biz_adjustment a2
                     WHERE a2.school_id = us.school_id
+                      AND a2.college_id = us.college_id
                       AND a2.major_id = us.major_id
                 ) &gt;= DATE_SUB(NOW(), INTERVAL #{reqVO.updateDays} DAY)
             </if>
@@ -148,6 +171,7 @@
                        SELECT 1
                        FROM biz_user_subscription us
                        JOIN biz_adjustment a ON a.school_id = us.school_id
+                           AND a.college_id = us.college_id
                            AND a.major_id = us.major_id
                        WHERE us.user_id = #{userId}
                          AND a.update_time > COALESCE(us.last_read_time, us.create_time)
