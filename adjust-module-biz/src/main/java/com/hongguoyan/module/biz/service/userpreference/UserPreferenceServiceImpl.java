@@ -15,7 +15,6 @@ import com.hongguoyan.module.biz.dal.mysql.userpreference.UserPreferenceMapper;
 import com.hongguoyan.module.biz.dal.mysql.schooldirection.SchoolDirectionMapper;
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
 import com.hongguoyan.module.biz.dal.mysql.schoolcollege.SchoolCollegeMapper;
-import com.hongguoyan.module.biz.dal.mysql.schoolmajor.SchoolMajorMapper;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 
@@ -31,8 +30,6 @@ import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.B
 @Service
 @Validated
 public class UserPreferenceServiceImpl implements UserPreferenceService {
-
-    private static final long HOT_SCORE_PREFERENCE_DELTA = 10L;
 
     @Resource
     private UserPreferenceMapper userPreferenceMapper;
@@ -120,9 +117,6 @@ public class UserPreferenceServiceImpl implements UserPreferenceService {
 
         if (existing == null) {
             userPreferenceMapper.insert(toSave);
-            // hot_score +10 for new preference
-            schoolMajorMapper.incrHotScoreByBizKey(adjustment.getSchoolId(), adjustment.getCollegeId(),
-                    adjustment.getMajorId(), HOT_SCORE_PREFERENCE_DELTA);
         } else {
             userPreferenceMapper.updateById(toSave);
         }
@@ -145,9 +139,6 @@ public class UserPreferenceServiceImpl implements UserPreferenceService {
 
     @Resource
     private SchoolCollegeMapper schoolCollegeMapper;
-
-    @Resource
-    private SchoolMajorMapper schoolMajorMapper;
 
     private void validatePreferenceNo(Integer preferenceNo) {
         if (preferenceNo == null || preferenceNo < 1 || preferenceNo > 3) {

@@ -163,5 +163,10 @@ public class AdjustmentDO extends BaseDO {
      */
     private Integer viewCount;
 
+    /**
+     * 热度累计分（点击/订阅等累计）
+     */
+    private Long hotScore;
+
 
 }

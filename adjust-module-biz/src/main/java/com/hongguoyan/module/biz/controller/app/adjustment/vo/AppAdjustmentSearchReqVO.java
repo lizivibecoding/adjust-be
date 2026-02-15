@@ -56,6 +56,9 @@ public class AppAdjustmentSearchReqVO extends PageParam {
     @Schema(description = "目标专业二级 code(多选)")
     private List<String> level2MajorCodes;
 
+    @Schema(description = "目标专业二级 ID（兼容旧客户端单选）", example = "249")
+    private Long level2MajorId;
+
     @Schema(description = "是否985")
     private Boolean is985;
 

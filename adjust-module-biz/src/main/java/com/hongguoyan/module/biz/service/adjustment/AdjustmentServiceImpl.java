@@ -41,7 +41,6 @@ import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.RecruitSnapshotRowDTO;
 import com.hongguoyan.module.biz.dal.mysql.area.AreaMapper;
 import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
-import com.hongguoyan.module.biz.dal.mysql.schoolmajor.SchoolMajorMapper;
 import com.hongguoyan.module.biz.framework.config.AdjustProperties;
 import com.hongguoyan.module.biz.service.userprofile.UserProfileService;
 import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
@@ -81,8 +80,6 @@ public class AdjustmentServiceImpl implements AdjustmentService {
     private MajorMapper majorMapper;
     @Resource
     private AreaMapper areaMapper;
-    @Resource
-    private SchoolMajorMapper schoolMajorMapper;
     @Resource
     private VipBenefitService vipBenefitService;
     @Resource
@@ -202,6 +199,14 @@ public class AdjustmentServiceImpl implements AdjustmentService {
         }
         ResolvedMajorCode resolved = resolveMajorCodeForSearch(reqVO != null ? reqVO.getMajorCode() : null);
         if (reqVO != null) {
+            // Compat: old client uses level2MajorId (single) instead of level2MajorCodes (list of code)
+            if ((reqVO.getLevel2MajorCodes() == null || reqVO.getLevel2MajorCodes().isEmpty())
+                    && reqVO.getLevel2MajorId() != null) {
+                MajorDO level2 = majorMapper.selectById(reqVO.getLevel2MajorId());
+                if (level2 != null && StrUtil.isNotBlank(level2.getCode())) {
+                    reqVO.setLevel2MajorCodes(List.of(level2.getCode().trim()));
+                }
+            }
             reqVO.setResolvedMajorCodePrefix(resolved.prefix());
             reqVO.setResolvedMajorCodeExact(resolved.exact());
             ResolvedMajorCodeList resolvedLevel2 = resolveMajorCodesForSearch(reqVO.getLevel2MajorCodes());
@@ -515,13 +520,15 @@ public class AdjustmentServiceImpl implements AdjustmentService {
             throw exception(ADJUSTMENT_NOT_EXISTS);
         }
 
-        // best-effort: detail view should +1 view_count and +1 hot_score for the major
+        // best-effort: detail view should +1 view_count and +1 hot_score for ONE representative adjustment row
         try {
-            schoolMajorMapper.incrViewAndHotByBizKey(reqVO.getSchoolId(), reqVO.getCollegeId(), reqVO.getMajorId(),
-                    1, 1L);
+            Long representativeId = pickRepresentativeAdjustmentId(list);
+            if (representativeId != null) {
+                adjustmentMapper.incrViewAndHotById(representativeId, 1, 1L);
+            }
         } catch (Exception e) {
-            log.warn("Failed to incr view/hot score. schoolId={}, collegeId={}, majorId={}",
-                    reqVO.getSchoolId(), reqVO.getCollegeId(), reqVO.getMajorId(), e);
+            log.warn("Failed to incr view/hot score. schoolId={}, collegeId={}, majorId={}, year={}, studyMode={}",
+                    reqVO.getSchoolId(), reqVO.getCollegeId(), reqVO.getMajorId(), reqVO.getYear(), reqVO.getStudyMode(), e);
         }
 
         // 按 directionCode 从小到大排序（兼容 00/01/02 以及 1/2/10）
@@ -577,6 +584,26 @@ public class AdjustmentServiceImpl implements AdjustmentService {
         }
         respVO.setDirections(directions);
         return respVO;
+    }
+
+    private Long pickRepresentativeAdjustmentId(List<AdjustmentDO> list) {
+        if (list == null || list.isEmpty()) {
+            return null;
+        }
+        Long minId = null;
+        for (AdjustmentDO item : list) {
+            if (item == null || item.getId() == null) {
+                continue;
+            }
+            // prefer "00" direction
+            if ("00".equals(item.getDirectionCode())) {
+                return item.getId();
+            }
+            if (minId == null || item.getId() < minId) {
+                minId = item.getId();
+            }
+        }
+        return minId;
     }
 
     @Override

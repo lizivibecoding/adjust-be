@@ -11,6 +11,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.*;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.BizMajorKeyDTO;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.RecruitSnapshotRowDTO;
@@ -130,5 +131,29 @@ public interface AdjustmentMapper extends BaseMapperX<AdjustmentDO> {
 
     List<AppSchoolAdjustmentRespVO> selectSchoolAdjustmentPage(IPage<AppSchoolAdjustmentRespVO> page,
                                                                @Param("reqVO") AppSchoolAdjustmentPageReqVO reqVO);
+
+    /**
+     * Increment view_count and hot_score by adjustment id.
+     */
+    @Update("""
+            UPDATE biz_adjustment
+            SET view_count = COALESCE(view_count, 0) + #{viewDelta},
+                hot_score = COALESCE(hot_score, 0) + #{hotDelta}
+            WHERE id = #{id}
+            """)
+    int incrViewAndHotById(@Param("id") Long id,
+                           @Param("viewDelta") int viewDelta,
+                           @Param("hotDelta") long hotDelta);
+
+    /**
+     * Increment hot_score by adjustment id.
+     */
+    @Update("""
+            UPDATE biz_adjustment
+            SET hot_score = COALESCE(hot_score, 0) + #{delta}
+            WHERE id = #{id}
+            """)
+    int incrHotScoreById(@Param("id") Long id,
+                         @Param("delta") long delta);
 
 }

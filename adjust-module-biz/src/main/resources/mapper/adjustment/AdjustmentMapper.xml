@@ -171,25 +171,11 @@
             a.study_mode AS studyMode,
             SUM(IFNULL(a.adjust_count, 0)) AS adjustCount,
             MAX(a.publish_time) AS updateTime,
-            MAX(COALESCE(sm.view_count, 0)) AS viewCount,
-            MAX(COALESCE(sm.hot_score, 0)) AS hotScore,
+            MAX(COALESCE(a.view_count, 0)) AS viewCount,
+            MAX(COALESCE(a.hot_score, 0)) AS hotScore,
             MAX(s.province_name) AS provinceName
         FROM biz_adjustment a
         LEFT JOIN biz_school s ON s.id = a.school_id
-        LEFT JOIN (
-            SELECT sm1.school_id, sm1.college_id, sm1.major_id, sm1.view_count, sm1.hot_score
-            FROM biz_school_major sm1
-            JOIN (
-                SELECT school_id, college_id, major_id, MAX(year) AS max_year
-                FROM biz_school_major
-                GROUP BY school_id, college_id, major_id
-            ) pick ON pick.school_id = sm1.school_id
-                AND pick.college_id = sm1.college_id
-                AND pick.major_id = sm1.major_id
-                AND pick.max_year = sm1.year
-        ) sm ON sm.school_id = a.school_id
-            AND sm.college_id = a.college_id
-            AND sm.major_id = a.major_id
         <include refid="SearchWhere" />
         GROUP BY a.school_id, a.college_id, a.major_id, a.year, a.study_mode
         ORDER BY hotScore DESC, updateTime DESC
@@ -214,25 +200,11 @@
                 a.study_mode AS studyMode,
                 SUM(IFNULL(a.adjust_count, 0)) AS adjustCount,
                 MAX(a.publish_time) AS updateTime,
-                MAX(COALESCE(sm.view_count, 0)) AS viewCount,
-                MAX(COALESCE(sm.hot_score, 0)) AS hotScore,
+                MAX(COALESCE(a.view_count, 0)) AS viewCount,
+                MAX(COALESCE(a.hot_score, 0)) AS hotScore,
                 MAX(s.province_name) AS provinceName
             FROM biz_adjustment a
             LEFT JOIN biz_school s ON s.id = a.school_id
-            LEFT JOIN (
-                SELECT sm1.school_id, sm1.college_id, sm1.major_id, sm1.view_count, sm1.hot_score
-                FROM biz_school_major sm1
-                JOIN (
-                    SELECT school_id, college_id, major_id, MAX(year) AS max_year
-                    FROM biz_school_major
-                    GROUP BY school_id, college_id, major_id
-                ) pick ON pick.school_id = sm1.school_id
-                    AND pick.college_id = sm1.college_id
-                    AND pick.major_id = sm1.major_id
-                    AND pick.max_year = sm1.year
-            ) sm ON sm.school_id = a.school_id
-                AND sm.college_id = a.college_id
-                AND sm.major_id = a.major_id
             <include refid="HotRankingWhere" />
             GROUP BY a.school_id, a.college_id, a.major_id, a.year, a.study_mode
             ORDER BY hotScore DESC, updateTime DESC

@@ -17,7 +17,6 @@ import com.hongguoyan.module.biz.controller.app.usersubscription.vo.AppUserSubsc
 
 import com.hongguoyan.module.biz.dal.dataobject.adjustment.AdjustmentDO;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.AdjustmentMapper;
-import com.hongguoyan.module.biz.dal.mysql.schoolmajor.SchoolMajorMapper;
 import com.hongguoyan.module.biz.dal.mysql.usersubscription.UserSubscriptionMapper;
 import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 
@@ -34,19 +33,18 @@ import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.B
 @Validated
 public class UserSubscriptionServiceImpl implements UserSubscriptionService {
 
-    private static final long HOT_SCORE_SUBSCRIBE_DELTA = 50L;
+    private static final long HOT_SCORE_SUBSCRIBE_DELTA = 5L;
 
     @Resource
     private UserSubscriptionMapper userSubscriptionMapper;
-    @Resource
-    private SchoolMajorMapper schoolMajorMapper;
     @Resource
     private VipBenefitService vipBenefitService;
 
     @Override
     public void subscribe(Long userId, AppUserSubscriptionSubscribeReqVO reqVO) {
         vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_SUBSCRIPTION);
-        AdjustmentDO adjustment = adjustmentMapper.selectById(reqVO.getAdjustmentId());
+        Long adjustmentId = reqVO != null ? reqVO.getAdjustmentId() : null;
+        AdjustmentDO adjustment = adjustmentMapper.selectById(adjustmentId);
         if (adjustment == null) {
             throw exception(ADJUSTMENT_NOT_EXISTS);
         }
@@ -69,8 +67,8 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
             // New subscription is treated as read at subscribe time
             toCreate.setLastReadTime(now);
             userSubscriptionMapper.insert(toCreate);
-            // hot_score +50 for new subscription
-            schoolMajorMapper.incrHotScoreByBizKey(schoolId, collegeId, majorId, HOT_SCORE_SUBSCRIBE_DELTA);
+            // hot_score +5 for new subscription (only from subscription behavior)
+            adjustmentMapper.incrHotScoreById(adjustmentId, HOT_SCORE_SUBSCRIBE_DELTA);
             return;
         }
 
