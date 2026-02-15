@@ -12,7 +12,10 @@ import lombok.ToString;
 @ToString(callSuper = true)
 public class RecommendRulePageReqVO extends PageParam {
 
-    @Schema(description = "专业代码", example = "081200")
+    @Schema(description = "专业代码 (模糊搜索)", example = "0812")
     private String majorCode;
+
+    @Schema(description = "桶名称 (模糊搜索)", example = "计算机")
+    private String bucketName;
 
 }

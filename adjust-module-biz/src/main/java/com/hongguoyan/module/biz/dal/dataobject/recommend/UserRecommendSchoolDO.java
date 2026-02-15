@@ -110,6 +110,21 @@ public class UserRecommendSchoolDO extends BaseDO {
     private BigDecimal simC;
 
     /**
+     * 用户基础分数 (UserScoreB)
+     */
+    private BigDecimal userScoreB;
+
+    /**
+     * 用户加分 (MaxC)
+     */
+    private BigDecimal maxC;
+
+    /**
+     * 学校分数 (SchoolScoreA)
+     */
+    private BigDecimal schoolScoreA;
+
+    /**
      * 推荐分类: 1=冲刺(<=0.4), 2=稳妥(<=0.8), 3=保底(<=1.0)
      */
     private Integer category;

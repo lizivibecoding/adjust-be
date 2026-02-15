@@ -11,8 +11,11 @@ public class RecommendRuleSaveReqVO {
     @Schema(description = "ID", example = "1")
     private Long id;
 
-    @Schema(description = "专业代码 (000000 代表默认/兜底)", example = "081200")
-    private String majorCode;
+    @Schema(description = "专业代码列表 (逗号分隔，如 081200,081201；000000 代表默认/兜底)", example = "081200,081201")
+    private String majorCodes;
+
+    @Schema(description = "桶名称 (分组名称，如 计算机类)", example = "计算机类")
+    private String bucketName;
 
     // --- B值权重 ---
     @Schema(description = "B1权重 (院校背景) 默认 0.7")

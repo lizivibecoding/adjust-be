@@ -41,7 +41,7 @@ public interface UserCustomReportMapper extends BaseMapperX<UserCustomReportDO> 
         return selectList(new LambdaQueryWrapperX<UserCustomReportDO>()
                 .select(UserCustomReportDO::getId, UserCustomReportDO::getUserId,
                         UserCustomReportDO::getReportNo, UserCustomReportDO::getReportName,
-                        UserCustomReportDO::getCreateTime)
+                        UserCustomReportDO::getCreateTime,UserCustomReportDO::getGenerateStatus)
                 .eq(UserCustomReportDO::getUserId, userId)
                 .orderByDesc(UserCustomReportDO::getReportNo));
     }

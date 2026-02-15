@@ -63,7 +63,6 @@ public class AppUserProfileSaveReqVO {
     private BigDecimal scoreTotal;
 
     @Schema(description = "自我介绍/个人优势", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotEmpty(message = "自我介绍/个人优势不能为空")
     private String selfIntroduction;
 
     @Schema(description = "论文数量(一作/二作合计或按你们口径)", example = "870")

@@ -29,9 +29,14 @@ public class RecommendRuleDO extends BaseDO {
     private Long id;
 
     /**
-     * 专业代码 (000000 代表默认/兜底)
+     * 专业代码列表 (逗号分隔，如 "030100,030200,030300"；"000000" 代表默认/兜底)
      */
-    private String majorCode;
+    private String majorCodes;
+
+    /**
+     * 桶名称 (分组名称，如 "法学类"、"计算机类")
+     */
+    private String bucketName;
 
     // --- B值权重 ---
     /**

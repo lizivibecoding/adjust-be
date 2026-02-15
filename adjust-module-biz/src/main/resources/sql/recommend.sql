@@ -27,6 +27,13 @@ CREATE TABLE `biz_user_recommend_adjustment` (
   KEY `idx_adjustment_id` (`adjustment_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='推荐结果表';
 
+ALTER TABLE `biz_recommend_rule` CHANGE `major_code` `major_codes` text DEFAULT NULL COMMENT '专业代码列表(逗号分隔)';
+ALTER TABLE `biz_recommend_rule` ADD COLUMN `bucket_name` varchar(128) DEFAULT NULL COMMENT '桶名称' AFTER `major_codes`;
+
+ALTER TABLE `biz_user_recommend_adjustment` ADD COLUMN `user_score_b` decimal(10,4) DEFAULT NULL COMMENT '用户基础分数' AFTER `sim_c`;
+ALTER TABLE `biz_user_recommend_adjustment` ADD COLUMN `max_c` decimal(10,4) DEFAULT NULL COMMENT '用户加分' AFTER `user_score_b`;
+ALTER TABLE `biz_user_recommend_adjustment` ADD COLUMN `school_score_a` decimal(10,4) DEFAULT NULL COMMENT '学校分数' AFTER `max_c`;
+
 ALTER TABLE `biz_user_custom_report` ADD COLUMN `source_profile_json` text DEFAULT NULL COMMENT '用户基础信息快照';
 ALTER TABLE `biz_user_custom_report` ADD COLUMN `source_intention_json` text DEFAULT NULL COMMENT '用户意向信息快照';
 ALTER TABLE `biz_user_custom_report` ADD COLUMN `report_pdf_url` varchar(512) DEFAULT NULL COMMENT '报告PDF文件URL';
