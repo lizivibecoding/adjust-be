@@ -8,6 +8,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import com.hongguoyan.module.biz.controller.app.school.vo.*;
+import com.hongguoyan.module.biz.controller.admin.school.vo.SchoolPageReqVO;
+import com.hongguoyan.module.biz.controller.admin.school.vo.SchoolDetailRespVO;
+import com.hongguoyan.module.biz.controller.admin.school.vo.SchoolRespVO;
+import com.hongguoyan.module.biz.controller.admin.school.vo.SchoolUpdateReqVO;
 import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.framework.common.pojo.PageParam;
@@ -17,6 +21,7 @@ import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import cn.hutool.core.util.StrUtil;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
+import com.hongguoyan.module.infra.api.file.FileApi;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertList;
@@ -34,6 +39,8 @@ public class SchoolServiceImpl implements SchoolService {
 
     @Resource
     private SchoolMapper schoolMapper;
+    @Resource
+    private FileApi fileApi;
 
     @Override
     public Long createSchool(AppSchoolSaveReqVO createReqVO) {
@@ -92,6 +99,59 @@ public class SchoolServiceImpl implements SchoolService {
     @Override
     public PageResult<SchoolDO> getSchoolPage(AppSchoolPageReqVO pageReqVO) {
         return schoolMapper.selectPage(pageReqVO);
+    }
+
+    @Override
+    public PageResult<SchoolRespVO> getSchoolAdminPage(SchoolPageReqVO pageReqVO) {
+        PageResult<SchoolDO> pageResult = schoolMapper.selectPage(pageReqVO);
+        if (pageResult == null || pageResult.getList() == null || pageResult.getList().isEmpty()) {
+            return new PageResult<>(Collections.emptyList(), pageResult != null ? pageResult.getTotal() : 0);
+        }
+
+        List<SchoolRespVO> list = new ArrayList<>(pageResult.getList().size());
+        for (SchoolDO school : pageResult.getList()) {
+            if (school == null) {
+                continue;
+            }
+            SchoolRespVO vo = BeanUtils.toBean(school, SchoolRespVO.class);
+            // Build static URL from stored path/key (no presign)
+            vo.setSchoolLogoUrl(fileApi.buildStaticUrl(school.getSchoolLogo()));
+            list.add(vo);
+        }
+        return new PageResult<>(list, pageResult.getTotal());
+    }
+
+    @Override
+    public SchoolDetailRespVO getSchoolAdmin(Long id) {
+        SchoolDO school = schoolMapper.selectById(id);
+        if (school == null) {
+            throw exception(SCHOOL_NOT_EXISTS);
+        }
+        SchoolDetailRespVO vo = BeanUtils.toBean(school, SchoolDetailRespVO.class);
+        vo.setSchoolLogoUrl(fileApi.buildStaticUrl(school.getSchoolLogo()));
+        return vo;
+    }
+
+    @Override
+    public void updateSchoolAdmin(SchoolUpdateReqVO updateReqVO) {
+        validateSchoolExists(updateReqVO.getId());
+        SchoolDO update = new SchoolDO();
+        update.setId(updateReqVO.getId());
+        update.setSchoolLogo(updateReqVO.getSchoolLogo());
+        update.setSchoolType(updateReqVO.getSchoolType());
+        update.setIsAcademy(updateReqVO.getIsAcademy());
+        update.setIs985(updateReqVO.getIs985());
+        update.setIs211(updateReqVO.getIs211());
+        update.setIsSyl(updateReqVO.getIsSyl());
+        update.setIsOrdinary(updateReqVO.getIsOrdinary());
+        update.setIsZihuaxian(updateReqVO.getIsZihuaxian());
+        update.setIntro(updateReqVO.getIntro());
+        update.setSchoolAddress(updateReqVO.getSchoolAddress());
+        update.setCreateYear(updateReqVO.getCreateYear());
+        update.setSchoolSite(updateReqVO.getSchoolSite());
+        update.setSchoolPhone(updateReqVO.getSchoolPhone());
+        update.setSchoolEmail(updateReqVO.getSchoolEmail());
+        schoolMapper.updateById(update);
     }
 
     @Override

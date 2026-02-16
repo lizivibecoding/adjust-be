@@ -29,4 +29,17 @@ public interface SchoolDirectionMapper extends BaseMapperX<SchoolDirectionDO> {
                 .orderByDesc(SchoolDirectionDO::getId));
     }
 
+    default List<SchoolDirectionDO> selectListByBizKey(Long schoolId, Long collegeId, Long majorId, Integer year) {
+        LambdaQueryWrapperX<SchoolDirectionDO> qw = new LambdaQueryWrapperX<>();
+        qw.select(SchoolDirectionDO::getId, SchoolDirectionDO::getSchoolId, SchoolDirectionDO::getCollegeId, SchoolDirectionDO::getMajorId,
+                SchoolDirectionDO::getRetiredPlan, SchoolDirectionDO::getShaoGuPlan, SchoolDirectionDO::getStudyMode,
+                SchoolDirectionDO::getDirectionCode, SchoolDirectionDO::getDirectionName, SchoolDirectionDO::getSubjects);
+        qw.eq(SchoolDirectionDO::getSchoolId, schoolId);
+        qw.eq(SchoolDirectionDO::getCollegeId, collegeId);
+        qw.eq(SchoolDirectionDO::getMajorId, majorId);
+        qw.eqIfPresent(SchoolDirectionDO::getYear, year);
+        qw.orderByAsc(SchoolDirectionDO::getId);
+        return selectList(qw);
+    }
+
 }

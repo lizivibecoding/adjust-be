@@ -59,4 +59,13 @@ public interface SchoolCollegeService {
      */
     PageResult<SchoolCollegeDO> getSchoolCollegePage(AppSchoolCollegePageReqVO pageReqVO);
 
+    /**
+     * 获得学院列表（按学校 + 年份）
+     *
+     * @param schoolId 学校ID
+     * @param year 年份（为空时使用有效年）
+     * @return 列表
+     */
+    List<SchoolCollegeDO> getSchoolCollegeList(Long schoolId, Integer year);
+
 }

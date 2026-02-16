@@ -17,6 +17,12 @@ import com.hongguoyan.framework.common.util.object.BeanUtils;
 import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.hongguoyan.framework.common.exception.ErrorCode;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.hongguoyan.module.biz.controller.admin.major.vo.MajorUpdateNameReqVO;
+import com.hongguoyan.module.biz.dal.dataobject.adjustment.AdjustmentDO;
+import com.hongguoyan.module.biz.dal.dataobject.adjustmentadmit.AdjustmentAdmitDO;
+import com.hongguoyan.module.biz.dal.mysql.adjustment.AdjustmentMapper;
+import com.hongguoyan.module.biz.dal.mysql.adjustmentadmit.AdjustmentAdmitMapper;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertList;
@@ -37,6 +43,10 @@ public class MajorServiceImpl implements MajorService {
     private MajorMapper majorMapper;
     @Resource
     private AdjustProperties adjustProperties;
+    @Resource
+    private AdjustmentMapper adjustmentMapper;
+    @Resource
+    private AdjustmentAdmitMapper adjustmentAdmitMapper;
 
     @Override
     public Long createMajor(AppMajorSaveReqVO createReqVO) {
@@ -235,6 +245,44 @@ public class MajorServiceImpl implements MajorService {
             }
         }
         return roots;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateMajorName(MajorUpdateNameReqVO reqVO) {
+        if (reqVO == null || reqVO.getId() == null) {
+            throw exception(new ErrorCode(400, "id is required"));
+        }
+        if (reqVO.getName() == null || reqVO.getName().isBlank()) {
+            throw exception(new ErrorCode(400, "name is required"));
+        }
+
+        MajorDO major = majorMapper.selectById(reqVO.getId());
+        if (major == null) {
+            throw exception(MAJOR_NOT_EXISTS);
+        }
+        Integer activeYear = adjustProperties.getActiveYear();
+        if (major.getYear() == null || !major.getYear().equals(activeYear)) {
+            throw exception(new ErrorCode(400, "仅允许修改有效学年数据"));
+        }
+
+        // 1) update biz_major
+        MajorDO update = new MajorDO();
+        update.setId(reqVO.getId());
+        update.setName(reqVO.getName().trim());
+        majorMapper.updateById(update);
+
+        // 2) sync redundant major_name for activeYear only
+        String newName = reqVO.getName().trim();
+        adjustmentMapper.update(null, new LambdaUpdateWrapper<AdjustmentDO>()
+                .set(AdjustmentDO::getMajorName, newName)
+                .eq(AdjustmentDO::getYear, activeYear)
+                .eq(AdjustmentDO::getMajorId, reqVO.getId()));
+
+        adjustmentAdmitMapper.update(null, new LambdaUpdateWrapper<AdjustmentAdmitDO>()
+                .set(AdjustmentAdmitDO::getMajorName, newName)
+                .eq(AdjustmentAdmitDO::getYear, activeYear.shortValue())
+                .eq(AdjustmentAdmitDO::getMajorId, reqVO.getId()));
     }
 
 }

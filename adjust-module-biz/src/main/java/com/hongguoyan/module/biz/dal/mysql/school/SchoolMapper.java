@@ -9,6 +9,7 @@ import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import com.hongguoyan.module.biz.controller.app.school.vo.*;
+import com.hongguoyan.module.biz.controller.admin.school.vo.SchoolPageReqVO;
 
 /**
  * 院校 Mapper
@@ -47,6 +48,12 @@ public interface SchoolMapper extends BaseMapperX<SchoolDO> {
                 .eqIfPresent(SchoolDO::getSchoolEmail, reqVO.getSchoolEmail())
                 .betweenIfPresent(SchoolDO::getCreateTime, reqVO.getCreateTime())
                 .orderByDesc(SchoolDO::getId));
+    }
+
+    default PageResult<SchoolDO> selectPage(SchoolPageReqVO reqVO) {
+        return selectPage(reqVO, new LambdaQueryWrapperX<SchoolDO>()
+                .likeIfPresent(SchoolDO::getSchoolName, reqVO.getSchoolName())
+                .orderByAsc(SchoolDO::getId));
     }
 
     List<String> selectSuggestSchoolNames(@Param("keyword") String keyword,

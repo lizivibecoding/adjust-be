@@ -2,6 +2,7 @@ package com.hongguoyan.module.biz.service.major;
 
 import java.util.*;
 import jakarta.validation.*;
+import com.hongguoyan.module.biz.controller.admin.major.vo.MajorUpdateNameReqVO;
 import com.hongguoyan.module.biz.controller.app.major.vo.*;
 import com.hongguoyan.module.biz.dal.dataobject.major.MajorDO;
 import com.hongguoyan.framework.common.pojo.PageResult;
@@ -82,5 +83,12 @@ public interface MajorService {
      * @return 专业树
      */
     List<AppMajorTreeNodeRespVO> getMajorTree();
+
+    /**
+     * 更新专业名称（仅允许更新有效学年数据，并同步冗余字段）
+     *
+     * @param reqVO 改名信息
+     */
+    void updateMajorName(@Valid MajorUpdateNameReqVO reqVO);
 
 }

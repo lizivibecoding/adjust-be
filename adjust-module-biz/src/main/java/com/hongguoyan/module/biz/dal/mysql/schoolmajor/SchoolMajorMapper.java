@@ -1,13 +1,15 @@
 package com.hongguoyan.module.biz.dal.mysql.schoolmajor;
 
 import com.hongguoyan.framework.common.pojo.PageResult;
-import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.hongguoyan.framework.mybatis.core.mapper.BaseMapperX;
+import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
+import com.hongguoyan.module.biz.controller.app.schoolmajor.vo.SchoolMajorPageReqVO;
 import com.hongguoyan.module.biz.dal.dataobject.schoolmajor.SchoolMajorDO;
-import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
-import com.hongguoyan.module.biz.controller.app.schoolmajor.vo.*;
+
+import java.util.List;
 
 /**
  * 院校专业 Mapper
@@ -62,6 +64,17 @@ public interface SchoolMajorMapper extends BaseMapperX<SchoolMajorDO> {
                 .betweenIfPresent(SchoolMajorDO::getCreateTime, reqVO.getCreateTime())
                 .eqIfPresent(SchoolMajorDO::getViewCount, reqVO.getViewCount())
                 .orderByDesc(SchoolMajorDO::getId));
+    }
+
+    default List<SchoolMajorDO> selectListByBizKey(Long schoolId, Long collegeId, Integer year) {
+        LambdaQueryWrapperX<SchoolMajorDO> qw = new LambdaQueryWrapperX<>();
+        qw.select(SchoolMajorDO::getId, SchoolMajorDO::getSchoolId, SchoolMajorDO::getCollegeId, SchoolMajorDO::getMajorId,
+                SchoolMajorDO::getCode, SchoolMajorDO::getName, SchoolMajorDO::getDegreeType, SchoolMajorDO::getYear);
+        qw.eq(SchoolMajorDO::getSchoolId, schoolId);
+        qw.eq(SchoolMajorDO::getCollegeId, collegeId);
+        qw.eqIfPresent(SchoolMajorDO::getYear, year);
+        qw.orderByAsc(SchoolMajorDO::getId);
+        return selectList(qw);
     }
 
 }

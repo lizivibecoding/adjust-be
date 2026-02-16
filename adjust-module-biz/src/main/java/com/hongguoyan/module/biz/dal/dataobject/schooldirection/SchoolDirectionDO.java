@@ -40,6 +40,16 @@ public class SchoolDirectionDO extends BaseDO {
      */
     private Long majorId;
     /**
+     * 是否退役大学生计划：0-否 1-是
+     */
+    @TableField("retired_plan")
+    private Integer retiredPlan;
+    /**
+     * 是否少数民族计划：0-否 1-是
+     */
+    @TableField("shao_gu_plan")
+    private Integer shaoGuPlan;
+    /**
      * 学习方式：1-全日制 2-非全日制
      */
     private Integer studyMode;
@@ -59,6 +69,14 @@ public class SchoolDirectionDO extends BaseDO {
      * 学年/业务年（字典当前有效年）
      */
     private Integer year;
+    /**
+     * 复试方式/考试方式
+     */
+    private String examMode;
+    /**
+     * 招生人数
+     */
+    private Integer recruitNumber;
 
 
 }

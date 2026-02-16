@@ -59,4 +59,15 @@ public interface SchoolDirectionService {
      */
     PageResult<SchoolDirectionDO> getSchoolDirectionPage(AppSchoolDirectionPageReqVO pageReqVO);
 
+    /**
+     * 获得院校研究方向列表（按学校 + 学院 + 专业 + 年份）
+     *
+     * @param schoolId 学校ID
+     * @param collegeId 学院ID
+     * @param majorId 专业ID
+     * @param year 年份（为空时使用有效年）
+     * @return 列表
+     */
+    List<SchoolDirectionDO> getSchoolDirectionList(Long schoolId, Long collegeId, Long majorId, Integer year);
+
 }

@@ -58,4 +58,14 @@ public interface SchoolMajorService {
      */
     PageResult<SchoolMajorDO> getSchoolMajorPage(SchoolMajorPageReqVO pageReqVO);
 
+    /**
+     * 获得院校专业列表（按学校 + 学院 + 年份）
+     *
+     * @param schoolId 学校ID
+     * @param collegeId 学院ID
+     * @param year 年份（为空时使用有效年）
+     * @return 列表
+     */
+    List<SchoolMajorDO> getSchoolMajorList(Long schoolId, Long collegeId, Integer year);
+
 }

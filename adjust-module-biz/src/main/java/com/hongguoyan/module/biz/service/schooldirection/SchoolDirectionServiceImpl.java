@@ -14,6 +14,7 @@ import com.hongguoyan.framework.common.pojo.PageParam;
 import com.hongguoyan.framework.common.util.object.BeanUtils;
 
 import com.hongguoyan.module.biz.dal.mysql.schooldirection.SchoolDirectionMapper;
+import com.hongguoyan.module.biz.framework.config.AdjustProperties;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertList;
@@ -31,6 +32,8 @@ public class SchoolDirectionServiceImpl implements SchoolDirectionService {
 
     @Resource
     private SchoolDirectionMapper schoolDirectionMapper;
+    @Resource
+    private AdjustProperties adjustProperties;
 
     @Override
     public Long createSchoolDirection(AppSchoolDirectionSaveReqVO createReqVO) {
@@ -80,6 +83,12 @@ public class SchoolDirectionServiceImpl implements SchoolDirectionService {
     @Override
     public PageResult<SchoolDirectionDO> getSchoolDirectionPage(AppSchoolDirectionPageReqVO pageReqVO) {
         return schoolDirectionMapper.selectPage(pageReqVO);
+    }
+
+    @Override
+    public List<SchoolDirectionDO> getSchoolDirectionList(Long schoolId, Long collegeId, Long majorId, Integer year) {
+        Integer queryYear = year != null ? year : adjustProperties.getActiveYear();
+        return schoolDirectionMapper.selectListByBizKey(schoolId, collegeId, majorId, queryYear);
     }
 
 }

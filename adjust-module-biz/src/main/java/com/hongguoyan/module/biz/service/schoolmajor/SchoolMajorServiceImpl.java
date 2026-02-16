@@ -11,6 +11,7 @@ import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.framework.common.util.object.BeanUtils;
 
 import com.hongguoyan.module.biz.dal.mysql.schoolmajor.SchoolMajorMapper;
+import com.hongguoyan.module.biz.framework.config.AdjustProperties;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertList;
@@ -27,6 +28,8 @@ public class SchoolMajorServiceImpl implements SchoolMajorService {
 
     @Resource
     private SchoolMajorMapper schoolMajorMapper;
+    @Resource
+    private AdjustProperties adjustProperties;
 
     @Override
     public Long createSchoolMajor(SchoolMajorSaveReqVO createReqVO) {
@@ -76,6 +79,12 @@ public class SchoolMajorServiceImpl implements SchoolMajorService {
     @Override
     public PageResult<SchoolMajorDO> getSchoolMajorPage(SchoolMajorPageReqVO pageReqVO) {
         return schoolMajorMapper.selectPage(pageReqVO);
+    }
+
+    @Override
+    public List<SchoolMajorDO> getSchoolMajorList(Long schoolId, Long collegeId, Integer year) {
+        Integer queryYear = year != null ? year : adjustProperties.getActiveYear();
+        return schoolMajorMapper.selectListByBizKey(schoolId, collegeId, queryYear);
     }
 
 }

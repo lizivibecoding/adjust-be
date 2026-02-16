@@ -26,4 +26,14 @@ public interface SchoolCollegeMapper extends BaseMapperX<SchoolCollegeDO> {
                 .orderByDesc(SchoolCollegeDO::getId));
     }
 
+    default List<SchoolCollegeDO> selectListBySchoolIdAndYear(Long schoolId, Integer year) {
+        LambdaQueryWrapperX<SchoolCollegeDO> qw = new LambdaQueryWrapperX<>();
+        qw.select(SchoolCollegeDO::getId, SchoolCollegeDO::getSchoolId,
+                SchoolCollegeDO::getCode, SchoolCollegeDO::getName, SchoolCollegeDO::getYear);
+        qw.eq(SchoolCollegeDO::getSchoolId, schoolId);
+        qw.eqIfPresent(SchoolCollegeDO::getYear, year);
+        qw.orderByAsc(SchoolCollegeDO::getId);
+        return selectList(qw);
+    }
+
 }
