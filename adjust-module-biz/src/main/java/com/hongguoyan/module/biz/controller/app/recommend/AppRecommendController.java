@@ -71,6 +71,14 @@ public class AppRecommendController {
         return success(reportId);
     }
 
+    @GetMapping("/test")
+    @Operation(summary = "测试推荐")
+    public CommonResult<Long> testRecommend(@RequestParam(value = "reportId", required = false) Long reportId ) {
+        Long userId = SecurityFrameworkUtils.getLoginUserId();
+        recommendService.generateRecommend(userId, reportId);
+        return success(reportId);
+    }
+
     @GetMapping("/my/report")
     @Operation(summary = "获取用户报告")
     public CommonResult<AppUserCustomReportRespVO> getMyLatestReport(
@@ -100,7 +108,6 @@ public class AppRecommendController {
     }
 
 
-
     @GetMapping("/my/report/export-pdf")
     @Operation(summary = "导出报告 PDF")
     public CommonResult<String> exportReportPdf(@RequestParam("reportId") Long reportId) {
@@ -119,6 +126,9 @@ public class AppRecommendController {
         userCustomReportService.updateReportPdfUrl(userId, reportId, fileWithPath.getPath());
         return success(fileWithPath.getPath());
     }
+
+
+
 
 
 }

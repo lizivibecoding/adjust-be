@@ -156,6 +156,25 @@
         <if test="year != null"> AND year = #{year} </if>
     </select>
 
+    <select id="selectBatchAdmitFullStats" resultType="java.util.Map">
+        SELECT school_id, college_id, major_code, year,
+               MIN(first_score) as min_score,
+               MAX(first_score) as max_score,
+               AVG(first_score) as avg_score,
+               COUNT(*) as count
+        FROM biz_adjustment_admit
+        WHERE deleted = 0
+        AND school_id IN
+        <foreach collection="schoolIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND year IN
+        <foreach collection="years" item="y" open="(" separator="," close=")">
+            #{y}
+        </foreach>
+        GROUP BY school_id, college_id, major_code, year
+    </select>
+
     <select id="selectAdmitStats" resultType="java.util.Map">
         SELECT
             MIN(first_score) as minScore,
