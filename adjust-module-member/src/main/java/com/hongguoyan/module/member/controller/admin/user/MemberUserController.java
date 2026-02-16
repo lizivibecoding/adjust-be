@@ -3,6 +3,7 @@ package com.hongguoyan.module.member.controller.admin.user;
 import cn.hutool.core.collection.CollUtil;
 import com.hongguoyan.framework.common.pojo.CommonResult;
 import com.hongguoyan.framework.common.pojo.PageResult;
+import com.hongguoyan.module.infra.api.file.FileApi;
 import com.hongguoyan.module.member.controller.admin.user.vo.*;
 import com.hongguoyan.module.member.convert.user.MemberUserConvert;
 import com.hongguoyan.module.member.dal.dataobject.group.MemberGroupDO;
@@ -50,6 +51,8 @@ public class MemberUserController {
     private MemberGroupService memberGroupService;
     @Resource
     private MemberPointRecordService memberPointRecordService;
+    @Resource
+    private FileApi fileApi;
 
     @PutMapping("/update")
     @Operation(summary = "更新会员用户")
@@ -86,6 +89,7 @@ public class MemberUserController {
             return success(null);
         }
         MemberUserRespVO userVO = MemberUserConvert.INSTANCE.convert03(user);
+        userVO.setAvatar(fileApi.buildStaticUrl(userVO.getAvatar()));
         if (user.getLevelId() != null) {
             MemberLevelDO level = memberLevelService.getLevel(userVO.getId());
             if (level != null) {
@@ -117,7 +121,12 @@ public class MemberUserController {
         // 处理用户分组返显
         List<MemberGroupDO> groups = memberGroupService.getGroupList(
                 convertSet(pageResult.getList(), MemberUserDO::getGroupId));
-        return success(MemberUserConvert.INSTANCE.convertPage(pageResult, tags, levels, groups));
+        PageResult<MemberUserRespVO> result = MemberUserConvert.INSTANCE.convertPage(pageResult, tags, levels, groups);
+        // 头像回显：path -> 静态 URL（若已是 URL 则原样返回）
+        if (result.getList() != null) {
+            result.getList().forEach(item -> item.setAvatar(fileApi.buildStaticUrl(item.getAvatar())));
+        }
+        return success(result);
     }
 
 }
