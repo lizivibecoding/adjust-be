@@ -101,8 +101,6 @@ public class RecommendServiceImpl implements RecommendService {
     @Resource
     private SchoolRankMapper schoolRankMapper;
     @Resource
-    private SchoolMajorRankMapper schoolMajorRankMapper;
-    @Resource
     private UserCustomReportService userCustomReportService;
     @Resource
     private UserCustomReportMapper userCustomReportMapper;
@@ -167,6 +165,33 @@ public class RecommendServiceImpl implements RecommendService {
             schoolMapper.selectBatchIds(schoolIds).stream()
                 .collect(Collectors.toMap(SchoolDO::getId, Function.identity()));
 
+        // --- 3.1 Batch fetch admission stats (Min, Max, Avg) & Scores (for Median) ---
+        // Assume last year data (e.g. 2025 admission data if now is 2026)
+        int currentYear = DateUtil.thisYear() - 1;
+        List<Integer> years = Arrays.asList(currentYear, currentYear - 1);
+        Map<String, Map<String, Object>> statsMap = new HashMap<>();
+        Map<String, List<BigDecimal>> scoresMap = new HashMap<>();
+
+        if (CollUtil.isNotEmpty(schoolIds)) {
+            List<Map<String, Object>> batchStats = adjustmentAdmitMapper.selectBatchAdmitFullStats(schoolIds, years);
+            // Map key: schoolId_collegeId_majorCode_year
+            statsMap = batchStats.stream().collect(Collectors.toMap(
+                    m -> m.get("school_id") + "_" + m.get("college_id") + "_" + m.get("major_code") + "_" + m.get("year"),
+                    Function.identity(), (v1, v2) -> v1
+            ));
+
+            // Batch fetch scores for median calculation
+            List<Map<String, Object>> batchScores = adjustmentAdmitMapper.selectBatchAdmitScores(schoolIds, years);
+            for (Map<String, Object> row : batchScores) {
+                String key = row.get("school_id") + "_" + row.get("college_id") + "_" + row.get("major_code") + "_" + row.get("year");
+                Object scoreObj = row.get("first_score");
+                if (scoreObj != null) {
+                    BigDecimal score = new BigDecimal(scoreObj.toString());
+                    scoresMap.computeIfAbsent(key, k -> new ArrayList<>()).add(score);
+                }
+            }
+        }
+
         // 4. Build response
         List<AppRecommendSchoolRespVO> result = new ArrayList<>(recommendations.size());
         for (UserRecommendSchoolDO rec : recommendations) {
@@ -217,6 +242,38 @@ public class RecommendServiceImpl implements RecommendService {
                 resp.setStudyMode(adj.getStudyMode());
                 resp.setDegreeType(adj.getDegreeType());
                 resp.setPlanCount(adj.getAdjustCount());
+
+                // Fill Stats (Min, Max, Avg, Median)
+                String majorCode = adj.getMajorCode();
+                if (StrUtil.isNotBlank(majorCode)) {
+                    // Try currentYear, then currentYear-1
+                    Map<String, Object> stats = statsMap.get(rec.getSchoolId() + "_" + rec.getCollegeId() + "_" + majorCode + "_" + currentYear);
+                    Integer statsYear = currentYear;
+                    if (stats == null) {
+                        stats = statsMap.get(rec.getSchoolId() + "_" + rec.getCollegeId() + "_" + majorCode + "_" + (currentYear - 1));
+                        statsYear = currentYear - 1;
+                    }
+
+                    if (stats != null) {
+                        // Fill Min/Max/Avg
+                        if (stats.get("min_score") != null) resp.setMinScore(new BigDecimal(stats.get("min_score").toString()));
+                        if (stats.get("max_score") != null) resp.setMaxScore(new BigDecimal(stats.get("max_score").toString()));
+                        if (stats.get("avg_score") != null) resp.setLastYearAvgScore(new BigDecimal(stats.get("avg_score").toString()));
+
+                        // Calculate Median (memory)
+                        List<BigDecimal> scores = scoresMap.get(rec.getSchoolId() + "_" + rec.getCollegeId() + "_" + majorCode + "_" + statsYear);
+                        if (CollUtil.isNotEmpty(scores)) {
+                            BigDecimal median;
+                            int size = scores.size();
+                            if (size % 2 == 0) {
+                                median = scores.get(size / 2 - 1).add(scores.get(size / 2)).divide(BigDecimal.valueOf(2));
+                            } else {
+                                median = scores.get(size / 2);
+                            }
+                            resp.setMedianScore(median);
+                        }
+                    }
+                }
             }
 
             result.add(resp);
@@ -319,7 +376,6 @@ public class RecommendServiceImpl implements RecommendService {
         double filterMin = rule.getFilterMin() != null ? rule.getFilterMin().doubleValue() : 0.75;
         double filterMax = rule.getFilterMax() != null ? rule.getFilterMax().doubleValue() : 1.5;
 
-        // 计算乐观 C (与 school 无关，提到循环外避免重复查库)
         double maxC = calculateUserBonusC(userProfile, userIntention, baseBonusC0, schoolRankSchoolIdMap, rule);
         maxC = Math.min(maxC, 5);
         double totalUserScore = userScoreB * 0.8 + maxC * 0.2;
@@ -340,7 +396,7 @@ public class RecommendServiceImpl implements RecommendService {
             }
             // 4.2 院校协同过滤
             double schoolScoreA = getRankScore(schoolId, schoolRankSchoolIdMap);
-            if (totalUserScore >= filterMin * schoolScoreA && totalUserScore <= filterMax * schoolScoreA) {
+            if (totalUserScore >= filterMin * schoolScoreA || totalUserScore <= filterMax * schoolScoreA) {
                 candidateSchoolIds.add(schoolId);
             }
         }
@@ -400,6 +456,16 @@ public class RecommendServiceImpl implements RecommendService {
         for (AdjustmentDO adjustment : adjustments) {
             SchoolDO school = schoolMap.get(adjustment.getSchoolId());
             if (school == null) {
+                continue;
+            }
+
+            // 如果没有往年录取数据，也没有国家线数据，直接跳过 (无法计算分数匹配度)
+            String key1 = adjustment.getSchoolId() + "_" + adjustment.getCollegeId() + "_" + adjustment.getMajorCode() + "_" + (currentYear - 1);
+            String key2 = adjustment.getSchoolId() + "_" + adjustment.getCollegeId() + "_" + adjustment.getMajorCode() + "_" + (currentYear - 2);
+            boolean hasAdmitScore = admitAvgScoreMap.containsKey(key1) || admitAvgScoreMap.containsKey(key2);
+            // 如果既没有往年录取分，国家线也是0或空，则无法评估，跳过
+            if (!hasAdmitScore) {
+                log.info("没有匹配的录取平均分");
                 continue;
             }
 
@@ -765,7 +831,7 @@ public class RecommendServiceImpl implements RecommendService {
                             
             * **格式**：只输出一个 JSON 对象，**严禁使用 Markdown 代码块包裹**，严禁任何额外解释。
             * **分数**：0-100 的整数。
-            * **评价语**：`analysis` 开头的字段必须使用中文，**每个字段的文案严禁超过 100 个汉字**（含标点），文词扮演专家的方式。
+            * **评价语**：`analysis` 开头的字段必须使用中文，**每个字段的文案严禁超过 200 个汉字**（含标点），文词扮演专家的方式。
             * **兜底**：若数据缺失，基于常识给出稳健的中性评价，但不要直接说数据缺失。
                             
             ### JSON Schema (严格遵守字段名)
@@ -1202,9 +1268,7 @@ public class RecommendServiceImpl implements RecommendService {
             return 0.5;
         }
         double userScore = user.getScoreTotal().doubleValue();
-
         double avgScore = 0; // 默认
-
         // 1. 从预加载的 Map 中查找调剂录取平均分 (优先 currentYear-1, 再 currentYear-2)
         BigDecimal admittedAvg = null;
         if (currentYear != null) {
@@ -1220,25 +1284,28 @@ public class RecommendServiceImpl implements RecommendService {
         } else {
             avgScore = nationalLineTotal.doubleValue();
         }
-
         double delta = userScore - avgScore;
-        if (delta > 0) {
-            double decay = rule.getSimADeltaPosDecay() != null ? rule.getSimADeltaPosDecay().doubleValue() : 0.5;
-            double div = rule.getSimADeltaPosDiv() != null ? rule.getSimADeltaPosDiv().doubleValue() : 100.0;
-            return 1.0 - Math.min(decay, delta / div);
-        } else if (delta >= -10) {
-            double base = rule.getSimADeltaNeg10Base() != null ? rule.getSimADeltaNeg10Base().doubleValue() : 0.8;
-            double slope = rule.getSimADeltaNeg10Slope() != null ? rule.getSimADeltaNeg10Slope().doubleValue() : 0.02;
-            return base + slope * delta;
-        } else if (delta >= -30) {
-            double base = rule.getSimADeltaNeg30Base() != null ? rule.getSimADeltaNeg30Base().doubleValue() : 0.6;
-            double slope = rule.getSimADeltaNeg30Slope() != null ? rule.getSimADeltaNeg30Slope().doubleValue() : 0.01;
-            return base + slope * (delta + 10);
-        } else {
-            double base = rule.getSimADeltaNegLowBase() != null ? rule.getSimADeltaNegLowBase().doubleValue() : 0.4;
-            double slope = rule.getSimADeltaNegLowSlope() != null ? rule.getSimADeltaNegLowSlope().doubleValue() : 0.005;
-            double min = rule.getSimADeltaNegLowMin() != null ? rule.getSimADeltaNegLowMin().doubleValue() : 0.1;
-            return Math.max(min, base + slope * (delta + 30));
+        // 新分段逻辑：
+        // 1. delta > 10: 0.8 ~ 1.0
+        if (delta > 10) {
+            // 每高 1 分加 0.01，直到 1.0
+            return Math.min(1.0, 0.8 + (delta - 10) * 0.01);
+        }
+        // 2. delta [0, 10]: 0.6 ~ 0.8
+        else if (delta >= 0) {
+            // 线性插值: 0.6 + (delta / 10) * 0.2
+            return 0.6 + (delta / 10.0) * 0.2;
+        }
+        // 3. delta [-10, 0): 0.4 ~ 0.6
+        else if (delta >= -10) {
+            // 线性插值: 0.6 + (delta / 10) * 0.2 (注意 delta 是负数)
+            // 当 delta=0 -> 0.6; delta=-10 -> 0.4
+            return 0.6 + (delta / 10.0) * 0.2;
+        }
+        // 4. delta < -10: 0.0 ~ 0.4
+        else {
+            // 从 0.4 开始衰减，每低 1 分减 0.01，直到 0.1 (保留一点点概率)
+            return Math.max(0.0, 0.4 + (delta + 10) * 0.01);
         }
     }
 
