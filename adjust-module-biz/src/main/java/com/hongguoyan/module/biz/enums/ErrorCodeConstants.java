@@ -91,4 +91,5 @@ public interface ErrorCodeConstants {
     ErrorCode INTENT_NO_FOUND = new ErrorCode(67, "未填写需求表");
     ErrorCode UNDERGRADUATE_MAJOR_NOT_EXISTS = new ErrorCode(72, "学科专业不存在");
     ErrorCode SCHOOL_RANK_NOT_EXISTS = new ErrorCode(73, "软科排名不存在");
+    ErrorCode BANNER_NOT_EXISTS = new ErrorCode(77, "轮播图不存在");
 }
