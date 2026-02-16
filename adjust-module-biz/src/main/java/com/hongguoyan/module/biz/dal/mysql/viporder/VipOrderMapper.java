@@ -10,6 +10,7 @@ import com.hongguoyan.module.biz.dal.dataobject.viporder.VipOrderDO;
 import org.apache.ibatis.annotations.Mapper;
 import com.hongguoyan.module.biz.controller.admin.viporder.vo.*;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderPageReqVO;
+import org.springframework.util.StringUtils;
 
 /**
  * 会员订单 Mapper
@@ -20,9 +21,10 @@ import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderPageReqVO;
 public interface VipOrderMapper extends BaseMapperX<VipOrderDO> {
 
     default PageResult<VipOrderDO> selectPage(VipOrderPageReqVO reqVO) {
-        return selectPage(reqVO, new LambdaQueryWrapperX<VipOrderDO>()
+        LambdaQueryWrapperX<VipOrderDO> wrapper = new LambdaQueryWrapperX<VipOrderDO>()
                 .eqIfPresent(VipOrderDO::getOrderNo, reqVO.getOrderNo())
                 .eqIfPresent(VipOrderDO::getUserId, reqVO.getUserId())
+                .inIfPresent(VipOrderDO::getUserId, reqVO.getUserIds())
                 .eqIfPresent(VipOrderDO::getPlanCode, reqVO.getPlanCode())
                 .eqIfPresent(VipOrderDO::getAmount, reqVO.getAmount())
                 .eqIfPresent(VipOrderDO::getStatus, reqVO.getStatus())
@@ -35,8 +37,27 @@ public interface VipOrderMapper extends BaseMapperX<VipOrderDO> {
                 .eqIfPresent(VipOrderDO::getPayRefundId, reqVO.getPayRefundId())
                 .betweenIfPresent(VipOrderDO::getCancelTime, reqVO.getCancelTime())
                 .eqIfPresent(VipOrderDO::getExtra, reqVO.getExtra())
-                .betweenIfPresent(VipOrderDO::getCreateTime, reqVO.getCreateTime())
-                .orderByDesc(VipOrderDO::getId));
+                .betweenIfPresent(VipOrderDO::getCreateTime, reqVO.getCreateTime());
+
+        if (StringUtils.hasText(reqVO.getKeyword())) {
+            String keyword = reqVO.getKeyword().trim();
+            wrapper.and(qw -> {
+                qw.eq(VipOrderDO::getOrderNo, keyword);
+                if (keyword.matches("\\d+")) {
+                    try {
+                        qw.or().eq(VipOrderDO::getUserId, Long.valueOf(keyword));
+                    } catch (Exception ignore) {
+                        // ignore
+                    }
+                }
+                if (reqVO.getUserIds() != null && !reqVO.getUserIds().isEmpty()) {
+                    qw.or().in(VipOrderDO::getUserId, reqVO.getUserIds());
+                }
+            });
+        }
+
+        wrapper.orderByDesc(VipOrderDO::getId);
+        return selectPage(reqVO, wrapper);
     }
 
     default PageResult<VipOrderDO> selectAppPage(Long userId, AppVipOrderPageReqVO reqVO) {
