@@ -24,6 +24,15 @@ public class VipOrderRespVO {
     @ExcelProperty("用户ID")
     private Long userId;
 
+    @Schema(description = "用户昵称")
+    private String userNickname;
+
+    @Schema(description = "用户手机号")
+    private String userMobile;
+
+    @Schema(description = "用户头像")
+    private String userAvatar;
+
     @Schema(description = "套餐编码", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("套餐编码")
     private String planCode;

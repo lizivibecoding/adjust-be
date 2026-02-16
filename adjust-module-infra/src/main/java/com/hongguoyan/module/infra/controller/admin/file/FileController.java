@@ -10,6 +10,7 @@ import com.hongguoyan.framework.tenant.core.aop.TenantIgnore;
 import com.hongguoyan.module.infra.controller.admin.file.vo.file.*;
 import com.hongguoyan.module.infra.dal.dataobject.file.FileDO;
 import com.hongguoyan.module.infra.service.file.FileService;
+import com.hongguoyan.module.infra.service.file.bo.FileCreateRespBO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -52,6 +53,21 @@ public class FileController {
         byte[] content = IoUtil.readBytes(file.getInputStream());
         return success(fileService.createFile(content, file.getOriginalFilename(),
                 uploadReqVO.getDirectory(), file.getContentType()));
+    }
+
+    @PostMapping("/upload2")
+    @Operation(summary = "上传文件（返回 url + path）")
+    @Parameter(name = "file", description = "文件附件", required = true,
+            schema = @Schema(type = "string", format = "binary"))
+    public CommonResult<FileUpload2RespVO> uploadFile2(@Valid FileUploadReqVO uploadReqVO) throws Exception {
+        MultipartFile file = uploadReqVO.getFile();
+        byte[] content = IoUtil.readBytes(file.getInputStream());
+        FileCreateRespBO fileRespBO = fileService.createFileWithPath(content, file.getOriginalFilename(),
+                uploadReqVO.getDirectory(), file.getContentType());
+        return success(FileUpload2RespVO.builder()
+                .url(fileRespBO.getUrl())
+                .path(fileRespBO.getPath())
+                .build());
     }
 
     @GetMapping("/presigned-url")

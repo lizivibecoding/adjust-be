@@ -101,7 +101,7 @@ public class AdjustmentServiceImpl implements AdjustmentService {
     /**
      * Exponential saturation factor (tau). Smaller => faster to reach cap.
      */
-    private static final double HEAT_TAU = 150D;
+    private static final double HEAT_TAU = 50D;
 
     /**
      * Preview limit for users with no opened major categories.
