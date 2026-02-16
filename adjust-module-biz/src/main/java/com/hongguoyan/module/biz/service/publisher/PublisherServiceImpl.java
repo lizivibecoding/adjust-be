@@ -1,8 +1,10 @@
 package com.hongguoyan.module.biz.service.publisher;
 
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.hongguoyan.framework.common.exception.ErrorCode;
 import com.hongguoyan.framework.common.pojo.PageResult;
+import com.hongguoyan.framework.common.util.http.HttpUtils;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.hongguoyan.module.biz.controller.admin.publisher.vo.PublisherPageReqVO;
 import com.hongguoyan.module.biz.controller.app.publisher.vo.AppPublisherMeRespVO;
@@ -13,8 +15,10 @@ import com.hongguoyan.module.biz.dal.mysql.publisher.PublisherMapper;
 import com.hongguoyan.module.biz.dal.mysql.publisherauditlog.PublisherAuditLogMapper;
 import com.hongguoyan.module.biz.enums.publisher.PublisherAuditActionEnum;
 import com.hongguoyan.module.biz.enums.publisher.PublisherStatusEnum;
+import com.hongguoyan.module.infra.api.file.FileApi;
 import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
+import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -37,6 +41,8 @@ public class PublisherServiceImpl implements PublisherService {
     private PublisherMapper publisherMapper;
     @Resource
     private PublisherAuditLogMapper publisherAuditLogMapper;
+    @Resource
+    private FileApi fileApi;
 
     @Override
     public PublisherDO getPublisherByUserId(Long userId) {
@@ -59,7 +65,9 @@ public class PublisherServiceImpl implements PublisherService {
         respVO.setNote(publisher.getNote());
         respVO.setReviewTime(publisher.getReviewTime());
         respVO.setRejectReason(publisher.getRejectReason());
-        respVO.setFiles(parseFiles(publisher.getFiles()));
+        respVO.setFiles(parseFiles(publisher.getFiles()).stream()
+                .map(fileApi::buildStaticUrl)
+                .toList());
         return respVO;
     }
 
@@ -76,7 +84,12 @@ public class PublisherServiceImpl implements PublisherService {
         toSave.setIdentityType(reqVO.getIdentityType());
         toSave.setRealName(reqVO.getRealName());
         toSave.setMobile(reqVO.getMobile());
-        toSave.setFiles(JSONUtil.toJsonStr(reqVO.getFiles()));
+        List<String> normalizedFiles = reqVO.getFiles().stream()
+                .map(this::normalizeFilePath)
+                .filter(StrUtil::isNotBlank)
+                .distinct()
+                .toList();
+        toSave.setFiles(JSONUtil.toJsonStr(normalizedFiles));
         toSave.setNote(reqVO.getNote());
         // optional fields kept as empty/default to satisfy NOT NULL columns
         toSave.setSchoolId(null);
@@ -207,6 +220,32 @@ public class PublisherServiceImpl implements PublisherService {
         } catch (Exception ignore) {
             return Collections.singletonList(files);
         }
+    }
+
+    /**
+     * 将前端传入的 URL/预签名 URL 提取成对象存储的 path/key，用于入库。
+     * <p>例如：{@code https://xxx.com/publisher/auth/a.jpg?X-Amz-...} -> {@code publisher/auth/a.jpg}
+     */
+    private String normalizeFilePath(String urlOrPath) {
+        if (StrUtil.isBlank(urlOrPath)) {
+            return urlOrPath;
+        }
+        String value = urlOrPath.trim();
+        if (StrUtil.startWithAnyIgnoreCase(value, "http://", "https://")) {
+            try {
+                // URI.getPath() 不包含 query（预签名参数会被自然剥离）
+                String path = URI.create(value).getPath();
+                if (StrUtil.isBlank(path)) {
+                    return value;
+                }
+                return HttpUtils.decodeUtf8(StrUtil.removePrefix(path, StrUtil.SLASH));
+            } catch (Exception ignore) {
+                // fall through
+            }
+        }
+        // 兜底：把 ? 后面参数移除，再作为 path 处理
+        value = StrUtil.subBefore(value, "?", false);
+        return HttpUtils.decodeUtf8(StrUtil.removePrefix(value, StrUtil.SLASH));
     }
 
 }
