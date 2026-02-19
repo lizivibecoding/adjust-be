@@ -15,12 +15,14 @@ import com.hongguoyan.module.biz.dal.dataobject.major.MajorDO;
 import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
 import com.hongguoyan.module.biz.dal.dataobject.schoolcollege.SchoolCollegeDO;
 import com.hongguoyan.module.biz.dal.dataobject.schooldirection.SchoolDirectionDO;
+import com.hongguoyan.module.biz.dal.dataobject.schoolrank.SchoolRankDO;
 import com.hongguoyan.module.biz.dal.dataobject.undergraduatemajor.UndergraduateMajorDO;
 import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
 import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
 import com.hongguoyan.module.biz.dal.mysql.schoolcollege.SchoolCollegeMapper;
 import com.hongguoyan.module.biz.dal.mysql.schooldirection.SchoolDirectionMapper;
+import com.hongguoyan.module.biz.dal.mysql.schoolrank.SchoolRankMapper;
 import com.hongguoyan.module.biz.dal.mysql.undergraduatemajor.UndergraduateMajorMapper;
 import com.hongguoyan.module.biz.dal.mysql.userprofile.UserProfileMapper;
 import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
@@ -64,6 +66,9 @@ public class UserProfileServiceImpl implements UserProfileService {
     private VipBenefitService vipBenefitService;
     @Resource
     private UndergraduateMajorMapper undergraduateMajorMapper;
+
+    @Resource
+    private SchoolRankMapper schoolRankMapper;
 
     @Override
     public Long createUserProfile(UserProfileSaveReqVO createReqVO) {
@@ -239,12 +244,13 @@ public class UserProfileServiceImpl implements UserProfileService {
 
         // graduate school (id -> name snapshot)
         Long graduateSchoolId = reqVO.getGraduateSchoolId();
-        SchoolDO graduateSchool = schoolMapper.selectById(graduateSchoolId);
-        if (graduateSchool == null) {
+        SchoolRankDO schoolRankDO = schoolRankMapper.selectById(graduateSchoolId);
+
+        if (schoolRankDO == null) {
             throw exception(new ErrorCode(400, "graduateSchoolId not exists: " + graduateSchoolId));
         }
         toSave.setGraduateSchoolId(graduateSchoolId);
-        toSave.setGraduateSchoolName(StrUtil.blankToDefault(graduateSchool.getSchoolName(), ""));
+        toSave.setGraduateSchoolName(StrUtil.blankToDefault(schoolRankDO.getSchoolName(), ""));
 
         // graduate major (id -> name snapshot)
         Long graduateMajorId = reqVO.getGraduateMajorId();
