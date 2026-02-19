@@ -130,12 +130,24 @@ public class PublisherServiceImpl implements PublisherService {
         if (publisher == null) {
             throw exception(PUBLISHER_NOT_EXISTS);
         }
+        // Admin view: build accessible file URLs from stored path/key
+        publisher.setFiles(buildFilesUrlJson(publisher.getFiles()));
         return publisher;
     }
 
     @Override
     public PageResult<PublisherDO> getPublisherPage(PublisherPageReqVO pageReqVO) {
-        return publisherMapper.selectPage(pageReqVO);
+        PageResult<PublisherDO> pageResult = publisherMapper.selectPage(pageReqVO);
+        if (pageResult == null || pageResult.getList() == null || pageResult.getList().isEmpty()) {
+            return pageResult;
+        }
+        for (PublisherDO item : pageResult.getList()) {
+            if (item == null) {
+                continue;
+            }
+            item.setFiles(buildFilesUrlJson(item.getFiles()));
+        }
+        return pageResult;
     }
 
     @Override
@@ -220,6 +232,37 @@ public class PublisherServiceImpl implements PublisherService {
         } catch (Exception ignore) {
             return Collections.singletonList(files);
         }
+    }
+
+    private List<String> parseFilesCompat(String files) {
+        if (files == null || files.isBlank()) {
+            return Collections.emptyList();
+        }
+        try {
+            List<String> list = JSONUtil.parseArray(files).toList(String.class);
+            return list != null ? list : Collections.emptyList();
+        } catch (Exception ignore) {
+            // fall through
+        }
+        if (files.contains(",")) {
+            return StrUtil.splitTrim(files, ",");
+        }
+        return Collections.singletonList(files);
+    }
+
+    private String buildFilesUrlJson(String storedFiles) {
+        List<String> files = parseFilesCompat(storedFiles);
+        if (files == null || files.isEmpty()) {
+            return storedFiles;
+        }
+        List<String> urls = files.stream()
+                .filter(StrUtil::isNotBlank)
+                .map(String::trim)
+                .map(fileApi::buildStaticUrl)
+                .filter(StrUtil::isNotBlank)
+                .distinct()
+                .toList();
+        return urls.isEmpty() ? storedFiles : JSONUtil.toJsonStr(urls);
     }
 
     /**
