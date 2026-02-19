@@ -169,7 +169,7 @@
             MAX(a.degree_type) AS degreeType,
             a.year,
             a.study_mode AS studyMode,
-            SUM(IFNULL(a.adjust_count, 0)) AS adjustCount,
+            MAX(IFNULL(a.adjust_count, 0)) AS adjustCount,
             MAX(a.publish_time) AS updateTime,
             MAX(COALESCE(a.view_count, 0)) AS viewCount,
             MAX(COALESCE(a.hot_score, 0)) AS hotScore,
@@ -198,7 +198,7 @@
                 MAX(a.degree_type) AS degreeType,
                 a.year,
                 a.study_mode AS studyMode,
-                SUM(IFNULL(a.adjust_count, 0)) AS adjustCount,
+                MAX(IFNULL(a.adjust_count, 0)) AS adjustCount,
                 MAX(a.publish_time) AS updateTime,
                 MAX(COALESCE(a.view_count, 0)) AS viewCount,
                 MAX(COALESCE(a.hot_score, 0)) AS hotScore,
@@ -222,7 +222,7 @@
             MAX(s.school_type) AS schoolType,
             MAX(s.province_name) AS provinceName,
             a.year,
-            SUM(IFNULL(a.adjust_count, 0)) AS adjustCount,
+            MAX(IFNULL(a.adjust_count, 0)) AS adjustCount,
             MAX(a.publish_time) AS updateTime,
             MAX(s.is_985) AS is985,
             MAX(s.is_211) AS is211,
@@ -374,7 +374,7 @@
             MAX(a.college_name) AS collegeName,
             a.year AS year,
             a.study_mode AS studyMode,
-            SUM(a.adjust_count) AS adjustCount
+            MAX(IFNULL(a.adjust_count, 0)) AS adjustCount
         FROM biz_adjustment a
         LEFT JOIN biz_school s ON s.id = a.school_id
         WHERE a.school_id = #{reqVO.schoolId}
