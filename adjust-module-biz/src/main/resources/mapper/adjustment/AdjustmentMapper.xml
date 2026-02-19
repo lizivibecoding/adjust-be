@@ -347,14 +347,14 @@
             resultType="com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentUpdateStatsRespVO">
         SELECT
             #{year} AS year,
-            MAX(a.update_time) AS lastUpdateTime,
+            MAX(a.create_time) AS lastUpdateTime,
             SUM(CASE
-                    WHEN a.update_time &gt;= CURDATE()
-                     AND a.update_time &lt; DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+                    WHEN a.create_time &gt;= CURDATE()
+                     AND a.create_time &lt; DATE_ADD(CURDATE(), INTERVAL 1 DAY)
                     THEN 1 ELSE 0 END) AS todayUpdateCount,
             COUNT(DISTINCT CASE
-                    WHEN a.update_time &gt;= CURDATE()
-                     AND a.update_time &lt; DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+                    WHEN a.create_time &gt;= CURDATE()
+                     AND a.create_time &lt; DATE_ADD(CURDATE(), INTERVAL 1 DAY)
                     THEN a.school_id ELSE NULL END) AS todayUpdateSchoolCount,
             COUNT(*) AS totalCount,
             COUNT(DISTINCT a.school_id) AS totalSchoolCount
@@ -385,7 +385,7 @@
               AND a.year &lt;= #{reqVO.endYear}
           </if>
         GROUP BY a.school_id, a.college_id, a.major_id, a.year, a.study_mode
-        ORDER BY a.year DESC, MAX(a.update_time) DESC
+        ORDER BY a.year DESC, MAX(a.create_time) DESC
     </select>
 
 </mapper>

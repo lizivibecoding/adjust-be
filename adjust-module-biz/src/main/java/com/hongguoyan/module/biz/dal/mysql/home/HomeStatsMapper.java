@@ -16,7 +16,7 @@ public interface HomeStatsMapper {
     @Select("""
             SELECT COUNT(*)
             FROM biz_adjustment
-            WHERE update_time >= #{begin}
+            WHERE create_time >= #{begin}
             """)
     Long selectTodayUpdatedAdjustmentCount(@Param("begin") LocalDateTime begin);
 
