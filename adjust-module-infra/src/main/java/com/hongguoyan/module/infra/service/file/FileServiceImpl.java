@@ -35,7 +35,7 @@ import static com.hongguoyan.module.infra.enums.ErrorCodeConstants.FILE_NOT_EXIS
 @Service
 public class FileServiceImpl implements FileService {
 
-    private static final String STATIC_FILE_BASE_URL = "http://pic.adjust.hongguoyan.com/";
+    private static final String STATIC_FILE_BASE_URL = "https://pic.adjust.hongguoyan.com/";
 
     /**
      * 上传文件的前缀，是否包含日期（yyyyMMdd）
