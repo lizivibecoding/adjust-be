@@ -3,6 +3,8 @@ package com.hongguoyan.module.biz.controller.admin.recommend.rule.vo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import java.math.BigDecimal;
+import java.util.List;
+import com.hongguoyan.module.biz.dal.dataobject.recommend.RecommendRuleSimAItem;
 import java.time.LocalDateTime;
 
 @Schema(description = "管理后台 - 推荐规则 Response VO")
@@ -124,25 +126,8 @@ public class RecommendRuleRespVO {
     @Schema(description = "默认匹配")
     private BigDecimal simBDefault;
 
-    // --- SimA 计算参数 ---
-    @Schema(description = "SimA: Delta > 0 时，衰减系数")
-    private BigDecimal simADeltaPosDecay;
-    @Schema(description = "SimA: Delta > 0 时，除数")
-    private BigDecimal simADeltaPosDiv;
-    @Schema(description = "SimA: Delta >= -10 基准")
-    private BigDecimal simADeltaNeg10Base;
-    @Schema(description = "SimA: Delta >= -10 斜率")
-    private BigDecimal simADeltaNeg10Slope;
-    @Schema(description = "SimA: Delta >= -30 基准")
-    private BigDecimal simADeltaNeg30Base;
-    @Schema(description = "SimA: Delta >= -30 斜率")
-    private BigDecimal simADeltaNeg30Slope;
-    @Schema(description = "SimA: Delta < -30 基准")
-    private BigDecimal simADeltaNegLowBase;
-    @Schema(description = "SimA: Delta < -30 斜率")
-    private BigDecimal simADeltaNegLowSlope;
-    @Schema(description = "SimA: Delta < -30 最小值")
-    private BigDecimal simADeltaNegLowMin;
+    @Schema(description = "SimA 动态规则列表")
+    private List<RecommendRuleSimAItem> simARules;
 
     @Schema(description = "创建时间", requiredMode = Schema.RequiredMode.REQUIRED)
     private LocalDateTime createTime;
