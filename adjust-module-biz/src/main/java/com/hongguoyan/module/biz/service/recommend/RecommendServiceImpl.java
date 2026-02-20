@@ -603,10 +603,26 @@ public class RecommendServiceImpl implements RecommendService {
                 .eq(NationalScoreDO::getYear, currentYear));
 
             // only load schools needed by report: graduate school + target school
+
+
+            // Graduate school rank (Ruanke)
+            SchoolRankDO ruanke = null;
+            if (userProfile.getGraduateSchoolId() != null) {
+                ruanke = schoolRankMapper.selectById(userProfile.getGraduateSchoolId());
+            }
+            if (ruanke == null && StrUtil.isNotBlank(userProfile.getGraduateSchoolName())) {
+                ruanke = schoolRankMapper.selectLatestBySchoolName(userProfile.getGraduateSchoolName());
+            }
+
             Set<Long> neededSchoolIds = new HashSet<>();
             if (userProfile.getTargetSchoolId() != null) {
                 neededSchoolIds.add(userProfile.getTargetSchoolId());
             }
+
+            if (Objects.nonNull(ruanke) && Objects.nonNull(ruanke.getSchoolId())){
+                neededSchoolIds.add(ruanke.getSchoolId());
+            }
+
             List<SchoolDO> schools = neededSchoolIds.isEmpty()
                 ? Collections.emptyList()
                 : schoolMapper.selectBatchIds(neededSchoolIds);
@@ -617,14 +633,6 @@ public class RecommendServiceImpl implements RecommendService {
             String firstChoiceArea = resolveFirstChoiceArea(userProfile, schoolMap);
             NationalScoreDO matchedLine = findMatchedNationalLine(userProfile, firstChoiceArea, nationalScores);
 
-            // Graduate school rank (Ruanke)
-            SchoolRankDO ruanke = null;
-            if (userProfile.getGraduateSchoolId() != null) {
-                ruanke = schoolRankMapper.selectById(userProfile.getGraduateSchoolId());
-            }
-            if (ruanke == null && StrUtil.isNotBlank(userProfile.getGraduateSchoolName())) {
-                ruanke = schoolRankMapper.selectLatestBySchoolName(userProfile.getGraduateSchoolName());
-            }
 
             // Intention majors
             List<Long> intentionMajorIds = parseJsonLongList(userIntention != null ? userIntention.getMajorIds() : null);
@@ -792,7 +800,7 @@ public class RecommendServiceImpl implements RecommendService {
         Map<Long, SchoolDO> schoolMap,
         Map<Long, String> intentionMajorNameMap,
         Map<Long, Long> openAdjustmentCountByMajorId) {
-        SchoolDO gradSchool = profile.getGraduateSchoolId() != null ? schoolMap.get(profile.getGraduateSchoolId()) : null;
+        SchoolDO gradSchool = ruankeRank.getSchoolId() != null ? schoolMap.get(ruankeRank.getSchoolId()) : null;
         SchoolDO targetSchool = profile.getTargetSchoolId() != null ? schoolMap.get(profile.getTargetSchoolId()) : null;
 
         Integer scoreTotal = profile.getScoreTotal() != null ? profile.getScoreTotal().intValue() : null;
