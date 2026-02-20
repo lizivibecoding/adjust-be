@@ -63,6 +63,9 @@ public class AppRecommendSchoolRespVO {
     @Schema(description = "学院名称", example = "计算机学院")
     private String collegeName;
 
+    @Schema(description = "学院ID", example = "1")
+    private Long collegeId;
+
     @Schema(description = "学习方式", example = "全日制", type = "string")
     @JsonSerialize(using = StudyModeNameSerializer.class)
     private Integer studyMode;

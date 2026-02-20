@@ -192,6 +192,36 @@ public class RecommendServiceImpl implements RecommendService {
             }
         }
 
+        // 3.2 Fetch School Ranks (for Ranking Gap)
+        UserProfileDO userProfile = userProfileMapper.selectOne(new LambdaQueryWrapperX<UserProfileDO>().eq(UserProfileDO::getUserId, userId));
+        Long userSchoolId = userProfile != null ? userProfile.getGraduateSchoolId() : null;
+        
+        // 1. Fetch User School Rank Score explicitly (single query)
+        BigDecimal userRankScore = null;
+        if (userSchoolId != null) {
+            List<SchoolRankDO> userRanks = schoolRankMapper.selectList(new LambdaQueryWrapperX<SchoolRankDO>()
+                    .eq(SchoolRankDO::getSchoolId, userSchoolId)
+                    .orderByDesc(SchoolRankDO::getYear)
+                    .last("LIMIT 1"));
+            if (CollUtil.isNotEmpty(userRanks) && userRanks.get(0).getNlScore() != null) {
+                userRankScore = userRanks.get(0).getNlScore();
+            }
+        }
+        
+        // 2. Fetch Candidate Schools Ranks
+        Map<Long, BigDecimal> schoolRankMap = new HashMap<>();
+        if (CollUtil.isNotEmpty(schoolIds)) {
+             List<SchoolRankDO> ranks = schoolRankMapper.selectList(new LambdaQueryWrapperX<SchoolRankDO>()
+                 .in(SchoolRankDO::getSchoolId, schoolIds)
+                 .orderByDesc(SchoolRankDO::getYear));
+             
+             for (SchoolRankDO r : ranks) {
+                 if (!schoolRankMap.containsKey(r.getSchoolId()) && r.getNlScore() != null) {
+                     schoolRankMap.put(r.getSchoolId(), r.getNlScore());
+                 }
+             }
+        }
+
         // 4. Build response
         List<AppRecommendSchoolRespVO> result = new ArrayList<>(recommendations.size());
         for (UserRecommendSchoolDO rec : recommendations) {
@@ -208,6 +238,8 @@ public class RecommendServiceImpl implements RecommendService {
 
             resp.setMajorId(rec.getMajorId());
             resp.setMajorName(rec.getMajorName());
+            resp.setCollegeName(rec.getCollegeName());
+            resp.setCollegeId(rec.getCollegeId());
             resp.setDirectionId(rec.getDirectionId());
             resp.setDirectionCode(rec.getDirectionCode());
             resp.setDirectionName(rec.getDirectionName());
@@ -232,7 +264,21 @@ public class RecommendServiceImpl implements RecommendService {
                 resp.setDifficultyLabel("未知");
             }
 
-            resp.setRankingGapLabel("适中");
+            // Ranking Gap Calculation
+            BigDecimal schoolRankScore = schoolRankMap.get(rec.getSchoolId());
+            if (userRankScore != null && schoolRankScore != null) {
+                double diff = schoolRankScore.subtract(userRankScore).doubleValue();
+                // nl_score range 0-5. diff > 1.0 means significant gap.
+                if (diff > 1.0) {
+                    resp.setRankingGapLabel("较大");
+                } else if (diff < -1.0) {
+                    resp.setRankingGapLabel("较小");
+                } else {
+                    resp.setRankingGapLabel("适中");
+                }
+            } else {
+                resp.setRankingGapLabel("适中");
+            }
 
             AdjustmentDO adj = adjustmentMap.get(rec.getAdjustmentId());
             if (adj != null) {
