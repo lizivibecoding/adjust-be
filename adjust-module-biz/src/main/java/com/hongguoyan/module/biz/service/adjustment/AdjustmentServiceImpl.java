@@ -408,7 +408,9 @@ public class AdjustmentServiceImpl implements AdjustmentService {
                     if (item == null || StrUtil.isBlank(item.getCode()) || StrUtil.isBlank(item.getName())) {
                         continue;
                     }
-                    level2MajorOptions.add(option(item.getCode(), item.getName()));
+                    AppAdjustmentFilterConfigRespVO.Option opt = option(item.getCode(), item.getName());
+                    opt.setDegreeType(item.getDegreeType());
+                    level2MajorOptions.add(opt);
                 }
             }
         }

@@ -38,6 +38,9 @@ public class AppAdjustmentFilterConfigRespVO {
 
         @Schema(description = "选项名称", example = "近7天")
         private String name;
+
+        @Schema(description = "学位类型(0=两者/不适用,1=学硕,2=专硕)。仅部分选项返回，例如一级学科", example = "1")
+        private Integer degreeType;
     }
 }
 
