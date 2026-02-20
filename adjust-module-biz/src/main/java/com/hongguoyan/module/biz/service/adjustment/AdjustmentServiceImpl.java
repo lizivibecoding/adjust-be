@@ -899,20 +899,30 @@ public class AdjustmentServiceImpl implements AdjustmentService {
         if (arr == null || !arr.isArray()) {
             return Collections.emptyList();
         }
-        // Accept both ["name"] and [{"name": "..."}]
+        // Accept both ["name"] and [{"name": "...", "code": "..."}]
         List<String> names = new ArrayList<>();
         for (JsonNode item : arr) {
             if (item == null || item.isNull()) {
                 continue;
             }
-            String name;
+            String name = null;
+            String code = null;
             if (item.isObject()) {
                 name = StrUtil.trimToNull(item.path("name").asText(null));
+                code = StrUtil.trimToNull(item.path("code").asText(null));
             } else {
                 name = StrUtil.trimToNull(item.asText(null));
             }
-            if (name != null) {
-                names.add(name);
+            String display;
+            if (name != null && code != null) {
+                display = name + "（" + code + "）";
+            } else if (name != null) {
+                display = name;
+            } else {
+                display = code;
+            }
+            if (display != null) {
+                names.add(display);
             }
         }
         // de-dup but keep order

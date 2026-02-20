@@ -116,6 +116,10 @@ public class AppUserProfileRespVO {
     @ExcelProperty("科目1名称")
     private String subjectName1;
 
+    @Schema(description = "科目1代码")
+    @ExcelProperty("科目1代码")
+    private String subjectCode1;
+
     @Schema(description = "科目1分数")
     @ExcelProperty("科目1分数")
     private BigDecimal subjectScore1;
@@ -123,6 +127,10 @@ public class AppUserProfileRespVO {
     @Schema(description = "科目2名称")
     @ExcelProperty("科目2名称")
     private String subjectName2;
+
+    @Schema(description = "科目2代码")
+    @ExcelProperty("科目2代码")
+    private String subjectCode2;
 
     @Schema(description = "科目2分数")
     @ExcelProperty("科目2分数")
@@ -132,6 +140,10 @@ public class AppUserProfileRespVO {
     @ExcelProperty("科目3名称")
     private String subjectName3;
 
+    @Schema(description = "科目3代码")
+    @ExcelProperty("科目3代码")
+    private String subjectCode3;
+
     @Schema(description = "科目3分数")
     @ExcelProperty("科目3分数")
     private BigDecimal subjectScore3;
@@ -139,6 +151,10 @@ public class AppUserProfileRespVO {
     @Schema(description = "科目4名称")
     @ExcelProperty("科目4名称")
     private String subjectName4;
+
+    @Schema(description = "科目4代码")
+    @ExcelProperty("科目4代码")
+    private String subjectCode4;
 
     @Schema(description = "科目4分数")
     @ExcelProperty("科目4分数")

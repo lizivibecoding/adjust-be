@@ -228,8 +228,9 @@ public class SchoolSpecialOptionsServiceImpl implements SchoolSpecialOptionsServ
     }
 
     /**
-     * Parse subjects JSON and return names only; for each s1~s4, keep at most 1 item (the first).
-     * Accept both ["name"] and [{"name": "..."}] array forms.
+     * Parse subjects JSON and return display strings; for each s1~s4, keep at most 1 item (the first).
+     * Accept both ["name"] and [{"name": "...", "code": "..."}] array forms.
+     * Display format: name（code） (full-width parentheses).
      */
     private AppAdjustmentSubjectsRespVO parseSubjectsFirstOnly(String subjectsJson) {
         AppAdjustmentSubjectsRespVO vo = new AppAdjustmentSubjectsRespVO();
@@ -242,17 +243,17 @@ public class SchoolSpecialOptionsServiceImpl implements SchoolSpecialOptionsServ
         }
         try {
             JsonNode root = objectMapper.readTree(subjectsJson);
-            vo.setS1(extractFirstSubjectName(root, "s1"));
-            vo.setS2(extractFirstSubjectName(root, "s2"));
-            vo.setS3(extractFirstSubjectName(root, "s3"));
-            vo.setS4(extractFirstSubjectName(root, "s4"));
+            vo.setS1(extractFirstSubjectDisplay(root, "s1"));
+            vo.setS2(extractFirstSubjectDisplay(root, "s2"));
+            vo.setS3(extractFirstSubjectDisplay(root, "s3"));
+            vo.setS4(extractFirstSubjectDisplay(root, "s4"));
             return vo;
         } catch (Exception ignore) {
             return vo;
         }
     }
 
-    private List<String> extractFirstSubjectName(JsonNode root, String key) {
+    private List<String> extractFirstSubjectDisplay(JsonNode root, String key) {
         if (root == null || StrUtil.isBlank(key)) {
             return Collections.emptyList();
         }
@@ -264,13 +265,23 @@ public class SchoolSpecialOptionsServiceImpl implements SchoolSpecialOptionsServ
         if (first == null || first.isNull()) {
             return Collections.emptyList();
         }
-        String name;
+        String name = null;
+        String code = null;
         if (first.isObject()) {
             name = StrUtil.trimToNull(first.path("name").asText(null));
+            code = StrUtil.trimToNull(first.path("code").asText(null));
         } else {
             name = StrUtil.trimToNull(first.asText(null));
         }
-        return name != null ? Collections.singletonList(name) : Collections.emptyList();
+        String display;
+        if (name != null && code != null) {
+            display = name + "（" + code + "）";
+        } else if (name != null) {
+            display = name;
+        } else {
+            display = code;
+        }
+        return display != null ? Collections.singletonList(display) : Collections.emptyList();
     }
 
     private AppSchoolSpecialOptionsRespVO.ScoreLimit buildScoreLimit(AppSchoolSpecialOptionsReqVO reqVO) {
