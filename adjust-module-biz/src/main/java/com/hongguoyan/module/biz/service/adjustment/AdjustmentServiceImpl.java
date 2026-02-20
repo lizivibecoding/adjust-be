@@ -396,6 +396,12 @@ public class AdjustmentServiceImpl implements AdjustmentService {
         provinceGroup.setChildren(areaChildren);
         groups.add(provinceGroup);
 
+        // 2) degreeType
+        groups.add(group("degreeType", "学位类型", Arrays.asList(
+                option("1", "学硕"),
+                option("2", "专硕")
+        )));
+
         // 2) target major (level2)
         AppAdjustmentFilterConfigRespVO.Group level2MajorGroup = new AppAdjustmentFilterConfigRespVO.Group();
         level2MajorGroup.setKey("level2MajorCodes");
@@ -421,12 +427,6 @@ public class AdjustmentServiceImpl implements AdjustmentService {
         groups.add(group("studyMode", "学习方式", Arrays.asList(
                 option("全日制", "全日制"),
                 option("非全日制", "非全日制")
-        )));
-
-        // 4) degreeType
-        groups.add(group("degreeType", "学位类型", Arrays.asList(
-                option("1", "学硕"),
-                option("2", "专硕")
         )));
 
         // 5) schoolFeature (985/211/双一流/其他)
