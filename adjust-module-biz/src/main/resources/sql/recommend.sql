@@ -37,3 +37,16 @@ ALTER TABLE `biz_user_recommend_adjustment` ADD COLUMN `school_score_a` decimal(
 ALTER TABLE `biz_user_custom_report` ADD COLUMN `source_profile_json` text DEFAULT NULL COMMENT '用户基础信息快照';
 ALTER TABLE `biz_user_custom_report` ADD COLUMN `source_intention_json` text DEFAULT NULL COMMENT '用户意向信息快照';
 ALTER TABLE `biz_user_custom_report` ADD COLUMN `report_pdf_url` varchar(512) DEFAULT NULL COMMENT '报告PDF文件URL';
+
+-- 更新 RecommendRule 字段，移除旧 SimA 参数，添加新分段参数
+ALTER TABLE `biz_recommend_rule` DROP COLUMN `sim_a_delta_pos_decay`;
+ALTER TABLE `biz_recommend_rule` DROP COLUMN `sim_a_delta_pos_div`;
+ALTER TABLE `biz_recommend_rule` DROP COLUMN `sim_a_delta_neg10_base`;
+ALTER TABLE `biz_recommend_rule` DROP COLUMN `sim_a_delta_neg10_slope`;
+ALTER TABLE `biz_recommend_rule` DROP COLUMN `sim_a_delta_neg30_base`;
+ALTER TABLE `biz_recommend_rule` DROP COLUMN `sim_a_delta_neg30_slope`;
+ALTER TABLE `biz_recommend_rule` DROP COLUMN `sim_a_delta_neg_low_base`;
+ALTER TABLE `biz_recommend_rule` DROP COLUMN `sim_a_delta_neg_low_slope`;
+ALTER TABLE `biz_recommend_rule` DROP COLUMN `sim_a_delta_neg_low_min`;
+
+ALTER TABLE `biz_recommend_rule` ADD COLUMN `sim_a_rules` text DEFAULT NULL COMMENT 'SimA 动态规则列表(JSON)';

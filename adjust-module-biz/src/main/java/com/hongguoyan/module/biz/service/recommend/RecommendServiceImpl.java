@@ -24,6 +24,7 @@ import com.hongguoyan.module.biz.dal.dataobject.major.MajorDO;
 import com.hongguoyan.module.biz.dal.dataobject.majorrank.SchoolMajorRankDO;
 import com.hongguoyan.module.biz.dal.dataobject.nationalscore.NationalScoreDO;
 import com.hongguoyan.module.biz.dal.dataobject.recommend.RecommendRuleDO;
+import com.hongguoyan.module.biz.dal.dataobject.recommend.RecommendRuleSimAItem;
 import com.hongguoyan.module.biz.dal.dataobject.recommend.UserRecommendSchoolDO;
 import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
 import com.hongguoyan.module.biz.dal.dataobject.schoolrank.SchoolRankDO;
@@ -441,8 +442,9 @@ public class RecommendServiceImpl implements RecommendService {
                 }
             }
             // 4.2 院校协同过滤
+            // 修正：学校分数应在用户分数的合理浮动范围内 [min, max]
             double schoolScoreA = getRankScore(schoolId, schoolRankSchoolIdMap);
-            if (totalUserScore >= filterMin * schoolScoreA || totalUserScore <= filterMax * schoolScoreA) {
+            if (schoolScoreA >= totalUserScore * filterMin && schoolScoreA <= totalUserScore * filterMax) {
                 candidateSchoolIds.add(schoolId);
             }
         }
@@ -459,6 +461,7 @@ public class RecommendServiceImpl implements RecommendService {
             : null;
         List<AdjustmentDO> adjustments = adjustmentMapper.selectList(new LambdaQueryWrapper<AdjustmentDO>()
             .in(AdjustmentDO::getSchoolId, candidateSchoolIds)
+                .eq(AdjustmentDO::getYear,currentYear)
             .apply(xuekemenleiInSql != null, xuekemenleiInSql));
 
         if (CollUtil.isEmpty(adjustments)) {
@@ -1331,26 +1334,42 @@ public class RecommendServiceImpl implements RecommendService {
             avgScore = nationalLineTotal.doubleValue();
         }
         double delta = userScore - avgScore;
-        // 新分段逻辑：
-        // 1. delta > 10: 0.8 ~ 1.0
+
+        List<RecommendRuleSimAItem> rules = rule.getSimARules();
+        if (CollUtil.isNotEmpty(rules)) {
+            for (RecommendRuleSimAItem item : rules) {
+                // Check range: [min, max)
+                // Null min implies -Infinity
+                // Null max implies +Infinity
+                boolean minMatch = item.getMin() == null || delta >= item.getMin();
+                boolean maxMatch = item.getMax() == null || delta < item.getMax();
+
+                if (minMatch && maxMatch) {
+                    double base = item.getBase() != null ? item.getBase().doubleValue() : 0.0;
+                    double slope = item.getSlope() != null ? item.getSlope().doubleValue() : 0.0;
+                    // 如果未配置 reference，默认使用 0 (即 base + delta * slope)
+                    // 但通常应该配置 reference，例如 delta > 10 时，reference=10，则 base + (delta-10)*slope
+                    double reference = item.getReference() != null ? item.getReference().doubleValue() : 0.0;
+
+                    double result = base + (delta - reference) * slope;
+
+                    if (item.getMaxLimit() != null) {
+                        result = Math.min(result, item.getMaxLimit().doubleValue());
+                    }
+                    if (item.getMinLimit() != null) {
+                        result = Math.max(result, item.getMinLimit().doubleValue());
+                    }
+                    return result;
+                }
+            }
+        }
         if (delta > 10) {
-            // 每高 1 分加 0.01，直到 1.0
             return Math.min(1.0, 0.8 + (delta - 10) * 0.01);
-        }
-        // 2. delta [0, 10]: 0.6 ~ 0.8
-        else if (delta >= 0) {
-            // 线性插值: 0.6 + (delta / 10) * 0.2
-            return 0.6 + (delta / 10.0) * 0.2;
-        }
-        // 3. delta [-10, 0): 0.4 ~ 0.6
-        else if (delta >= -10) {
-            // 线性插值: 0.6 + (delta / 10) * 0.2 (注意 delta 是负数)
-            // 当 delta=0 -> 0.6; delta=-10 -> 0.4
-            return 0.6 + (delta / 10.0) * 0.2;
-        }
-        // 4. delta < -10: 0.0 ~ 0.4
-        else {
-            // 从 0.4 开始衰减，每低 1 分减 0.01，直到 0.1 (保留一点点概率)
+        } else if (delta >= 0) {
+            return 0.6 + delta * 0.02;
+        } else if (delta >= -10) {
+            return 0.6 + delta * 0.02;
+        } else {
             return Math.max(0.0, 0.4 + (delta + 10) * 0.01);
         }
     }

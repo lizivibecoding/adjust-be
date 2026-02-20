@@ -4,10 +4,12 @@ import com.baomidou.mybatisplus.annotation.KeySequence;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.hongguoyan.framework.mybatis.core.dataobject.BaseDO;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * 推荐算法规则参数 DO
@@ -15,7 +17,7 @@ import java.math.BigDecimal;
  *
  * @author hgy
  */
-@TableName("biz_recommend_rule")
+@TableName(value = "biz_recommend_rule", autoResultMap = true)
 @KeySequence("biz_recommend_rule_seq")
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -231,42 +233,11 @@ public class RecommendRuleDO extends BaseDO {
      */
     private BigDecimal simBDefault;
 
-    // --- SimA 计算参数 ---
+    // --- SimA 计算参数 (新版分段逻辑) ---
     /**
-     * SimA: Delta > 0 时，衰减系数 (默认 0.5)
+     * SimA 动态规则列表 (JSON)
      */
-    private BigDecimal simADeltaPosDecay;
-    /**
-     * SimA: Delta > 0 时，除数 (默认 100.0)
-     */
-    private BigDecimal simADeltaPosDiv;
-    /**
-     * SimA: Delta >= -10 基准 (默认 0.8)
-     */
-    private BigDecimal simADeltaNeg10Base;
-    /**
-     * SimA: Delta >= -10 斜率 (默认 0.02)
-     */
-    private BigDecimal simADeltaNeg10Slope;
-    /**
-     * SimA: Delta >= -30 基准 (默认 0.6)
-     */
-    private BigDecimal simADeltaNeg30Base;
-    /**
-     * SimA: Delta >= -30 斜率 (默认 0.01)
-     */
-    private BigDecimal simADeltaNeg30Slope;
-    /**
-     * SimA: Delta < -30 基准 (默认 0.4)
-     */
-    private BigDecimal simADeltaNegLowBase;
-    /**
-     * SimA: Delta < -30 斜率 (默认 0.005)
-     */
-    private BigDecimal simADeltaNegLowSlope;
-    /**
-     * SimA: Delta < -30 最小值 (默认 0.1)
-     */
-    private BigDecimal simADeltaNegLowMin;
+    @TableField(value = "sim_a_rules", typeHandler = JacksonTypeHandler.class)
+    private List<RecommendRuleSimAItem> simARules;
 
 }
