@@ -29,9 +29,6 @@ public class AppUserProfileSaveReqVO {
     private BigDecimal undergraduateGpa;
 
     @Schema(description = "本科专业学科排名：A+/A/A-/B+/B/B-/C+/C", example = "A")
-    @Pattern(
-            regexp = "^(A\\+|A|A-|B\\+|B|B-|C\\+|C)$",
-            message = "本科专业学科排名仅支持 A+、A、A-、B+、B、B-、C+、C")
     private String graduateMajorRank;
 
     @Schema(description = "英语四级分数(空代表未填/未过)")
