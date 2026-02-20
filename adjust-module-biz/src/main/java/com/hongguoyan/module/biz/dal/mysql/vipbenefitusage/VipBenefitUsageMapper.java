@@ -46,4 +46,18 @@ public interface VipBenefitUsageMapper extends BaseMapperX<VipBenefitUsageDO> {
                                       @Param("periodStartTime") java.time.LocalDateTime periodStartTime,
                                       @Param("periodEndTime") java.time.LocalDateTime periodEndTime);
 
+    /**
+     * Increase grant_total by grantCount (grantCount can be negative; -1 means unlimited and should be handled by caller).
+     */
+    default int increaseGrantTotal(Long userId, String benefitKey,
+                                   java.time.LocalDateTime periodStartTime, java.time.LocalDateTime periodEndTime,
+                                   int grantCount) {
+        return update(null, new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<VipBenefitUsageDO>()
+                .eq(VipBenefitUsageDO::getUserId, userId)
+                .eq(VipBenefitUsageDO::getBenefitKey, benefitKey)
+                .eq(VipBenefitUsageDO::getPeriodStartTime, periodStartTime)
+                .eq(VipBenefitUsageDO::getPeriodEndTime, periodEndTime)
+                .setSql("grant_total = grant_total + " + grantCount));
+    }
+
 }

@@ -493,6 +493,9 @@ public class VipAppServiceImpl implements VipAppService {
             vipSubscriptionMapper.updateById(sub);
         }
 
+        // Grant additive QUOTA benefits (e.g., major_category_open, user_report)
+        vipBenefitService.grantAdditiveQuotaByPlan(order.getUserId(), order.getPlanCode(), "PAY", order.getOrderNo());
+
         VipSubscriptionLogDO log = new VipSubscriptionLogDO();
         log.setUserId(order.getUserId());
         log.setPlanCode(order.getPlanCode());
@@ -625,6 +628,9 @@ public class VipAppServiceImpl implements VipAppService {
             sub.setSource(VIP_SUBSCRIPTION_SOURCE_COUPON);
             vipSubscriptionMapper.updateById(sub);
         }
+
+        // Grant additive QUOTA benefits (e.g., major_category_open, user_report)
+        vipBenefitService.grantAdditiveQuotaByPlan(userId, plan.getPlanCode(), "COUPON", code);
 
         // 写流水
         VipSubscriptionLogDO log = new VipSubscriptionLogDO();

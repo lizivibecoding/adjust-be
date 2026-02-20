@@ -16,14 +16,6 @@ import com.hongguoyan.framework.common.pojo.PageResult;
 public interface VipBenefitUsageService {
 
     /**
-     * 创建用户权益用量汇总
-     *
-     * @param createReqVO 创建信息
-     * @return 编号
-     */
-    Long createVipBenefitUsage(@Valid AppVipBenefitUsageSaveReqVO createReqVO);
-
-    /**
      * 更新用户权益用量汇总
      *
      * @param updateReqVO 更新信息

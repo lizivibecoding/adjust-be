@@ -34,6 +34,10 @@ import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.*
 public class VipBenefitServiceImpl implements VipBenefitService {
 
     private static final int COMMON_STATUS_ENABLE = 1;
+    /**
+     * Quota keys that should be accumulated by each subscription open/renew.
+     */
+    private static final Set<String> ADDITIVE_QUOTA_KEYS = Set.of(BENEFIT_KEY_MAJOR_CATEGORY_OPEN, BENEFIT_KEY_USER_REPORT);
 
     @Resource
     private VipSubscriptionMapper vipSubscriptionMapper;
@@ -77,6 +81,7 @@ public class VipBenefitServiceImpl implements VipBenefitService {
         }
 
         List<String> planCodes = resolvePlanCodes(userId);
+        boolean hasPaidPlan = planCodes.stream().anyMatch(c -> PLAN_CODE_VIP.equalsIgnoreCase(c) || PLAN_CODE_SVIP.equalsIgnoreCase(c));
         List<VipPlanBenefitDO> rows = vipPlanBenefitMapper.selectList(new LambdaQueryWrapperX<VipPlanBenefitDO>()
                 .in(VipPlanBenefitDO::getPlanCode, planCodes)
                 .eq(VipPlanBenefitDO::getBenefitKey, key));
@@ -130,6 +135,14 @@ public class VipBenefitServiceImpl implements VipBenefitService {
                     .eq(VipBenefitUsageDO::getPeriodStartTime, window.start)
                     .eq(VipBenefitUsageDO::getPeriodEndTime, window.end));
             resolved.setUsedCount(usage != null && usage.getUsedCount() != null ? usage.getUsedCount() : 0);
+            // For additive quota keys, total should come from accumulated grant_total (only when user has an active paid plan)
+            if (hasPaidPlan && Objects.equals(resolved.getBenefitType(), BENEFIT_TYPE_QUOTA)
+                    && ADDITIVE_QUOTA_KEYS.contains(key)
+                    && !resolved.isUnlimited()) {
+                Integer grantTotal = usage != null ? usage.getGrantTotal() : null;
+                // grant_total only stores accumulated positive quota; unlimited is derived from current plan config.
+                resolved.setBenefitValue(grantTotal != null ? Math.max(0, grantTotal) : 0);
+            }
         } else {
             resolved.setUsedCount(0);
         }
@@ -243,6 +256,7 @@ public class VipBenefitServiceImpl implements VipBenefitService {
             toCreate.setPeriodStartTime(window.start);
             toCreate.setPeriodEndTime(window.end);
             toCreate.setUsedCount(consumeCount);
+            toCreate.setGrantTotal(0);
             toCreate.setLastUsedTime(now);
             try {
                 vipBenefitUsageMapper.insert(toCreate);
@@ -360,6 +374,62 @@ public class VipBenefitServiceImpl implements VipBenefitService {
         // Only PERIOD_TYPE_NONE (0) is supported now. Treat all as lifetime window.
         return new PeriodWindow(LocalDateTime.of(1970, 1, 1, 0, 0),
                 LocalDateTime.of(9999, 12, 31, 23, 59, 59));
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void grantAdditiveQuotaByPlan(Long userId, String planCode, String refType, String refId) {
+        if (userId == null || StrUtil.isBlank(planCode)) {
+            return;
+        }
+        String p = planCode.trim().toUpperCase();
+
+        // Grant QUOTA benefits configured on this plan
+        List<VipPlanBenefitDO> benefits = vipPlanBenefitMapper.selectList(new LambdaQueryWrapperX<VipPlanBenefitDO>()
+                .eq(VipPlanBenefitDO::getPlanCode, p)
+                .eq(VipPlanBenefitDO::getEnabled, COMMON_STATUS_ENABLE)
+                .eq(VipPlanBenefitDO::getBenefitType, BENEFIT_TYPE_QUOTA)
+                .in(VipPlanBenefitDO::getBenefitKey, ADDITIVE_QUOTA_KEYS));
+        if (CollUtil.isEmpty(benefits)) {
+            return;
+        }
+
+        PeriodWindow window = calcPeriodWindow(PERIOD_TYPE_NONE, LocalDateTime.now());
+        for (VipPlanBenefitDO b : benefits) {
+            if (b == null || StrUtil.isBlank(b.getBenefitKey())) {
+                continue;
+            }
+            Integer grant = b.getBenefitValue();
+            // grant_total only stores accumulated positive quota; unlimited is derived from current plan config.
+            if (grant == null || grant <= 0) {
+                continue;
+            }
+            String key = b.getBenefitKey().trim();
+
+            // Lock usage row to prevent concurrent grants
+            VipBenefitUsageDO usage = vipBenefitUsageMapper.selectForUpdate(userId, key, window.start, window.end);
+            if (usage == null) {
+                VipBenefitUsageDO toCreate = new VipBenefitUsageDO();
+                toCreate.setUserId(userId);
+                toCreate.setBenefitKey(key);
+                toCreate.setPeriodStartTime(window.start);
+                toCreate.setPeriodEndTime(window.end);
+                toCreate.setUsedCount(0);
+                toCreate.setGrantTotal(grant);
+                try {
+                    vipBenefitUsageMapper.insert(toCreate);
+                    continue; // inserted with proper grant_total
+                } catch (DuplicateKeyException ignore) {
+                    // another tx inserted; re-lock and update
+                    usage = vipBenefitUsageMapper.selectForUpdate(userId, key, window.start, window.end);
+                }
+            }
+            if (usage == null) {
+                continue;
+            }
+
+            vipBenefitUsageMapper.increaseGrantTotal(userId, key, window.start, window.end, grant);
+        }
     }
 }
 

@@ -51,6 +51,10 @@ public class VipBenefitUsageDO extends BaseDO {
      */
     private Integer usedCount;
     /**
+     * 周期内累计发放次数（-1 不限次）
+     */
+    private Integer grantTotal;
+    /**
      * 最近一次消耗时间
      */
     private LocalDateTime lastUsedTime;

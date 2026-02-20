@@ -31,16 +31,6 @@ public class VipBenefitUsageServiceImpl implements VipBenefitUsageService {
     private VipBenefitUsageMapper vipBenefitUsageMapper;
 
     @Override
-    public Long createVipBenefitUsage(AppVipBenefitUsageSaveReqVO createReqVO) {
-        // 插入
-        VipBenefitUsageDO vipBenefitUsage = BeanUtils.toBean(createReqVO, VipBenefitUsageDO.class);
-        vipBenefitUsageMapper.insert(vipBenefitUsage);
-
-        // 返回
-        return vipBenefitUsage.getId();
-    }
-
-    @Override
     public void updateVipBenefitUsage(AppVipBenefitUsageSaveReqVO updateReqVO) {
         // 校验存在
         validateVipBenefitUsageExists(updateReqVO.getId());

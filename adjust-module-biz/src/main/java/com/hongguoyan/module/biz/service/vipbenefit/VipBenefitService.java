@@ -64,5 +64,10 @@ public interface VipBenefitService {
      * Record a UNIQUE_KEY log once (idempotent via unique index). Used for tracking default major categories.
      */
     void markUniqueKeyOnce(Long userId, String benefitKey, String uniqueKey, String refType, String refId);
+
+    /**
+     * Grant additive QUOTA benefits for a plan (e.g., major_category_open, user_report) when subscription opens/renews.
+     */
+    void grantAdditiveQuotaByPlan(Long userId, String planCode, String refType, String refId);
 }
 
