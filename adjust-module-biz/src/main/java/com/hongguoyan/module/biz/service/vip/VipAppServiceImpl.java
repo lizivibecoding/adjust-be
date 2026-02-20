@@ -127,6 +127,15 @@ public class VipAppServiceImpl implements VipAppService {
         Map<String, List<VipPlanBenefitDO>> benefitMap = benefits.stream()
                 .collect(Collectors.groupingBy(VipPlanBenefitDO::getPlanCode));
 
+        // VIP benefit map (for SVIP folding)
+        Map<String, VipPlanBenefitDO> vipBenefitMap = new HashMap<>();
+        List<VipPlanBenefitDO> vipBenefits = benefitMap.getOrDefault("VIP", List.of());
+        for (VipPlanBenefitDO b : vipBenefits) {
+            if (b != null && StrUtil.isNotBlank(b.getBenefitKey())) {
+                vipBenefitMap.put(b.getBenefitKey(), b);
+            }
+        }
+
         List<AppVipPlanRespVO> result = new ArrayList<>(plans.size());
         for (VipPlanDO plan : plans) {
             AppVipPlanRespVO respVO = new AppVipPlanRespVO();
@@ -137,22 +146,62 @@ public class VipAppServiceImpl implements VipAppService {
             respVO.setSort(plan.getSort());
 
             List<VipPlanBenefitDO> planBenefits = benefitMap.getOrDefault(plan.getPlanCode(), List.of());
-            respVO.setBenefits(convertList(planBenefits, benefit -> {
-                AppVipPlanBenefitRespVO b = new AppVipPlanBenefitRespVO();
-                b.setBenefitKey(benefit.getBenefitKey());
-                b.setBenefitName(benefit.getBenefitName());
-                b.setBenefitDesc(benefit.getBenefitDesc());
-                b.setBenefitType(benefit.getBenefitType());
-                b.setBenefitValue(benefit.getBenefitValue());
-                b.setPeriodType(benefit.getPeriodType());
-                b.setConsumePolicy(benefit.getConsumePolicy());
-                b.setSort(benefit.getSort());
-                b.setEnabled(benefit.getEnabled());
-                return b;
-            }));
+            if ("SVIP".equalsIgnoreCase(plan.getPlanCode())) {
+                List<AppVipPlanBenefitRespVO> displayBenefits = new ArrayList<>();
+                AppVipPlanBenefitRespVO vipAll = new AppVipPlanBenefitRespVO();
+                vipAll.setBenefitKey("__vip_all__");
+                vipAll.setBenefitName("VIP 全部权益");
+                vipAll.setBenefitDesc("VIP 全部权益");
+                displayBenefits.add(vipAll);
+
+                for (VipPlanBenefitDO benefit : planBenefits) {
+                    if (benefit == null || StrUtil.isBlank(benefit.getBenefitKey())) {
+                        continue;
+                    }
+                    VipPlanBenefitDO vipBenefit = vipBenefitMap.get(benefit.getBenefitKey());
+                    if (vipBenefit != null
+                            && Objects.equals(vipBenefit.getBenefitType(), benefit.getBenefitType())
+                            && Objects.equals(vipBenefit.getBenefitValue(), benefit.getBenefitValue())) {
+                        continue; // same as VIP: folded into "VIP 全部权益"
+                    }
+                    displayBenefits.add(toAppBenefit(benefit));
+                }
+                respVO.setBenefits(displayBenefits);
+            } else {
+                respVO.setBenefits(convertList(planBenefits, this::toAppBenefit));
+            }
             result.add(respVO);
         }
         return result;
+    }
+
+    private AppVipPlanBenefitRespVO toAppBenefit(VipPlanBenefitDO benefit) {
+        AppVipPlanBenefitRespVO b = new AppVipPlanBenefitRespVO();
+        if (benefit == null) {
+            return b;
+        }
+        b.setBenefitKey(benefit.getBenefitKey());
+        b.setBenefitName(benefit.getBenefitName());
+        b.setBenefitDesc(buildBenefitLabel(benefit));
+        return b;
+    }
+
+    private String buildBenefitLabel(VipPlanBenefitDO benefit) {
+        if (benefit == null) {
+            return "";
+        }
+        String name = StrUtil.blankToDefault(StrUtil.trim(benefit.getBenefitName()), "");
+        if (Objects.equals(benefit.getBenefitType(), 1)) {
+            return name;
+        }
+        Integer value = benefit.getBenefitValue();
+        if (value != null && value == -1) {
+            return name + "（不限次）";
+        }
+        if (value != null && value > 0) {
+            return name + "（" + value + "次）";
+        }
+        return name;
     }
 
     @Override
