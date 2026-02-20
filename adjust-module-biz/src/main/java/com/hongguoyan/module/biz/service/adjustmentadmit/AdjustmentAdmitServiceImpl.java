@@ -1,40 +1,29 @@
 package com.hongguoyan.module.biz.service.adjustmentadmit;
 
-import cn.hutool.core.collection.CollUtil;
+import com.hongguoyan.framework.common.pojo.PageResult;
+import com.hongguoyan.framework.common.util.object.BeanUtils;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
-import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentAnalysisReqVO;
-import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentAnalysisRespVO;
-import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreAxisRespVO;
-import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreItemRespVO;
-import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScorePageReqVO;
-import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreStatItemRespVO;
-import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreStatReqVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.*;
 import com.hongguoyan.module.biz.controller.app.adjustmentadmit.vo.AppAdjustmentAdmitListItemRespVO;
 import com.hongguoyan.module.biz.controller.app.adjustmentadmit.vo.AppAdjustmentAdmitListReqVO;
-import org.springframework.stereotype.Service;
+import com.hongguoyan.module.biz.controller.app.adjustmentadmit.vo.AppAdjustmentAdmitPageReqVO;
+import com.hongguoyan.module.biz.controller.app.adjustmentadmit.vo.AppAdjustmentAdmitSaveReqVO;
+import com.hongguoyan.module.biz.dal.dataobject.adjustmentadmit.AdjustmentAdmitDO;
+import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
+import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
+import com.hongguoyan.module.biz.dal.mysql.adjustmentadmit.AdjustmentAdmitMapper;
+import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
+import com.hongguoyan.module.biz.service.userprofile.UserProfileService;
+import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 import jakarta.annotation.Resource;
+import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
-import com.hongguoyan.module.biz.controller.app.adjustmentadmit.vo.*;
-import com.hongguoyan.module.biz.dal.dataobject.adjustmentadmit.AdjustmentAdmitDO;
-import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
-import com.hongguoyan.framework.common.pojo.PageResult;
-import com.hongguoyan.framework.common.pojo.PageParam;
-import com.hongguoyan.framework.common.util.object.BeanUtils;
-
-import com.hongguoyan.module.biz.dal.mysql.adjustmentadmit.AdjustmentAdmitMapper;
-import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
-import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
-import com.hongguoyan.module.biz.service.userprofile.UserProfileService;
-import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
-import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertList;
-import static com.hongguoyan.framework.common.util.collection.CollectionUtils.diffList;
 import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.*;
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.*;
 
@@ -218,6 +207,7 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
     @Override
     public PageResult<AppSameScoreItemRespVO> getSameScorePage(Long userId, AppSameScorePageReqVO reqVO) {
         vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_VIEW_SAME_SCORE);
+        List<String> openedMajorCodes = resolveOpenedMajorCodes(userId);
         String targetMajorCode = null;
         if (userId != null) {
             UserProfileDO profile = userProfileService.getUserProfileByUserId(userId);
@@ -231,7 +221,7 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
                 }
             }
         }
-        return adjustmentAdmitMapper.selectSameScorePage(reqVO, targetMajorCode);
+        return adjustmentAdmitMapper.selectSameScorePage(reqVO, targetMajorCode, openedMajorCodes);
     }
 
     @Override
@@ -262,8 +252,25 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
     @Override
     public List<AppSameScoreStatItemRespVO> getSameScoreStat(Long userId, AppSameScoreStatReqVO reqVO) {
         vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_VIEW_SAME_SCORE);
-        List<AppSameScoreStatItemRespVO> list = adjustmentAdmitMapper.selectSameScoreStat(reqVO);
+        List<String> openedMajorCodes = resolveOpenedMajorCodes(userId);
+        List<AppSameScoreStatItemRespVO> list = adjustmentAdmitMapper.selectSameScoreStat(reqVO, openedMajorCodes);
         return list != null ? list : Collections.emptyList();
+    }
+
+    private List<String> resolveOpenedMajorCodes(Long userId) {
+        if (userId == null) {
+            return List.of();
+        }
+        Set<String> opened = vipBenefitService.getConsumedUniqueKeys(userId, BENEFIT_KEY_MAJOR_CATEGORY_OPEN);
+        if (opened == null || opened.isEmpty()) {
+            return List.of();
+        }
+        return opened.stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .sorted()
+                .toList();
     }
 
     private long countNotNullOrAll(List<BigDecimal> scores) {

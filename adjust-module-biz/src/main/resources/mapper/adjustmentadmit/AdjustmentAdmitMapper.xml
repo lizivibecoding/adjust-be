@@ -32,6 +32,13 @@
             <if test="reqVO.studyMode != null">
                 AND a.study_mode = #{reqVO.studyMode}
             </if>
+            <if test="openedMajorCodes != null and openedMajorCodes.size &gt; 0">
+                AND (
+                <foreach collection="openedMajorCodes" item="c" separator=" OR ">
+                    a.major_code LIKE CONCAT(#{c}, '%')
+                </foreach>
+                )
+            </if>
         </where>
     </sql>
 
@@ -73,6 +80,13 @@
                         AND IFNULL(s.is_syl, 0) = 0
                     </when>
                 </choose>
+            </if>
+            <if test="openedMajorCodes != null and openedMajorCodes.size &gt; 0">
+                AND (
+                <foreach collection="openedMajorCodes" item="c" separator=" OR ">
+                    a.major_code LIKE CONCAT(#{c}, '%')
+                </foreach>
+                )
             </if>
         </where>
     </sql>

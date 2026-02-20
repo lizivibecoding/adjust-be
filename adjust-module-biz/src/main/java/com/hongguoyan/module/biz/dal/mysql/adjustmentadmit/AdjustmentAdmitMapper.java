@@ -51,21 +51,28 @@ public interface AdjustmentAdmitMapper extends BaseMapperX<AdjustmentAdmitDO> {
     }
 
     default PageResult<AppSameScoreItemRespVO> selectSameScorePage(AppSameScorePageReqVO reqVO) {
-        return selectSameScorePage(reqVO, null);
+        return selectSameScorePage(reqVO, null, null);
     }
 
     default PageResult<AppSameScoreItemRespVO> selectSameScorePage(AppSameScorePageReqVO reqVO, String targetMajorCode) {
+        return selectSameScorePage(reqVO, targetMajorCode, null);
+    }
+
+    default PageResult<AppSameScoreItemRespVO> selectSameScorePage(AppSameScorePageReqVO reqVO, String targetMajorCode,
+                                                                   List<String> openedMajorCodes) {
         Page<AppSameScoreItemRespVO> page = MyBatisUtils.buildPage(reqVO);
-        List<AppSameScoreItemRespVO> records = selectSameScorePage(page, reqVO, targetMajorCode);
+        List<AppSameScoreItemRespVO> records = selectSameScorePage(page, reqVO, targetMajorCode, openedMajorCodes);
         page.setRecords(records);
         return new PageResult<>(page.getRecords(), page.getTotal());
     }
 
     List<AppSameScoreItemRespVO> selectSameScorePage(IPage<AppSameScoreItemRespVO> page,
                                                      @Param("reqVO") AppSameScorePageReqVO reqVO,
-                                                     @Param("targetMajorCode") String targetMajorCode);
+                                                     @Param("targetMajorCode") String targetMajorCode,
+                                                     @Param("openedMajorCodes") List<String> openedMajorCodes);
 
-    List<AppSameScoreStatItemRespVO> selectSameScoreStat(@Param("reqVO") AppSameScoreStatReqVO reqVO);
+    List<AppSameScoreStatItemRespVO> selectSameScoreStat(@Param("reqVO") AppSameScoreStatReqVO reqVO,
+                                                         @Param("openedMajorCodes") List<String> openedMajorCodes);
 
 
     /**
