@@ -1,5 +1,11 @@
 package com.hongguoyan.module.biz.service.usercustomreport;
 
+import com.hongguoyan.module.member.api.user.MemberUserApi;
+import com.hongguoyan.module.member.api.user.dto.MemberUserRespDTO;
+import java.util.Map;
+import java.util.Set;
+import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertSet;
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
@@ -29,6 +35,8 @@ public class UserCustomReportServiceImpl implements UserCustomReportService {
 
     @Resource
     private UserCustomReportMapper userCustomReportMapper;
+    @Resource
+    private MemberUserApi memberUserApi;
 
     @Override
     public UserCustomReportDO getLatestByUserId(Long userId) {
@@ -114,8 +122,18 @@ public class UserCustomReportServiceImpl implements UserCustomReportService {
                 .eqIfPresent(UserCustomReportDO::getUserId, pageReqVO.getUserId())
                 .likeIfPresent(UserCustomReportDO::getReportName, pageReqVO.getReportName())
                 .orderByDesc(UserCustomReportDO::getId));
-        if (pageResult != null && pageResult.getList() != null) {
+        if (pageResult != null && CollUtil.isNotEmpty(pageResult.getList())) {
+            // Fill default report name if missing
             pageResult.getList().forEach(this::fillDefaultReportNameIfMissing);
+
+            // Fill user name
+            Set<Long> userIds = convertSet(pageResult.getList(), UserCustomReportDO::getUserId);
+            Map<Long, MemberUserRespDTO> userMap = memberUserApi.getUserMap(userIds);
+            pageResult.getList().forEach(report -> {
+                if (report.getUserId() != null && userMap.containsKey(report.getUserId())) {
+                    report.setUserName(userMap.get(report.getUserId()).getNickname());
+                }
+            });
         }
         return pageResult;
     }

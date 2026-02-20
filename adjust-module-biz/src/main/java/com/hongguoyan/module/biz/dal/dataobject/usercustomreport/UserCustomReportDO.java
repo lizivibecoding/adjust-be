@@ -1,6 +1,7 @@
 package com.hongguoyan.module.biz.dal.dataobject.usercustomreport;
 
 import com.baomidou.mybatisplus.annotation.KeySequence;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.hongguoyan.framework.mybatis.core.dataobject.BaseDO;
@@ -10,6 +11,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.springframework.data.annotation.Transient;
 
 /**
  * 用户AI调剂定制报告 DO
@@ -35,6 +37,13 @@ public class UserCustomReportDO extends BaseDO {
      * 用户ID
      */
     private Long userId;
+
+    /**
+     * 用户名称
+     */
+    @TableField(exist = false)
+    private String userName;
+
     /**
      * 报告版本号(用户内递增，从1开始)
      */

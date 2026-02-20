@@ -14,6 +14,9 @@ public class UserCustomReportRespVO {
     @Schema(description = "用户ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
     private Long userId;
 
+    @Schema(description = "用户姓名")
+    private String userName;
+
     @Schema(description = "报告编号 (递增)", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
     private Integer reportNo;
 
