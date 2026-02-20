@@ -51,14 +51,19 @@ public interface AdjustmentAdmitMapper extends BaseMapperX<AdjustmentAdmitDO> {
     }
 
     default PageResult<AppSameScoreItemRespVO> selectSameScorePage(AppSameScorePageReqVO reqVO) {
+        return selectSameScorePage(reqVO, null);
+    }
+
+    default PageResult<AppSameScoreItemRespVO> selectSameScorePage(AppSameScorePageReqVO reqVO, String targetMajorCode) {
         Page<AppSameScoreItemRespVO> page = MyBatisUtils.buildPage(reqVO);
-        List<AppSameScoreItemRespVO> records = selectSameScorePage(page, reqVO);
+        List<AppSameScoreItemRespVO> records = selectSameScorePage(page, reqVO, targetMajorCode);
         page.setRecords(records);
         return new PageResult<>(page.getRecords(), page.getTotal());
     }
 
     List<AppSameScoreItemRespVO> selectSameScorePage(IPage<AppSameScoreItemRespVO> page,
-                                                     @Param("reqVO") AppSameScorePageReqVO reqVO);
+                                                     @Param("reqVO") AppSameScorePageReqVO reqVO,
+                                                     @Param("targetMajorCode") String targetMajorCode);
 
     List<AppSameScoreStatItemRespVO> selectSameScoreStat(@Param("reqVO") AppSameScoreStatReqVO reqVO);
 

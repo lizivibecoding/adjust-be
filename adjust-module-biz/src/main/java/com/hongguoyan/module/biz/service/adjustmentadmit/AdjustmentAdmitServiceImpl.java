@@ -218,7 +218,20 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
     @Override
     public PageResult<AppSameScoreItemRespVO> getSameScorePage(Long userId, AppSameScorePageReqVO reqVO) {
         vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_VIEW_SAME_SCORE);
-        return adjustmentAdmitMapper.selectSameScorePage(reqVO);
+        String targetMajorCode = null;
+        if (userId != null) {
+            UserProfileDO profile = userProfileService.getUserProfileByUserId(userId);
+            if (profile != null) {
+                String code = profile.getTargetMajorCode();
+                if (code != null) {
+                    code = code.trim();
+                    if (!code.isEmpty() && code.length() >= 2) {
+                        targetMajorCode = code;
+                    }
+                }
+            }
+        }
+        return adjustmentAdmitMapper.selectSameScorePage(reqVO, targetMajorCode);
     }
 
     @Override

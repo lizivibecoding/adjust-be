@@ -107,7 +107,28 @@
         <include refid="SameScoreBaseFrom" />
         <include refid="SameScoreListWhere" />
         GROUP BY a.school_id, a.college_id, a.major_id, a.year, a.study_mode
-        ORDER BY firstScore DESC, schoolLevel ASC, a.school_id DESC
+        ORDER BY
+            CASE
+                WHEN #{targetMajorCode} IS NOT NULL
+                    AND #{targetMajorCode} != ''
+                    AND CHAR_LENGTH(#{targetMajorCode}) &gt;= 6
+                    AND MAX(a.major_code) = #{targetMajorCode}
+                    THEN 3
+                WHEN #{targetMajorCode} IS NOT NULL
+                    AND #{targetMajorCode} != ''
+                    AND CHAR_LENGTH(#{targetMajorCode}) &gt;= 4
+                    AND CHAR_LENGTH(MAX(a.major_code)) &gt;= 4
+                    AND LEFT(MAX(a.major_code), 4) = LEFT(#{targetMajorCode}, 4)
+                    THEN 2
+                WHEN #{targetMajorCode} IS NOT NULL
+                    AND #{targetMajorCode} != ''
+                    AND CHAR_LENGTH(#{targetMajorCode}) &gt;= 2
+                    AND CHAR_LENGTH(MAX(a.major_code)) &gt;= 2
+                    AND LEFT(MAX(a.major_code), 2) = LEFT(#{targetMajorCode}, 2)
+                    THEN 1
+                ELSE 0
+            END DESC,
+            firstScore DESC, schoolLevel ASC, a.school_id DESC
     </select>
 
     <select id="selectSameScoreStat"
