@@ -18,6 +18,8 @@ import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScorePageRe
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreStatItemRespVO;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreStatReqVO;
 import org.apache.ibatis.annotations.Select;
+import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentAdmitPageReqVO;
+import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentAdmitPageRespVO;
 
 /**
  * 调剂录取名单 Mapper
@@ -141,5 +143,17 @@ public interface AdjustmentAdmitMapper extends BaseMapperX<AdjustmentAdmitDO> {
                                        @Param("collegeId") Long collegeId,
                                        @Param("majorCode") String majorCode,
                                        @Param("year") Integer year);
+
+    // ==================== admin queries ====================
+
+    default PageResult<AdjustmentAdmitPageRespVO> selectAdminAdmitPage(AdjustmentAdmitPageReqVO reqVO) {
+        Page<AdjustmentAdmitPageRespVO> page = MyBatisUtils.buildPage(reqVO);
+        List<AdjustmentAdmitPageRespVO> records = selectAdminAdmitPage(page, reqVO);
+        page.setRecords(records);
+        return new PageResult<>(page.getRecords(), page.getTotal());
+    }
+
+    List<AdjustmentAdmitPageRespVO> selectAdminAdmitPage(IPage<AdjustmentAdmitPageRespVO> page,
+                                                         @Param("reqVO") AdjustmentAdmitPageReqVO reqVO);
 
 }

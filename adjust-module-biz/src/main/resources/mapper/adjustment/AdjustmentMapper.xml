@@ -388,4 +388,63 @@
         ORDER BY a.year DESC, MAX(a.create_time) DESC
     </select>
 
+    <!-- ==================== admin queries ==================== -->
+
+    <sql id="AdminAdjustmentWhere">
+        <where>
+            <if test="reqVO.keyword != null and reqVO.keyword != ''">
+                AND (
+                    a.school_name LIKE CONCAT('%', #{reqVO.keyword}, '%')
+                    OR a.major_code LIKE CONCAT('%', #{reqVO.keyword}, '%')
+                    OR a.major_name LIKE CONCAT('%', #{reqVO.keyword}, '%')
+                )
+            </if>
+            <if test="reqVO.provinceCode != null and reqVO.provinceCode != ''">
+                AND s.province_code = #{reqVO.provinceCode}
+            </if>
+            <if test="reqVO.year != null">
+                AND a.year = #{reqVO.year}
+            </if>
+            <if test="reqVO.majorCode != null and reqVO.majorCode != ''">
+                AND a.major_code LIKE CONCAT(#{reqVO.majorCode}, '%')
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectAdminAdjustmentPage"
+            resultType="com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentPageRespVO">
+        SELECT
+            s.school_logo AS schoolLogo,
+            a.school_id AS schoolId,
+            a.school_name AS schoolName,
+            s.province_name AS provinceName,
+            a.college_id AS collegeId,
+            a.college_name AS collegeName,
+            a.major_id AS majorId,
+            a.major_code AS majorCode,
+            a.major_name AS majorName,
+            a.direction_code AS directionCode,
+            a.direction_name AS directionName,
+            a.study_mode AS studyMode,
+            a.year AS year,
+            IFNULL(a.adjust_count, 0) AS adjustCount,
+            IFNULL(a.adjust_left, 0) AS adjustLeft
+        FROM biz_adjustment a
+        LEFT JOIN biz_school s ON s.id = a.school_id
+        <include refid="AdminAdjustmentWhere" />
+        ORDER BY
+            a.year DESC,
+            a.create_time DESC,
+            a.school_id ASC,
+            a.college_id ASC,
+            a.major_id ASC,
+            a.direction_code ASC
+    </select>
+
+    <select id="selectAdminYearList" resultType="java.lang.Integer">
+        SELECT DISTINCT year
+        FROM biz_adjustment
+        ORDER BY year DESC
+    </select>
+
 </mapper>

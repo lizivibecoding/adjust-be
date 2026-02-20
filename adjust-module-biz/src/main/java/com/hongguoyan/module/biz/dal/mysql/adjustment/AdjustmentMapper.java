@@ -17,6 +17,8 @@ import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.BizMajorKeyDTO;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.RecruitSnapshotRowDTO;
 import com.hongguoyan.module.biz.controller.app.school.vo.AppSchoolAdjustmentPageReqVO;
 import com.hongguoyan.module.biz.controller.app.school.vo.AppSchoolAdjustmentRespVO;
+import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentPageReqVO;
+import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentPageRespVO;
 
 /**
  * 调剂 Mapper
@@ -155,5 +157,19 @@ public interface AdjustmentMapper extends BaseMapperX<AdjustmentDO> {
             """)
     int incrHotScoreById(@Param("id") Long id,
                          @Param("delta") long delta);
+
+    // ==================== admin queries ====================
+
+    default PageResult<AdjustmentPageRespVO> selectAdminAdjustmentPage(AdjustmentPageReqVO reqVO) {
+        Page<AdjustmentPageRespVO> page = MyBatisUtils.buildPage(reqVO);
+        List<AdjustmentPageRespVO> records = selectAdminAdjustmentPage(page, reqVO);
+        page.setRecords(records);
+        return new PageResult<>(page.getRecords(), page.getTotal());
+    }
+
+    List<AdjustmentPageRespVO> selectAdminAdjustmentPage(IPage<AdjustmentPageRespVO> page,
+                                                         @Param("reqVO") AdjustmentPageReqVO reqVO);
+
+    List<Integer> selectAdminYearList();
 
 }

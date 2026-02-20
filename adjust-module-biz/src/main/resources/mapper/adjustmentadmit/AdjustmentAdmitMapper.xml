@@ -247,4 +247,52 @@
         LIMIT 20
     </select>
 
+    <!-- ==================== admin queries ==================== -->
+
+    <select id="selectAdminAdmitPage"
+            resultType="com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentAdmitPageRespVO">
+        SELECT
+            a.id AS id,
+            a.candidate_name AS candidateName,
+            a.first_school_name AS firstSchoolName,
+            a.first_score AS firstScore,
+            a.retest_score AS retestScore,
+            a.total_score AS totalScore
+        FROM biz_adjustment_admit a
+        <where>
+            <if test="reqVO.schoolId != null">
+                AND a.school_id = #{reqVO.schoolId}
+            </if>
+            <if test="reqVO.collegeId != null">
+                AND a.college_id = #{reqVO.collegeId}
+            </if>
+            <if test="reqVO.majorId != null">
+                AND a.major_id = #{reqVO.majorId}
+            </if>
+            <if test="reqVO.year != null">
+                AND a.year = #{reqVO.year}
+            </if>
+            <if test="reqVO.studyMode != null">
+                AND a.study_mode = #{reqVO.studyMode}
+            </if>
+            <if test="reqVO.keyword != null and reqVO.keyword != ''">
+                AND (
+                    a.candidate_name LIKE CONCAT('%', #{reqVO.keyword}, '%')
+                    OR a.first_school_name LIKE CONCAT('%', #{reqVO.keyword}, '%')
+                )
+            </if>
+            <if test="reqVO.type != null">
+                <choose>
+                    <when test="reqVO.type == 1">
+                        AND a.first_school_id = a.school_id
+                    </when>
+                    <when test="reqVO.type == 2">
+                        AND (a.first_school_id IS NULL OR a.first_school_id != a.school_id)
+                    </when>
+                </choose>
+            </if>
+        </where>
+        ORDER BY a.total_score DESC, a.first_score DESC, a.id DESC
+    </select>
+
 </mapper>

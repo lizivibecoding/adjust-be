@@ -2,6 +2,7 @@ package com.hongguoyan.module.biz.controller.admin.major;
 
 import com.hongguoyan.framework.common.pojo.CommonResult;
 import com.hongguoyan.module.biz.controller.admin.major.vo.MajorUpdateNameReqVO;
+import com.hongguoyan.module.biz.controller.app.major.vo.AppMajorLevel1RespVO;
 import com.hongguoyan.module.biz.controller.app.major.vo.AppMajorTreeNodeRespVO;
 import com.hongguoyan.module.biz.service.major.MajorService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,6 +35,13 @@ public class MajorController {
     @PreAuthorize("@ss.hasPermission('biz:major:query')")
     public CommonResult<List<AppMajorTreeNodeRespVO>> getMajorTree() {
         return success(majorService.getMajorTree());
+    }
+
+    @GetMapping("/level1-list")
+    @Operation(summary = "获得一级学科列表（管理后台）")
+    @PreAuthorize("@ss.hasPermission('biz:major:query')")
+    public CommonResult<List<AppMajorLevel1RespVO>> getMajorLevel1List() {
+        return success(majorService.getMajorLevel1List());
     }
 
     @PutMapping("/update-name")
