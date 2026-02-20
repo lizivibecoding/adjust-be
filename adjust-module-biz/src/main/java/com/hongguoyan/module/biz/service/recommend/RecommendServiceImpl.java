@@ -442,8 +442,9 @@ public class RecommendServiceImpl implements RecommendService {
                 }
             }
             // 4.2 院校协同过滤
+            // 修正：学校分数应在用户分数的合理浮动范围内 [min, max]
             double schoolScoreA = getRankScore(schoolId, schoolRankSchoolIdMap);
-            if (totalUserScore >= filterMin * schoolScoreA || totalUserScore <= filterMax * schoolScoreA) {
+            if (schoolScoreA >= totalUserScore * filterMin && schoolScoreA <= totalUserScore * filterMax) {
                 candidateSchoolIds.add(schoolId);
             }
         }
