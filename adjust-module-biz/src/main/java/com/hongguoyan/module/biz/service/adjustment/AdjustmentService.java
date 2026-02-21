@@ -103,7 +103,7 @@ public interface AdjustmentService {
     AppAdjustmentDetailRespVO getAdjustmentDetail(Long userId, @Valid AppAdjustmentDetailReqVO reqVO);
 
     /**
-     * 调剂更新统计(默认2025年)
+     * 调剂更新统计(默认取调剂数据最大年份；无数据则取 activeYear)
      *
      * @return 更新统计
      */

@@ -441,6 +441,12 @@
             a.direction_code ASC
     </select>
 
+    <select id="selectYearList" resultType="java.lang.Integer">
+        SELECT DISTINCT year
+        FROM biz_adjustment
+        ORDER BY year DESC
+    </select>
+
     <select id="selectAdminYearList" resultType="java.lang.Integer">
         SELECT DISTINCT year
         FROM biz_adjustment

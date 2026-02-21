@@ -158,6 +158,11 @@ public interface AdjustmentMapper extends BaseMapperX<AdjustmentDO> {
     int incrHotScoreById(@Param("id") Long id,
                          @Param("delta") long delta);
 
+    /**
+     * Year list of adjustment data (distinct, desc).
+     */
+    List<Integer> selectYearList();
+
     // ==================== admin queries ====================
 
     default PageResult<AdjustmentPageRespVO> selectAdminAdjustmentPage(AdjustmentPageReqVO reqVO) {

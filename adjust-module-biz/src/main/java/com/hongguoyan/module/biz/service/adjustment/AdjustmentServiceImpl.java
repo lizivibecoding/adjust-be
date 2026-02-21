@@ -90,7 +90,6 @@ public class AdjustmentServiceImpl implements AdjustmentService {
     private AdjustProperties adjustProperties;
 
     private static final Pattern SPLIT_PATTERN = Pattern.compile("[\\n;,，；]+");
-    private static final int DEFAULT_STATS_YEAR = 2025;
     /**
      * Default opened major category code for new users with no opened codes.
      * "01" => 哲学
@@ -610,16 +609,29 @@ public class AdjustmentServiceImpl implements AdjustmentService {
 
     @Override
     public AppAdjustmentUpdateStatsRespVO getAdjustmentUpdateStats() {
-        AppAdjustmentUpdateStatsRespVO respVO = adjustmentMapper.selectUpdateStats(DEFAULT_STATS_YEAR);
+        Integer statYear = resolveStatsYear();
+        AppAdjustmentUpdateStatsRespVO respVO = adjustmentMapper.selectUpdateStats(statYear);
         if (respVO == null) {
             respVO = new AppAdjustmentUpdateStatsRespVO();
-            respVO.setYear(DEFAULT_STATS_YEAR);
+            respVO.setYear(statYear);
             respVO.setTodayUpdateCount(0L);
             respVO.setTodayUpdateSchoolCount(0L);
             respVO.setTotalCount(0L);
             respVO.setTotalSchoolCount(0L);
         }
         return respVO;
+    }
+
+    private Integer resolveStatsYear() {
+        List<Integer> years = adjustmentMapper.selectYearList();
+        if (years != null && !years.isEmpty() && years.get(0) != null) {
+            return years.get(0);
+        }
+        Integer activeYear = adjustProperties.getActiveYear();
+        if (activeYear != null) {
+            return activeYear;
+        }
+        return Year.now().getValue();
     }
 
     @Override
