@@ -6,6 +6,8 @@ import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.framework.common.util.object.BeanUtils;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.hongguoyan.module.biz.controller.admin.vipplan.vo.VipPlanBenefitItemRespVO;
+import com.hongguoyan.module.biz.controller.admin.vipplan.vo.VipPlanBenefitDisplayStatusUpdateReqVO;
+import com.hongguoyan.module.biz.controller.admin.vipplan.vo.VipPlanBenefitNameUpdateReqVO;
 import com.hongguoyan.module.biz.controller.admin.vipplan.vo.VipPlanCardRespVO;
 import com.hongguoyan.module.biz.controller.admin.vipplan.vo.VipPlanCardUpdateReqVO;
 import com.hongguoyan.module.biz.controller.admin.vipplan.vo.VipPlanPageReqVO;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -27,7 +30,9 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
+import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.VIP_PLAN_DISCOUNT_CONFIG_INVALID;
 import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.VIP_PLAN_NOT_EXISTS;
+import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.VIP_PLAN_FEATURE_NOT_EXISTS;
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_MAJOR_CATEGORY_OPEN;
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_USER_REPORT;
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.PLAN_CODE_SVIP;
@@ -112,6 +117,10 @@ public class VipPlanServiceImpl implements VipPlanService {
             card.setPlanCode(plan.getPlanCode());
             card.setPlanName(plan.getPlanName());
             card.setPlanPrice(plan.getPlanPrice());
+            card.setDurationDays(plan.getDurationDays());
+            card.setDiscountPrice(plan.getDiscountPrice());
+            card.setDiscountStartTime(plan.getDiscountStartTime());
+            card.setDiscountEndTime(plan.getDiscountEndTime());
 
             List<VipPlanBenefitDO> planBenefits = benefitMap.getOrDefault(plan.getPlanCode(), List.of());
             List<VipPlanBenefitItemRespVO> items = planBenefits.stream()
@@ -145,10 +154,47 @@ public class VipPlanServiceImpl implements VipPlanService {
             throw exception(VIP_PLAN_NOT_EXISTS);
         }
         plan.setPlanPrice(updateReqVO.getPlanPrice());
+        plan.setDurationDays(updateReqVO.getDurationDays());
+        Integer discountPrice = normalizeDiscountPrice(updateReqVO.getDiscountPrice());
+        plan.setDiscountPrice(discountPrice);
+        if (discountPrice == null) {
+            plan.setDiscountStartTime(null);
+            plan.setDiscountEndTime(null);
+        } else {
+            plan.setDiscountStartTime(updateReqVO.getDiscountStartTime());
+            plan.setDiscountEndTime(updateReqVO.getDiscountEndTime());
+        }
+        validateDiscountWindow(plan);
         vipPlanMapper.updateById(plan);
 
         updateBenefitValue(planCode, BENEFIT_KEY_MAJOR_CATEGORY_OPEN, updateReqVO.getMajorCategoryOpenCount());
         updateBenefitValue(planCode, BENEFIT_KEY_USER_REPORT, updateReqVO.getUserReportCount());
+    }
+
+    private Integer normalizeDiscountPrice(Integer discountPrice) {
+        if (discountPrice == null || discountPrice <= 0) {
+            return null;
+        }
+        return discountPrice;
+    }
+
+    private void validateDiscountWindow(VipPlanDO plan) {
+        if (plan == null) {
+            return;
+        }
+        Integer discountPrice = plan.getDiscountPrice();
+        if (discountPrice == null) {
+            return;
+        }
+        Integer planPrice = plan.getPlanPrice();
+        if (planPrice != null && discountPrice > planPrice) {
+            throw exception(VIP_PLAN_DISCOUNT_CONFIG_INVALID);
+        }
+        LocalDateTime start = plan.getDiscountStartTime();
+        LocalDateTime end = plan.getDiscountEndTime();
+        if (start != null && end != null && start.isAfter(end)) {
+            throw exception(VIP_PLAN_DISCOUNT_CONFIG_INVALID);
+        }
     }
 
     private void updateBenefitValue(String planCode, String benefitKey, Integer benefitValue) {
@@ -162,6 +208,38 @@ public class VipPlanServiceImpl implements VipPlanService {
         if (benefit.getDisplayStatus() == null) {
             benefit.setDisplayStatus(CommonStatusEnum.ENABLE.getStatus());
         }
+        vipPlanBenefitMapper.updateById(benefit);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateVipPlanBenefitDisplayStatus(VipPlanBenefitDisplayStatusUpdateReqVO reqVO) {
+        String planCode = StrUtil.trimToEmpty(reqVO.getPlanCode()).toUpperCase(Locale.ROOT);
+        String benefitKey = StrUtil.trimToEmpty(reqVO.getBenefitKey());
+        Integer status = reqVO.getDisplayStatus();
+        VipPlanBenefitDO benefit = vipPlanBenefitMapper.selectOne(new LambdaQueryWrapperX<VipPlanBenefitDO>()
+                .eq(VipPlanBenefitDO::getPlanCode, planCode)
+                .eq(VipPlanBenefitDO::getBenefitKey, benefitKey));
+        if (benefit == null) {
+            throw exception(VIP_PLAN_FEATURE_NOT_EXISTS);
+        }
+        benefit.setDisplayStatus(status);
+        vipPlanBenefitMapper.updateById(benefit);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateVipPlanBenefitName(VipPlanBenefitNameUpdateReqVO reqVO) {
+        String planCode = StrUtil.trimToEmpty(reqVO.getPlanCode()).toUpperCase(Locale.ROOT);
+        String benefitKey = StrUtil.trimToEmpty(reqVO.getBenefitKey());
+        String benefitName = StrUtil.trimToEmpty(reqVO.getBenefitName());
+        VipPlanBenefitDO benefit = vipPlanBenefitMapper.selectOne(new LambdaQueryWrapperX<VipPlanBenefitDO>()
+                .eq(VipPlanBenefitDO::getPlanCode, planCode)
+                .eq(VipPlanBenefitDO::getBenefitKey, benefitKey));
+        if (benefit == null) {
+            throw exception(VIP_PLAN_FEATURE_NOT_EXISTS);
+        }
+        benefit.setBenefitName(benefitName);
         vipPlanBenefitMapper.updateById(benefit);
     }
 

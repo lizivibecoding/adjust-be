@@ -53,6 +53,22 @@ public class VipPlanController {
         return success(true);
     }
 
+    @PutMapping("/benefit/display-status")
+    @Operation(summary = "更新套餐权益展示开关")
+    @PreAuthorize("@ss.hasPermission('biz:vip-plan:update')")
+    public CommonResult<Boolean> updateVipPlanBenefitDisplayStatus(@Valid @RequestBody VipPlanBenefitDisplayStatusUpdateReqVO reqVO) {
+        vipPlanService.updateVipPlanBenefitDisplayStatus(reqVO);
+        return success(true);
+    }
+
+    @PutMapping("/benefit/name")
+    @Operation(summary = "更新套餐权益名称")
+    @PreAuthorize("@ss.hasPermission('biz:vip-plan:update')")
+    public CommonResult<Boolean> updateVipPlanBenefitName(@Valid @RequestBody VipPlanBenefitNameUpdateReqVO reqVO) {
+        vipPlanService.updateVipPlanBenefitName(reqVO);
+        return success(true);
+    }
+
     @DeleteMapping("/delete")
     @Operation(summary = "删除会员套餐")
     @Parameter(name = "id", description = "编号", required = true)

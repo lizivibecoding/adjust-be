@@ -34,4 +34,9 @@ public interface VipOrderService {
      */
     int expireOrder();
 
+    /**
+     * 后台发起退款：按用户与套餐，退最近一笔已支付且未发起退款的订单（LIFO）
+     */
+    VipOrderRefundRespVO refundLatestPaidOrder(VipOrderRefundReqVO reqVO);
+
 }

@@ -69,4 +69,14 @@ public interface VipPlanService {
      */
     void updateVipPlanCard(@Valid VipPlanCardUpdateReqVO updateReqVO);
 
+    /**
+     * 更新套餐权益展示开关（仅影响前端展示，不影响功能）
+     */
+    void updateVipPlanBenefitDisplayStatus(@Valid VipPlanBenefitDisplayStatusUpdateReqVO reqVO);
+
+    /**
+     * 更新套餐权益名称（仅修改 benefit_name）
+     */
+    void updateVipPlanBenefitName(@Valid VipPlanBenefitNameUpdateReqVO reqVO);
+
 }

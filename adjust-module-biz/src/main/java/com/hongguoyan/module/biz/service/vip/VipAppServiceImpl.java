@@ -4,6 +4,8 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.hongguoyan.framework.common.enums.UserTypeEnum;
@@ -19,6 +21,8 @@ import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipRefundNotifyReqVO;
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.module.biz.dal.dataobject.vipcouponbatch.VipCouponBatchDO;
 import com.hongguoyan.module.biz.dal.dataobject.vipcouponcode.VipCouponCodeDO;
+import com.hongguoyan.module.biz.dal.dataobject.vipbenefitlog.VipBenefitLogDO;
+import com.hongguoyan.module.biz.dal.dataobject.vipbenefitusage.VipBenefitUsageDO;
 import com.hongguoyan.module.biz.dal.dataobject.vipsubscriptionlog.VipSubscriptionLogDO;
 import com.hongguoyan.module.biz.dal.dataobject.viporder.VipOrderDO;
 import com.hongguoyan.module.biz.dal.dataobject.vipplan.VipPlanDO;
@@ -27,11 +31,15 @@ import com.hongguoyan.module.biz.dal.dataobject.vipsubscription.VipSubscriptionD
 import com.hongguoyan.module.biz.enums.vip.VipOrderStatusEnum;
 import com.hongguoyan.module.biz.dal.mysql.vipcouponbatch.VipCouponBatchMapper;
 import com.hongguoyan.module.biz.dal.mysql.vipcouponcode.VipCouponCodeMapper;
+import com.hongguoyan.module.biz.dal.mysql.vipbenefitlog.VipBenefitLogMapper;
+import com.hongguoyan.module.biz.dal.mysql.vipbenefitusage.VipBenefitUsageMapper;
 import com.hongguoyan.module.biz.dal.mysql.vipsubscriptionlog.VipSubscriptionLogMapper;
 import com.hongguoyan.module.biz.dal.mysql.viporder.VipOrderMapper;
 import com.hongguoyan.module.biz.dal.mysql.vipplan.VipPlanMapper;
 import com.hongguoyan.module.biz.dal.mysql.vipplanbenefit.VipPlanBenefitMapper;
 import com.hongguoyan.module.biz.dal.mysql.vipsubscription.VipSubscriptionMapper;
+import com.hongguoyan.module.biz.dal.mysql.userprofile.UserProfileMapper;
+import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
 import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 import com.hongguoyan.module.biz.service.vipbenefit.model.VipResolvedBenefit;
 import com.hongguoyan.module.pay.api.notify.dto.PayOrderNotifyReqDTO;
@@ -40,6 +48,7 @@ import com.hongguoyan.module.pay.api.order.dto.PayOrderCreateReqDTO;
 import com.hongguoyan.module.pay.api.order.dto.PayOrderRespDTO;
 import com.hongguoyan.module.pay.enums.order.PayOrderStatusEnum;
 import jakarta.annotation.Resource;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -78,6 +87,7 @@ public class VipAppServiceImpl implements VipAppService {
 
     private static final int VIP_COUPON_LOG_ACTION_OPEN = 1;
     private static final int VIP_COUPON_LOG_ACTION_RENEW = 2;
+    private static final int VIP_COUPON_LOG_ACTION_REFUND_SHRINK = 3;
     private static final int VIP_COUPON_LOG_SOURCE_PAY = 1;
     private static final int VIP_COUPON_LOG_SOURCE_COUPON = 2;
     private static final int VIP_COUPON_LOG_REF_TYPE_ORDER = 1;
@@ -88,6 +98,8 @@ public class VipAppServiceImpl implements VipAppService {
      * "01" => 哲学
      */
     private static final String DEFAULT_MAJOR_CATEGORY_CODE = "01";
+    private static final LocalDateTime PERIOD_START_LIFETIME = LocalDateTime.of(1970, 1, 1, 0, 0);
+    private static final LocalDateTime PERIOD_END_LIFETIME = LocalDateTime.of(9999, 12, 31, 23, 59, 59);
 
     @Resource
     private VipPlanMapper vipPlanMapper;
@@ -104,9 +116,15 @@ public class VipAppServiceImpl implements VipAppService {
     @Resource
     private VipOrderMapper vipOrderMapper;
     @Resource
+    private VipBenefitUsageMapper vipBenefitUsageMapper;
+    @Resource
+    private VipBenefitLogMapper vipBenefitLogMapper;
+    @Resource
     private PayOrderApi payOrderApi;
     @Resource
     private VipBenefitService vipBenefitService;
+    @Resource
+    private UserProfileMapper userProfileMapper;
 
     @Override
     public List<AppVipPlanRespVO> getPlanList() {
@@ -127,52 +145,43 @@ public class VipAppServiceImpl implements VipAppService {
         Map<String, List<VipPlanBenefitDO>> benefitMap = benefits.stream()
                 .collect(Collectors.groupingBy(VipPlanBenefitDO::getPlanCode));
 
-        // VIP benefit map (for SVIP folding)
-        Map<String, VipPlanBenefitDO> vipBenefitMap = new HashMap<>();
-        List<VipPlanBenefitDO> vipBenefits = benefitMap.getOrDefault("VIP", List.of());
-        for (VipPlanBenefitDO b : vipBenefits) {
-            if (b != null && StrUtil.isNotBlank(b.getBenefitKey())) {
-                vipBenefitMap.put(b.getBenefitKey(), b);
-            }
-        }
-
         List<AppVipPlanRespVO> result = new ArrayList<>(plans.size());
+        LocalDateTime now = LocalDateTime.now();
         for (VipPlanDO plan : plans) {
             AppVipPlanRespVO respVO = new AppVipPlanRespVO();
             respVO.setPlanCode(plan.getPlanCode());
             respVO.setPlanName(plan.getPlanName());
             respVO.setPlanPrice(plan.getPlanPrice());
+            fillPlanDiscountInfo(respVO, plan, now);
             respVO.setDurationDays(plan.getDurationDays());
             respVO.setSort(plan.getSort());
 
             List<VipPlanBenefitDO> planBenefits = benefitMap.getOrDefault(plan.getPlanCode(), List.of());
-            if ("SVIP".equalsIgnoreCase(plan.getPlanCode())) {
-                List<AppVipPlanBenefitRespVO> displayBenefits = new ArrayList<>();
-                AppVipPlanBenefitRespVO vipAll = new AppVipPlanBenefitRespVO();
-                vipAll.setBenefitKey("__vip_all__");
-                vipAll.setBenefitName("VIP 全部权益");
-                vipAll.setBenefitDesc("VIP 全部权益");
-                displayBenefits.add(vipAll);
-
-                for (VipPlanBenefitDO benefit : planBenefits) {
-                    if (benefit == null || StrUtil.isBlank(benefit.getBenefitKey())) {
-                        continue;
-                    }
-                    VipPlanBenefitDO vipBenefit = vipBenefitMap.get(benefit.getBenefitKey());
-                    if (vipBenefit != null
-                            && Objects.equals(vipBenefit.getBenefitType(), benefit.getBenefitType())
-                            && Objects.equals(vipBenefit.getBenefitValue(), benefit.getBenefitValue())) {
-                        continue; // same as VIP: folded into "VIP 全部权益"
-                    }
-                    displayBenefits.add(toAppBenefit(benefit));
-                }
-                respVO.setBenefits(displayBenefits);
-            } else {
-                respVO.setBenefits(convertList(planBenefits, this::toAppBenefit));
-            }
+            // SVIP 不再聚合折叠，直接返回该套餐配置的全部权益点（display_status=1）
+            respVO.setBenefits(convertList(planBenefits, this::toAppBenefit));
             result.add(respVO);
         }
         return result;
+    }
+
+    private void fillPlanDiscountInfo(AppVipPlanRespVO respVO, VipPlanDO plan, LocalDateTime now) {
+        if (respVO == null || plan == null) {
+            return;
+        }
+        Integer planPrice = plan.getPlanPrice() != null ? plan.getPlanPrice() : 0;
+        Integer discountPrice = plan.getDiscountPrice();
+        LocalDateTime start = plan.getDiscountStartTime();
+        LocalDateTime end = plan.getDiscountEndTime();
+        boolean active = false;
+        if (discountPrice != null && discountPrice > 0 && now != null) {
+            boolean afterStart = start == null || !now.isBefore(start);
+            boolean beforeEnd = end == null || !now.isAfter(end);
+            active = afterStart && beforeEnd;
+        }
+        respVO.setDiscountActive(active);
+        respVO.setDiscountPrice(discountPrice);
+        respVO.setDiscountStartTime(start);
+        respVO.setDiscountEndTime(end);
     }
 
     private AppVipPlanBenefitRespVO toAppBenefit(VipPlanBenefitDO benefit) {
@@ -180,8 +189,6 @@ public class VipAppServiceImpl implements VipAppService {
         if (benefit == null) {
             return b;
         }
-        b.setBenefitKey(benefit.getBenefitKey());
-        b.setBenefitName(benefit.getBenefitName());
         b.setBenefitDesc(buildBenefitLabel(benefit));
         return b;
     }
@@ -309,7 +316,7 @@ public class VipAppServiceImpl implements VipAppService {
         order.setOrderNo(IdUtil.getSnowflakeNextIdStr());
         order.setUserId(userId);
         order.setPlanCode(plan.getPlanCode());
-        order.setAmount(plan.getPlanPrice());
+        order.setAmount(calcOrderPrice(plan, now));
         order.setStatus(VIP_ORDER_STATUS_WAIT_PAY);
         order.setExpireTime(now.plusMinutes(30));
         vipOrderMapper.insert(order);
@@ -333,6 +340,28 @@ public class VipAppServiceImpl implements VipAppService {
         respVO.setExpireTime(order.getExpireTime());
         respVO.setPayOrderId(order.getPayOrderId());
         return respVO;
+    }
+
+    private Integer calcOrderPrice(VipPlanDO plan, LocalDateTime now) {
+        if (plan == null) {
+            return 0;
+        }
+        Integer planPrice = plan.getPlanPrice() != null ? plan.getPlanPrice() : 0;
+        if (now == null) {
+            return planPrice;
+        }
+        Integer discountPrice = plan.getDiscountPrice();
+        if (discountPrice == null || discountPrice <= 0) {
+            return planPrice;
+        }
+        LocalDateTime start = plan.getDiscountStartTime();
+        LocalDateTime end = plan.getDiscountEndTime();
+        boolean afterStart = start == null || !now.isBefore(start);
+        boolean beforeEnd = end == null || !now.isAfter(end);
+        if (afterStart && beforeEnd) {
+            return Math.min(planPrice, discountPrice);
+        }
+        return planPrice;
     }
 
     @Override
@@ -387,6 +416,7 @@ public class VipAppServiceImpl implements VipAppService {
         String merchantOrderId = StrUtil.trim(notifyReqVO.getMerchantOrderId());
         Long payRefundId = notifyReqVO.getPayRefundId();
         Integer refundPrice = notifyReqVO.getRefundPrice();
+        LocalDateTime refundTime = parseNotifyTimeOrNow(notifyReqVO.getSuccessTime());
 
         // 1. 校验业务订单是否存在
         VipOrderDO order = vipOrderMapper.selectOne(new LambdaQueryWrapperX<VipOrderDO>()
@@ -398,6 +428,8 @@ public class VipAppServiceImpl implements VipAppService {
         // 2. 幂等：已退款直接返回；若退款单号不一致，提示异常便于排查
         if (Objects.equals(order.getStatus(), VIP_ORDER_STATUS_REFUNDED)) {
             if (order.getPayRefundId() != null && Objects.equals(order.getPayRefundId(), payRefundId)) {
+                // 兼容历史：旧逻辑可能只更新订单状态未做订阅/权益回滚；若未处理过则补偿执行一次
+                applyRefundShrinkIfNeeded(order, refundTime);
                 return Boolean.TRUE;
             }
             throw exception(VIP_REFUND_NOTIFY_REFUND_ID_MISMATCH);
@@ -414,7 +446,6 @@ public class VipAppServiceImpl implements VipAppService {
         }
 
         // 5. 更新订单为已退款（并发安全：只从已支付改为已退款）
-        LocalDateTime refundTime = parseNotifyTimeOrNow(notifyReqVO.getSuccessTime());
         int updated = vipOrderMapper.update(null, new LambdaUpdateWrapper<VipOrderDO>()
                 .set(VipOrderDO::getStatus, VIP_ORDER_STATUS_REFUNDED)
                 .set(VipOrderDO::getPayRefundId, payRefundId)
@@ -427,11 +458,285 @@ public class VipAppServiceImpl implements VipAppService {
                     .eq(VipOrderDO::getOrderNo, order.getOrderNo()));
             if (latest != null && Objects.equals(latest.getStatus(), VIP_ORDER_STATUS_REFUNDED)
                     && latest.getPayRefundId() != null && Objects.equals(latest.getPayRefundId(), payRefundId)) {
+                applyRefundShrinkIfNeeded(latest, refundTime);
                 return Boolean.TRUE;
             }
             throw exception(VIP_REFUND_NOTIFY_ORDER_STATUS_INVALID);
         }
+        // 6. 退款缩容：扣回订阅时长/额度，并按最早开通保留门类（必留 profile 匹配门类）
+        applyRefundShrinkIfNeeded(order, refundTime);
         return Boolean.TRUE;
+    }
+
+    private void applyRefundShrinkIfNeeded(VipOrderDO order, LocalDateTime refundTime) {
+        if (order == null || order.getUserId() == null || StrUtil.isBlank(order.getOrderNo())) {
+            return;
+        }
+
+        // 幂等锁：先写入退款缩容流水，成功才执行扣回/缩容；重复则直接返回
+        VipSubscriptionLogDO lock = new VipSubscriptionLogDO();
+        lock.setUserId(order.getUserId());
+        lock.setPlanCode(order.getPlanCode());
+        lock.setAction(VIP_COUPON_LOG_ACTION_REFUND_SHRINK);
+        lock.setSource(VIP_COUPON_LOG_SOURCE_PAY);
+        lock.setRefType(VIP_COUPON_LOG_REF_TYPE_ORDER);
+        lock.setRefId(order.getOrderNo());
+        lock.setBeforeEndTime(null);
+        lock.setAfterEndTime(refundTime != null ? refundTime : LocalDateTime.now());
+        lock.setGrantDays(0);
+        lock.setRemark("退款缩容");
+        try {
+            vipSubscriptionLogMapper.insert(lock);
+        } catch (DuplicateKeyException ignore) {
+            return;
+        }
+
+        // 1) 扣回订阅 end_time（支持多次购买叠加+倒序退款）
+        VipSubscriptionDO sub = vipSubscriptionMapper.selectOne(new LambdaQueryWrapperX<VipSubscriptionDO>()
+                .eq(VipSubscriptionDO::getUserId, order.getUserId())
+                .eq(VipSubscriptionDO::getPlanCode, order.getPlanCode()));
+        LocalDateTime beforeEndTime = sub != null ? sub.getEndTime() : null;
+        Integer grantDays = resolveGrantDaysByOrder(order);
+        LocalDateTime afterEndTime = beforeEndTime;
+        if (sub != null && beforeEndTime != null && grantDays != null && grantDays > 0) {
+            afterEndTime = beforeEndTime.minusDays(grantDays);
+            // 保底：到期时间不应早于开通时间
+            if (sub.getStartTime() != null && afterEndTime.isBefore(sub.getStartTime())) {
+                afterEndTime = sub.getStartTime();
+            }
+            sub.setEndTime(afterEndTime);
+            vipSubscriptionMapper.updateById(sub);
+        }
+
+        // 2) 扣回累计配额 grant_total（major_category_open / user_report）
+        rollbackGrantTotalByOrder(order, BENEFIT_KEY_MAJOR_CATEGORY_OPEN);
+        rollbackGrantTotalByOrder(order, BENEFIT_KEY_USER_REPORT);
+
+        // 3) 门类缩容：按最早开通保留，并强制保留 profile 匹配门类 code
+        shrinkMajorCategoriesByRefund(order.getUserId());
+
+        // 回填锁记录的变更信息（便于审计与排查）
+        if (lock.getId() != null) {
+            VipSubscriptionLogDO toUpdate = new VipSubscriptionLogDO();
+            toUpdate.setId(lock.getId());
+            toUpdate.setBeforeEndTime(beforeEndTime);
+            toUpdate.setAfterEndTime(afterEndTime != null ? afterEndTime : (refundTime != null ? refundTime : LocalDateTime.now()));
+            toUpdate.setGrantDays(grantDays != null ? -Math.abs(grantDays) : 0);
+            vipSubscriptionLogMapper.updateById(toUpdate);
+        }
+    }
+
+    private Integer resolveGrantDaysByOrder(VipOrderDO order) {
+        if (order == null) {
+            return null;
+        }
+        VipSubscriptionLogDO paidLog = vipSubscriptionLogMapper.selectOne(new LambdaQueryWrapperX<VipSubscriptionLogDO>()
+                .eq(VipSubscriptionLogDO::getUserId, order.getUserId())
+                .eq(VipSubscriptionLogDO::getPlanCode, order.getPlanCode())
+                .eq(VipSubscriptionLogDO::getRefType, VIP_COUPON_LOG_REF_TYPE_ORDER)
+                .eq(VipSubscriptionLogDO::getRefId, order.getOrderNo())
+                .in(VipSubscriptionLogDO::getAction, VIP_COUPON_LOG_ACTION_OPEN, VIP_COUPON_LOG_ACTION_RENEW)
+                .orderByDesc(VipSubscriptionLogDO::getId)
+                .last("LIMIT 1"));
+        if (paidLog != null && paidLog.getGrantDays() != null && paidLog.getGrantDays() > 0) {
+            return paidLog.getGrantDays();
+        }
+        VipPlanDO plan = vipPlanMapper.selectOne(new LambdaQueryWrapperX<VipPlanDO>()
+                .eq(VipPlanDO::getPlanCode, order.getPlanCode()));
+        return plan != null ? plan.getDurationDays() : null;
+    }
+
+    private void rollbackGrantTotalByOrder(VipOrderDO order, String benefitKey) {
+        if (order == null || order.getUserId() == null || StrUtil.isBlank(benefitKey)) {
+            return;
+        }
+        Integer rollbackCount = resolveRollbackCount(order, benefitKey);
+        if (rollbackCount == null || rollbackCount <= 0) {
+            return;
+        }
+        VipBenefitUsageDO usage = vipBenefitUsageMapper.selectForUpdate(order.getUserId(), benefitKey, PERIOD_START_LIFETIME, PERIOD_END_LIFETIME);
+        if (usage == null || usage.getGrantTotal() == null || usage.getGrantTotal() <= 0) {
+            return;
+        }
+        int before = Math.max(0, usage.getGrantTotal());
+        int sub = Math.min(before, rollbackCount);
+        if (sub <= 0) {
+            return;
+        }
+        int after = before - sub;
+        int used = usage.getUsedCount() != null ? Math.max(0, usage.getUsedCount()) : 0;
+        // 夹紧：grant_total 不小于 used_count，避免出现“用量 > 总量”的展示/口径困扰（剩余依旧为 0）
+        int finalGrant = Math.max(after, used);
+        if (finalGrant == before) {
+            return;
+        }
+        if (finalGrant == after) {
+            vipBenefitUsageMapper.increaseGrantTotal(order.getUserId(), benefitKey, PERIOD_START_LIFETIME, PERIOD_END_LIFETIME, -sub);
+            return;
+        }
+        // after < used: 直接设置为 used（等价于 rollback 到“剩余 0”）
+        vipBenefitUsageMapper.update(null, new LambdaUpdateWrapper<VipBenefitUsageDO>()
+                .set(VipBenefitUsageDO::getGrantTotal, finalGrant)
+                .eq(VipBenefitUsageDO::getUserId, order.getUserId())
+                .eq(VipBenefitUsageDO::getBenefitKey, benefitKey)
+                .eq(VipBenefitUsageDO::getPeriodStartTime, PERIOD_START_LIFETIME)
+                .eq(VipBenefitUsageDO::getPeriodEndTime, PERIOD_END_LIFETIME));
+    }
+
+    private Integer resolveRollbackCount(VipOrderDO order, String benefitKey) {
+        // 兼容：优先从订单 extra 读取，缺失时回退到当前套餐配置
+        Integer fromExtra = getExtraInt(order != null ? order.getExtra() : null,
+                "major_category_open".equalsIgnoreCase(benefitKey) ? "grantMajorCategoryOpen" : "grantUserReport");
+        if (fromExtra != null) {
+            if (fromExtra <= 0) {
+                return 0;
+            }
+            return fromExtra;
+        }
+        VipPlanBenefitDO benefit = vipPlanBenefitMapper.selectOne(new LambdaQueryWrapperX<VipPlanBenefitDO>()
+                .eq(VipPlanBenefitDO::getPlanCode, order.getPlanCode())
+                .eq(VipPlanBenefitDO::getBenefitKey, StrUtil.trim(benefitKey)));
+        Integer value = benefit != null ? benefit.getBenefitValue() : null;
+        if (value == null || value <= 0) {
+            return 0;
+        }
+        // -1(不限次) 不回滚 grant_total（grantAdditiveQuotaByPlan 也不会累加）
+        if (value == -1) {
+            return 0;
+        }
+        return value;
+    }
+
+    private Integer getExtraInt(String extra, String key) {
+        if (StrUtil.isBlank(extra) || StrUtil.isBlank(key)) {
+            return null;
+        }
+        try {
+            JSONObject obj = JSONUtil.parseObj(extra);
+            if (obj.containsKey(key)) {
+                return obj.getInt(key);
+            }
+        } catch (Exception ignore) {
+            // ignore
+        }
+        return null;
+    }
+
+    private void shrinkMajorCategoriesByRefund(Long userId) {
+        if (userId == null) {
+            return;
+        }
+        VipResolvedBenefit major = vipBenefitService.resolveBenefit(userId, BENEFIT_KEY_MAJOR_CATEGORY_OPEN);
+        if (major == null || !Boolean.TRUE.equals(major.getEnabled())) {
+            return;
+        }
+        Integer total = major.getBenefitValue();
+        if (total != null && total == -1) { // unlimited: no need shrink
+            return;
+        }
+        int allowed = Math.max(1, total != null ? total : 0);
+
+        String keepCode = resolveProfileMajorCategoryCode(userId);
+        if (StrUtil.isBlank(keepCode)) {
+            keepCode = DEFAULT_MAJOR_CATEGORY_CODE;
+        }
+
+        // 查询已开通门类（按最早开通排序）
+        List<VipBenefitLogDO> logs = vipBenefitLogMapper.selectList(new LambdaQueryWrapperX<VipBenefitLogDO>()
+                .eq(VipBenefitLogDO::getUserId, userId)
+                .eq(VipBenefitLogDO::getBenefitKey, BENEFIT_KEY_MAJOR_CATEGORY_OPEN)
+                .isNotNull(VipBenefitLogDO::getUniqueKey)
+                .ne(VipBenefitLogDO::getUniqueKey, "")
+                .orderByAsc(VipBenefitLogDO::getCreateTime)
+                .orderByAsc(VipBenefitLogDO::getId));
+
+        LinkedHashSet<String> preserveKeys = new LinkedHashSet<>();
+        if (StrUtil.isNotBlank(keepCode)) {
+            preserveKeys.add(keepCode);
+        }
+        if (logs != null) {
+            for (VipBenefitLogDO row : logs) {
+                if (preserveKeys.size() >= allowed) {
+                    break;
+                }
+                if (row == null || StrUtil.isBlank(row.getUniqueKey())) {
+                    continue;
+                }
+                preserveKeys.add(row.getUniqueKey().trim());
+            }
+        }
+
+        // 删除多余门类
+        List<Long> toDeleteIds = new ArrayList<>();
+        if (logs != null) {
+            for (VipBenefitLogDO row : logs) {
+                if (row == null || row.getId() == null) {
+                    continue;
+                }
+                String key = StrUtil.trim(row.getUniqueKey());
+                if (!preserveKeys.contains(key)) {
+                    toDeleteIds.add(row.getId());
+                }
+            }
+        }
+        if (!toDeleteIds.isEmpty()) {
+            vipBenefitLogMapper.deleteBatchIds(toDeleteIds);
+        }
+
+        // 修正 used_count（按实际保留数）
+        int preservedCount = preserveKeys.size();
+        upsertMajorCategoryUsage(userId, preservedCount, total != null ? total : 0);
+    }
+
+    private void upsertMajorCategoryUsage(Long userId, int usedCount, int currentTotal) {
+        // 优先按标准 lifetime 窗口更新；若历史数据 period_end_time 不一致，则按唯一键(user+key+period_start)兜底修正
+        int updated = vipBenefitUsageMapper.update(null, new LambdaUpdateWrapper<VipBenefitUsageDO>()
+                .set(VipBenefitUsageDO::getUsedCount, usedCount)
+                .eq(VipBenefitUsageDO::getUserId, userId)
+                .eq(VipBenefitUsageDO::getBenefitKey, BENEFIT_KEY_MAJOR_CATEGORY_OPEN)
+                .eq(VipBenefitUsageDO::getPeriodStartTime, PERIOD_START_LIFETIME)
+                .eq(VipBenefitUsageDO::getPeriodEndTime, PERIOD_END_LIFETIME));
+        if (updated > 0) {
+            return;
+        }
+
+        VipBenefitUsageDO exist = vipBenefitUsageMapper.selectOne(new LambdaQueryWrapperX<VipBenefitUsageDO>()
+                .eq(VipBenefitUsageDO::getUserId, userId)
+                .eq(VipBenefitUsageDO::getBenefitKey, BENEFIT_KEY_MAJOR_CATEGORY_OPEN)
+                .eq(VipBenefitUsageDO::getPeriodStartTime, PERIOD_START_LIFETIME)
+                .last("LIMIT 1"));
+        if (exist != null && exist.getId() != null) {
+            exist.setPeriodEndTime(PERIOD_END_LIFETIME);
+            exist.setUsedCount(usedCount);
+            // 仅当仍为付费会员且 total>0 时，用当前 total 修正 grant_total（避免误置 0）
+            if (currentTotal > 0 && exist.getGrantTotal() != null && exist.getGrantTotal() >= 0) {
+                exist.setGrantTotal(Math.max(exist.getGrantTotal(), currentTotal));
+            }
+            vipBenefitUsageMapper.updateById(exist);
+            return;
+        }
+
+        VipBenefitUsageDO toCreate = new VipBenefitUsageDO();
+        toCreate.setUserId(userId);
+        toCreate.setBenefitKey(BENEFIT_KEY_MAJOR_CATEGORY_OPEN);
+        toCreate.setPeriodStartTime(PERIOD_START_LIFETIME);
+        toCreate.setPeriodEndTime(PERIOD_END_LIFETIME);
+        toCreate.setUsedCount(usedCount);
+        toCreate.setGrantTotal(Math.max(0, currentTotal));
+        vipBenefitUsageMapper.insert(toCreate);
+    }
+
+    private String resolveProfileMajorCategoryCode(Long userId) {
+        if (userId == null) {
+            return "";
+        }
+        UserProfileDO profile = userProfileMapper.selectOne(new LambdaQueryWrapperX<UserProfileDO>()
+                .eq(UserProfileDO::getUserId, userId));
+        String majorCode = profile != null ? StrUtil.blankToDefault(profile.getTargetMajorCode(), "").trim() : "";
+        if (majorCode.length() < 2) {
+            return "";
+        }
+        return majorCode.substring(0, 2);
     }
 
     private LocalDateTime parseNotifyTimeOrNow(String timeStr) {
@@ -508,6 +813,27 @@ public class VipAppServiceImpl implements VipAppService {
         log.setGrantDays(grantDays);
         log.setRemark("支付开通/续期");
         vipSubscriptionLogMapper.insert(log);
+
+        // 记录本次发放配置，便于退款时回滚（best-effort）
+        try {
+            JSONObject extra = StrUtil.isBlank(order.getExtra()) ? new JSONObject() : JSONUtil.parseObj(order.getExtra());
+            extra.set("grantDays", grantDays);
+            extra.set("grantMajorCategoryOpen", resolvePlanBenefitValue(order.getPlanCode(), BENEFIT_KEY_MAJOR_CATEGORY_OPEN));
+            extra.set("grantUserReport", resolvePlanBenefitValue(order.getPlanCode(), BENEFIT_KEY_USER_REPORT));
+            vipOrderMapper.updateById(new VipOrderDO().setId(order.getId()).setExtra(extra.toString()));
+        } catch (Exception ignore) {
+            // ignore
+        }
+    }
+
+    private Integer resolvePlanBenefitValue(String planCode, String benefitKey) {
+        if (StrUtil.isBlank(planCode) || StrUtil.isBlank(benefitKey)) {
+            return null;
+        }
+        VipPlanBenefitDO benefit = vipPlanBenefitMapper.selectOne(new LambdaQueryWrapperX<VipPlanBenefitDO>()
+                .eq(VipPlanBenefitDO::getPlanCode, StrUtil.trimToEmpty(planCode).toUpperCase())
+                .eq(VipPlanBenefitDO::getBenefitKey, StrUtil.trim(benefitKey)));
+        return benefit != null ? benefit.getBenefitValue() : null;
     }
 
     private PayOrderRespDTO validatePayOrderPaid(VipOrderDO order, Long payOrderId) {

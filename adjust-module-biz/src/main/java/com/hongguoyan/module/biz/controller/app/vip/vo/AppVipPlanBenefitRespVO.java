@@ -7,12 +7,6 @@ import lombok.Data;
 @Data
 public class AppVipPlanBenefitRespVO {
 
-    @Schema(description = "权益 key", example = "view_analysis")
-    private String benefitKey;
-
-    @Schema(description = "权益名称")
-    private String benefitName;
-
     @Schema(description = "权益描述")
     private String benefitDesc;
 

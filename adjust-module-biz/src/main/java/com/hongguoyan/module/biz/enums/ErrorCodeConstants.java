@@ -70,6 +70,10 @@ public interface ErrorCodeConstants {
     ErrorCode VIP_REFUND_NOTIFY_REFUND_ID_MISMATCH = new ErrorCode(69, "退款回调失败：退款单号不匹配");
     ErrorCode VIP_REFUND_NOTIFY_ORDER_STATUS_INVALID = new ErrorCode(70, "退款回调失败：订单状态异常");
     ErrorCode VIP_REFUND_NOTIFY_REFUND_PRICE_INVALID = new ErrorCode(71, "退款回调失败：退款金额不合法");
+
+    ErrorCode VIP_PLAN_DISCOUNT_CONFIG_INVALID = new ErrorCode(79, "会员活动价配置不合法");
+    ErrorCode VIP_ORDER_REFUND_NOT_FOUND = new ErrorCode(80, "未找到可退款的订单");
+    ErrorCode VIP_ORDER_REFUND_ALREADY_REQUESTED = new ErrorCode(81, "该订单已发起退款，请勿重复操作");
     ErrorCode NO_MATCHING_SCHOOLS = new ErrorCode(52, "没有匹配的学校");
     ErrorCode NO_MATCHING_SCHOOLS_ADJUSTS = new ErrorCode(53, "没有匹配的调剂专业");
 

@@ -61,4 +61,11 @@ public class VipOrderController {
         ExcelUtils.write(response, "会员订单.xls", "数据", VipOrderRespVO.class, list);
     }
 
+    @PostMapping("/refund")
+    @Operation(summary = "后台发起退款（退最近一笔已支付订单）")
+    @PreAuthorize("@ss.hasPermission('biz:vip-order:refund')")
+    public CommonResult<VipOrderRefundRespVO> refund(@Valid @RequestBody VipOrderRefundReqVO reqVO) {
+        return success(vipOrderService.refundLatestPaidOrder(reqVO));
+    }
+
 }

@@ -3,7 +3,6 @@ package com.hongguoyan.module.biz.dal.dataobject.vipplan;
 import lombok.*;
 import java.util.*;
 import java.time.LocalDateTime;
-import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.*;
 import com.hongguoyan.framework.mybatis.core.dataobject.BaseDO;
 
@@ -39,6 +38,18 @@ public class VipPlanDO extends BaseDO {
      * 价格（单位：分）
      */
     private Integer planPrice;
+    /**
+     * 活动价（单位：分）
+     */
+    private Integer discountPrice;
+    /**
+     * 活动开始时间
+     */
+    private LocalDateTime discountStartTime;
+    /**
+     * 活动结束时间
+     */
+    private LocalDateTime discountEndTime;
     /**
      * 增加时长（单位：天）
      */
