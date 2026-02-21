@@ -27,19 +27,14 @@ import com.hongguoyan.module.biz.dal.mysql.undergraduatemajor.UndergraduateMajor
 import com.hongguoyan.module.biz.dal.mysql.userprofile.UserProfileMapper;
 import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 import jakarta.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.*;
+
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
-import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.USER_PROFILE_EDIT_EXCEEDED;
-import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.USER_PROFILE_SUBJECT_SCORE12_EXCEEDED_100;
-import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.USER_PROFILE_SUBJECT_SCORE34_EXCEEDED_300;
+import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.*;
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_MAJOR_CATEGORY_OPEN;
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.REF_TYPE_MAJOR_CATEGORY_OPEN;
 
@@ -120,7 +115,14 @@ public class UserProfileServiceImpl implements UserProfileService {
     public Long saveUserProfileByUserId(Long userId, AppUserProfileSaveReqVO reqVO) {
         validateSubjectScores(reqVO);
         UserProfileDO existing = getUserProfileByUserId(userId);
-        UserProfileDO toSave = buildToSave(userId, reqVO);
+        UserProfileDO toSave = buildBaseToSave(userId, reqVO);
+        // 已有一志愿则不再更新（避免客户端传错方向导致保存失败）
+        boolean shouldUpdateFirstChoice = existing == null || existing.getTargetDirectionId() == null;
+        if (shouldUpdateFirstChoice) {
+            fillFirstChoiceFromDirection(toSave, reqVO.getTargetDirectionId());
+        } else {
+            copyFirstChoiceFromExisting(toSave, existing);
+        }
 
         if (existing == null) {
             toSave.setId(null);
@@ -235,7 +237,7 @@ public class UserProfileServiceImpl implements UserProfileService {
                 REF_TYPE_MAJOR_CATEGORY_OPEN, majorCategoryCode, majorCategoryCode);
     }
 
-    private UserProfileDO buildToSave(Long userId, AppUserProfileSaveReqVO reqVO) {
+    private UserProfileDO buildBaseToSave(Long userId, AppUserProfileSaveReqVO reqVO) {
         if (reqVO == null) {
             throw exception(new ErrorCode(400, "request body is required"));
         }
@@ -272,38 +274,6 @@ public class UserProfileServiceImpl implements UserProfileService {
         toSave.setIsNationalScholarship(reqVO.getIsNationalScholarship());
         toSave.setIsSchoolScholarship(reqVO.getIsSchoolScholarship());
 
-        // target direction (id -> school/college/major + snapshots)
-        Long targetDirectionId = reqVO.getTargetDirectionId();
-        SchoolDirectionDO direction = schoolDirectionMapper.selectById(targetDirectionId);
-        if (direction == null) {
-            throw exception(new ErrorCode(400, "targetDirectionId not exists: " + targetDirectionId));
-        }
-        toSave.setTargetDirectionId(targetDirectionId);
-        toSave.setTargetDirectionCode(StrUtil.blankToDefault(direction.getDirectionCode(), ""));
-        toSave.setTargetDirectionName(StrUtil.blankToDefault(direction.getDirectionName(), ""));
-        toSave.setTargetSchoolId(direction.getSchoolId());
-        toSave.setTargetCollegeId(direction.getCollegeId());
-        toSave.setTargetMajorId(direction.getMajorId());
-
-        SchoolDO targetSchool = direction.getSchoolId() != null ? schoolMapper.selectById(direction.getSchoolId()) : null;
-        toSave.setTargetSchoolName(targetSchool != null ? StrUtil.blankToDefault(targetSchool.getSchoolName(), "") : "");
-        SchoolCollegeDO targetCollege = direction.getCollegeId() != null ? schoolCollegeMapper.selectById(direction.getCollegeId()) : null;
-        toSave.setTargetCollegeName(targetCollege != null ? StrUtil.blankToDefault(targetCollege.getName(), "") : "");
-
-        MajorDO targetMajor = direction.getMajorId() != null ? majorMapper.selectById(direction.getMajorId()) : null;
-        if (targetMajor != null) {
-            toSave.setTargetMajorCode(StrUtil.blankToDefault(targetMajor.getCode(), ""));
-            toSave.setTargetMajorName(StrUtil.blankToDefault(targetMajor.getName(), ""));
-            toSave.setTargetDegreeType(targetMajor.getDegreeType() != null ? targetMajor.getDegreeType() : 0);
-        } else {
-            toSave.setTargetMajorCode("");
-            toSave.setTargetMajorName("");
-            toSave.setTargetDegreeType(0);
-        }
-
-        // subjects: snapshot from direction.subjects JSON; each sx is an array, take the first item
-        fillSubjectsFromDirectionSubjects(toSave, direction.getSubjects());
-
         toSave.setSubjectScore1(reqVO.getSubjectScore1());
         toSave.setSubjectScore2(reqVO.getSubjectScore2());
         toSave.setSubjectScore3(reqVO.getSubjectScore3());
@@ -335,6 +305,65 @@ public class UserProfileServiceImpl implements UserProfileService {
 
         toSave.setSelfAssessedScore(reqVO.getSelfAssessedScore() != null ? reqVO.getSelfAssessedScore() : 0);
         return toSave;
+    }
+
+    private void fillFirstChoiceFromDirection(UserProfileDO toSave, Long targetDirectionId) {
+        // target direction (id -> school/college/major + snapshots)
+        SchoolDirectionDO direction = schoolDirectionMapper.selectById(targetDirectionId);
+        if (direction == null) {
+            throw exception(new ErrorCode(400, "targetDirectionId not exists: " + targetDirectionId));
+        }
+        toSave.setTargetDirectionId(targetDirectionId);
+        toSave.setTargetDirectionCode(StrUtil.blankToDefault(direction.getDirectionCode(), ""));
+        toSave.setTargetDirectionName(StrUtil.blankToDefault(direction.getDirectionName(), ""));
+        toSave.setTargetSchoolId(direction.getSchoolId());
+        toSave.setTargetCollegeId(direction.getCollegeId());
+        toSave.setTargetMajorId(direction.getMajorId());
+
+        SchoolDO targetSchool = direction.getSchoolId() != null ? schoolMapper.selectById(direction.getSchoolId()) : null;
+        toSave.setTargetSchoolName(targetSchool != null ? StrUtil.blankToDefault(targetSchool.getSchoolName(), "") : "");
+        SchoolCollegeDO targetCollege = direction.getCollegeId() != null ? schoolCollegeMapper.selectById(direction.getCollegeId()) : null;
+        toSave.setTargetCollegeName(targetCollege != null ? StrUtil.blankToDefault(targetCollege.getName(), "") : "");
+
+        MajorDO targetMajor = direction.getMajorId() != null ? majorMapper.selectById(direction.getMajorId()) : null;
+        if (targetMajor != null) {
+            toSave.setTargetMajorCode(StrUtil.blankToDefault(targetMajor.getCode(), ""));
+            toSave.setTargetMajorName(StrUtil.blankToDefault(targetMajor.getName(), ""));
+            toSave.setTargetDegreeType(targetMajor.getDegreeType() != null ? targetMajor.getDegreeType() : 0);
+        } else {
+            toSave.setTargetMajorCode("");
+            toSave.setTargetMajorName("");
+            toSave.setTargetDegreeType(0);
+        }
+
+        // subjects: snapshot from direction.subjects JSON; each sx is an array, take the first item
+        fillSubjectsFromDirectionSubjects(toSave, direction.getSubjects());
+    }
+
+    private void copyFirstChoiceFromExisting(UserProfileDO toSave, UserProfileDO existing) {
+        if (toSave == null || existing == null) {
+            return;
+        }
+        toSave.setTargetSchoolId(existing.getTargetSchoolId());
+        toSave.setTargetSchoolName(existing.getTargetSchoolName());
+        toSave.setTargetCollegeId(existing.getTargetCollegeId());
+        toSave.setTargetCollegeName(existing.getTargetCollegeName());
+        toSave.setTargetMajorId(existing.getTargetMajorId());
+        toSave.setTargetMajorCode(existing.getTargetMajorCode());
+        toSave.setTargetMajorName(existing.getTargetMajorName());
+        toSave.setTargetDegreeType(existing.getTargetDegreeType());
+        toSave.setTargetDirectionId(existing.getTargetDirectionId());
+        toSave.setTargetDirectionCode(existing.getTargetDirectionCode());
+        toSave.setTargetDirectionName(existing.getTargetDirectionName());
+
+        toSave.setSubjectCode1(existing.getSubjectCode1());
+        toSave.setSubjectName1(existing.getSubjectName1());
+        toSave.setSubjectCode2(existing.getSubjectCode2());
+        toSave.setSubjectName2(existing.getSubjectName2());
+        toSave.setSubjectCode3(existing.getSubjectCode3());
+        toSave.setSubjectName3(existing.getSubjectName3());
+        toSave.setSubjectCode4(existing.getSubjectCode4());
+        toSave.setSubjectName4(existing.getSubjectName4());
     }
 
     private void fillSubjectsFromDirectionSubjects(UserProfileDO toSave, String subjectsJson) {
