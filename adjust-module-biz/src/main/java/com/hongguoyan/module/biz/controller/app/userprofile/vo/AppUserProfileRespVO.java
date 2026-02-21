@@ -188,7 +188,7 @@ public class AppUserProfileRespVO {
     @ExcelProperty("创建时间")
     private LocalDateTime createTime;
 
-    @Schema(description = "修改次数")
+    @Schema(description = "除一志愿外信息剩余可修改次数(0/1)")
     private Integer editNum;
 
 }

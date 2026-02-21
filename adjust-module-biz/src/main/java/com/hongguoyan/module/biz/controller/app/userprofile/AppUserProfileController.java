@@ -34,7 +34,13 @@ public class AppUserProfileController {
     public CommonResult<AppUserProfileRespVO> getMyUserProfile() {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
         UserProfileDO userProfile = userProfileService.getUserProfileByUserId(userId);
-        return success(BeanUtils.toBean(userProfile, AppUserProfileRespVO.class));
+        AppUserProfileRespVO respVO = BeanUtils.toBean(userProfile, AppUserProfileRespVO.class);
+        if (respVO != null) {
+            int used = userProfile != null && userProfile.getEditNum() != null ? userProfile.getEditNum() : 0;
+            int remaining = 1 - used;
+            respVO.setEditNum(Math.max(0, remaining));
+        }
+        return success(respVO);
     }
 
     @PostMapping("/save")
