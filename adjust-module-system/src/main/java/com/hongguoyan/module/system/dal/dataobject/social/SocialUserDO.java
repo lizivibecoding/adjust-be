@@ -38,6 +38,12 @@ public class SocialUserDO extends BaseDO {
      */
     private String openid;
     /**
+     * 社交 unionId
+     *
+     * 微信体系下，用于跨应用（同开放平台下）唯一标识用户
+     */
+    private String unionId;
+    /**
      * 社交 token
      */
     private String token;

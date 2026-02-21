@@ -2,6 +2,9 @@ package com.hongguoyan.module.system.service.social;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.Assert;
+import cn.hutool.core.util.ReflectUtil;
+import cn.hutool.core.util.StrUtil;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.hongguoyan.framework.common.exception.ServiceException;
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.module.system.api.social.dto.SocialUserBindReqDTO;
@@ -22,9 +25,11 @@ import org.springframework.validation.annotation.Validated;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertSet;
+import static com.hongguoyan.framework.common.util.json.JsonUtils.parseObjectQuietly;
 import static com.hongguoyan.framework.common.util.json.JsonUtils.toJsonString;
 import static com.hongguoyan.module.system.enums.ErrorCodeConstants.SOCIAL_USER_NOT_FOUND;
 
@@ -147,6 +152,11 @@ public class SocialUserServiceImpl implements SocialUserService {
         if (socialUser == null) {
             socialUser = new SocialUserDO();
         }
+        // 仅在「本次拿到 unionId」且「DB 尚未存 unionId」时进行补齐，避免影响既有业务逻辑
+        String unionId = getUnionId(authUser);
+        if (StrUtil.isNotBlank(unionId) && StrUtil.isBlank(socialUser.getUnionId())) {
+            socialUser.setUnionId(unionId);
+        }
         socialUser.setType(socialType).setCode(code).setState(state) // 需要保存 code + state 字段，保证后续可查询
                 .setOpenid(authUser.getUuid()).setToken(authUser.getToken().getAccessToken()).setRawTokenInfo((toJsonString(authUser.getToken())))
                 .setNickname(authUser.getNickname()).setAvatar(authUser.getAvatar()).setRawUserInfo(toJsonString(authUser.getRawUserInfo()));
@@ -157,6 +167,75 @@ public class SocialUserServiceImpl implements SocialUserService {
             socialUserMapper.updateById(socialUser);
         }
         return socialUser;
+    }
+
+    private String getUnionId(AuthUser authUser) {
+        if (authUser == null) {
+            return null;
+        }
+        // 1) 优先从 token 里取（JustAuth 的 AuthToken 常带 unionId 字段）
+        if (authUser.getToken() != null) {
+            Object token = authUser.getToken();
+            Object value = invokeQuietly(token, "getUnionId");
+            if (value == null) {
+                value = getFieldQuietly(token, "unionId");
+            }
+            if (value != null && StrUtil.isNotBlank(String.valueOf(value))) {
+                return String.valueOf(value);
+            }
+        }
+        // 2) 再从 rawUserInfo 里取（不同渠道/实现可能会放在这里）
+        Object rawUserInfo = authUser.getRawUserInfo();
+        String unionId = getUnionIdFromRawUserInfo(rawUserInfo);
+        return StrUtil.isBlank(unionId) ? null : unionId;
+    }
+
+    @SuppressWarnings("unchecked")
+    private String getUnionIdFromRawUserInfo(Object rawUserInfo) {
+        if (rawUserInfo == null) {
+            return null;
+        }
+        if (rawUserInfo instanceof Map) {
+            return getUnionIdFromMap((Map<String, Object>) rawUserInfo);
+        }
+        if (rawUserInfo instanceof String) {
+            Map<String, Object> map = parseObjectQuietly((String) rawUserInfo,
+                    new TypeReference<Map<String, Object>>() {});
+            return map != null ? getUnionIdFromMap(map) : null;
+        }
+        // 兜底：尝试反射读取 unionId/unionid 字段
+        Object value = getFieldQuietly(rawUserInfo, "unionId");
+        if (value == null) {
+            value = getFieldQuietly(rawUserInfo, "unionid");
+        }
+        return value != null ? String.valueOf(value) : null;
+    }
+
+    private String getUnionIdFromMap(Map<String, Object> map) {
+        if (map == null || map.isEmpty()) {
+            return null;
+        }
+        Object value = map.get("unionid");
+        if (value == null) {
+            value = map.get("unionId");
+        }
+        return value != null ? String.valueOf(value) : null;
+    }
+
+    private Object invokeQuietly(Object obj, String methodName) {
+        try {
+            return ReflectUtil.invoke(obj, methodName);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private Object getFieldQuietly(Object obj, String fieldName) {
+        try {
+            return ReflectUtil.getFieldValue(obj, fieldName);
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 
     // ==================== 社交用户 CRUD ====================
