@@ -49,4 +49,29 @@ ALTER TABLE `biz_recommend_rule` DROP COLUMN `sim_a_delta_neg_low_base`;
 ALTER TABLE `biz_recommend_rule` DROP COLUMN `sim_a_delta_neg_low_slope`;
 ALTER TABLE `biz_recommend_rule` DROP COLUMN `sim_a_delta_neg_low_min`;
 
+ALTER TABLE `biz_recommend_rule` ADD COLUMN `sim_a_gt10_base` decimal(10,4) DEFAULT NULL COMMENT 'SimA: Delta > 10 基准';
+ALTER TABLE `biz_recommend_rule` ADD COLUMN `sim_a_gt10_slope` decimal(10,4) DEFAULT NULL COMMENT 'SimA: Delta > 10 斜率';
+ALTER TABLE `biz_recommend_rule` ADD COLUMN `sim_a_gt10_max` decimal(10,4) DEFAULT NULL COMMENT 'SimA: Delta > 10 最大值';
+ALTER TABLE `biz_recommend_rule` ADD COLUMN `sim_a_0_to_10_base` decimal(10,4) DEFAULT NULL COMMENT 'SimA: 0 <= Delta <= 10 基准';
+ALTER TABLE `biz_recommend_rule` ADD COLUMN `sim_a_0_to_10_slope` decimal(10,4) DEFAULT NULL COMMENT 'SimA: 0 <= Delta <= 10 斜率';
+ALTER TABLE `biz_recommend_rule` ADD COLUMN `sim_a_neg10_to_0_base` decimal(10,4) DEFAULT NULL COMMENT 'SimA: -10 <= Delta < 0 基准';
+ALTER TABLE `biz_recommend_rule` ADD COLUMN `sim_a_neg10_to_0_slope` decimal(10,4) DEFAULT NULL COMMENT 'SimA: -10 <= Delta < 0 斜率';
+ALTER TABLE `biz_recommend_rule` ADD COLUMN `sim_a_lt_neg10_base` decimal(10,4) DEFAULT NULL COMMENT 'SimA: Delta < -10 基准';
+ALTER TABLE `biz_recommend_rule` ADD COLUMN `sim_a_lt_neg10_slope` decimal(10,4) DEFAULT NULL COMMENT 'SimA: Delta < -10 斜率';
+ALTER TABLE `biz_recommend_rule` ADD COLUMN `sim_a_lt_neg10_min` decimal(10,4) DEFAULT NULL COMMENT 'SimA: Delta < -10 最小值';
+
+-- 再次重构：改为 JSON 配置动态区间，移除上述固定字段
+ALTER TABLE `biz_recommend_rule` DROP COLUMN `sim_a_gt10_base`;
+ALTER TABLE `biz_recommend_rule` DROP COLUMN `sim_a_gt10_slope`;
+ALTER TABLE `biz_recommend_rule` DROP COLUMN `sim_a_gt10_max`;
+ALTER TABLE `biz_recommend_rule` DROP COLUMN `sim_a_0_to_10_base`;
+ALTER TABLE `biz_recommend_rule` DROP COLUMN `sim_a_0_to_10_slope`;
+ALTER TABLE `biz_recommend_rule` DROP COLUMN `sim_a_neg10_to_0_base`;
+ALTER TABLE `biz_recommend_rule` DROP COLUMN `sim_a_neg10_to_0_slope`;
+ALTER TABLE `biz_recommend_rule` DROP COLUMN `sim_a_lt_neg10_base`;
+ALTER TABLE `biz_recommend_rule` DROP COLUMN `sim_a_lt_neg10_slope`;
+ALTER TABLE `biz_recommend_rule` DROP COLUMN `sim_a_lt_neg10_min`;
+
 ALTER TABLE `biz_recommend_rule` ADD COLUMN `sim_a_rules` text DEFAULT NULL COMMENT 'SimA 动态规则列表(JSON)';
+
+ALTER TABLE `biz_recommend_rule` ADD COLUMN `name` varchar(128) DEFAULT NULL COMMENT '规则名称' AFTER `id`;

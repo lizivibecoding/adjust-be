@@ -14,6 +14,9 @@ public class RecommendRuleRespVO {
     @Schema(description = "ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
     private Long id;
 
+    @Schema(description = "规则名称", requiredMode = Schema.RequiredMode.REQUIRED, example = "法学类规则")
+    private String name;
+
     @Schema(description = "专业代码列表 (逗号分隔)", example = "081200,081201")
     private String majorCodes;
 

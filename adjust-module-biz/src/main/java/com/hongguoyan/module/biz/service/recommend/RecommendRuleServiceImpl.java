@@ -64,7 +64,8 @@ public class RecommendRuleServiceImpl implements RecommendRuleService {
     @Override
     public PageResult<RecommendRuleDO> getRecommendRulePage(RecommendRulePageReqVO pageReqVO) {
         LambdaQueryWrapperX<RecommendRuleDO> wrapper = new LambdaQueryWrapperX<RecommendRuleDO>();
-        wrapper.likeIfPresent(RecommendRuleDO::getMajorCodes, pageReqVO.getMajorCode())
+        wrapper.likeIfPresent(RecommendRuleDO::getName, pageReqVO.getName())
+                .likeIfPresent(RecommendRuleDO::getMajorCodes, pageReqVO.getMajorCode())
                 .likeIfPresent(RecommendRuleDO::getBucketName, pageReqVO.getBucketName())
                 .orderByDesc(RecommendRuleDO::getId);
         return recommendRuleMapper.selectPage(pageReqVO, wrapper);

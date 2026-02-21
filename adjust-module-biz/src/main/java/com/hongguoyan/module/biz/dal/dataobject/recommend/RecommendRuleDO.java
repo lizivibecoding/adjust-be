@@ -31,6 +31,11 @@ public class RecommendRuleDO extends BaseDO {
     private Long id;
 
     /**
+     * 规则名称
+     */
+    private String name;
+
+    /**
      * 专业代码列表 (逗号分隔，如 "030100,030200,030300"；"000000" 代表默认/兜底)
      */
     private String majorCodes;

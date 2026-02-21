@@ -188,5 +188,8 @@ public class AppUserProfileRespVO {
     @ExcelProperty("创建时间")
     private LocalDateTime createTime;
 
+    @Schema(description = "修改次数")
+    private Integer editNum;
+
 }
 
