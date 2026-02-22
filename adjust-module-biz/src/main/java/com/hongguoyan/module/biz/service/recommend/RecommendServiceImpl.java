@@ -558,11 +558,19 @@ public class RecommendServiceImpl implements RecommendService {
 
         // 5. 保存结果
         if (CollUtil.isNotEmpty(recommendations)) {
-            // 按 simFinal 降序排序
-            recommendations.sort((o1, o2) -> o2.getSimFinal().compareTo(o1.getSimFinal()));
-            userRecommendSchoolMapper.insertBatch(recommendations);
+            // 每个分档按 simFinal 降序，仅保留 Top100 入库
+            List<UserRecommendSchoolDO> limitedRecommendations = new ArrayList<>();
+            for (int category = 1; category <= 3; category++) {
+                int finalCategory = category;
+                List<UserRecommendSchoolDO> categoryList = recommendations.stream()
+                    .filter(item -> Objects.equals(item.getCategory(), finalCategory))
+                    .sorted((o1, o2) -> o2.getSimFinal().compareTo(o1.getSimFinal()))
+                    .limit(100)
+                    .toList();
+                limitedRecommendations.addAll(categoryList);
+            }
+            userRecommendSchoolMapper.insertBatch(limitedRecommendations);
         }
-
         return true;
     }
 

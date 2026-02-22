@@ -42,7 +42,7 @@
         </where>
     </sql>
 
-    <sql id="SameScoreListWhere">
+    <sql id="SameScoreListInnerWhere">
         <where>
             AND a.deleted = b'0'
             <if test="reqVO.year != null">
@@ -54,11 +54,11 @@
             <if test="reqVO.endScore != null">
                 AND a.first_score &lt;= #{reqVO.endScore}
             </if>
-            <if test="reqVO.provinceCode != null and reqVO.provinceCode != ''">
-                AND s.province_code = #{reqVO.provinceCode}
-            </if>
             <if test="reqVO.studyMode != null">
                 AND a.study_mode = #{reqVO.studyMode}
+            </if>
+            <if test="reqVO.provinceCode != null and reqVO.provinceCode != ''">
+                AND s.province_code = #{reqVO.provinceCode}
             </if>
             <if test="reqVO.schoolLevel != null">
                 <choose>
@@ -91,58 +91,87 @@
         </where>
     </sql>
 
+    <sql id="SameScoreListOuterWhere">
+        <where>
+            1 = 1
+        </where>
+    </sql>
+
     <select id="selectSameScorePage"
             resultType="com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreItemRespVO">
         SELECT
-            a.school_id AS schoolId,
-            MAX(a.school_name) AS schoolName,
-            a.college_id AS collegeId,
-            MAX(a.college_name) AS collegeName,
-            a.major_id AS majorId,
-            MAX(a.major_code) AS majorCode,
-            MAX(a.major_name) AS majorName,
-            a.year AS year,
-            a.study_mode AS studyMode,
-            MAX(s.province_name) AS provinceName,
-            MAX(s.province_area) AS provinceArea,
+            g.school_id AS schoolId,
+            g.school_name AS schoolName,
+            g.college_id AS collegeId,
+            g.college_name AS collegeName,
+            g.major_id AS majorId,
+            g.major_code AS majorCode,
+            g.major_name AS majorName,
+            g.year AS year,
+            g.study_mode AS studyMode,
+            s.province_name AS provinceName,
+            s.province_area AS provinceArea,
             CASE
-                WHEN IFNULL(MAX(s.is_985), 0) = 1 THEN 1
-                WHEN IFNULL(MAX(s.is_211), 0) = 1 THEN 2
-                WHEN IFNULL(MAX(s.is_syl), 0) = 1 THEN 3
+                WHEN IFNULL(s.is_985, 0) = 1 THEN 1
+                WHEN IFNULL(s.is_211, 0) = 1 THEN 2
+                WHEN IFNULL(s.is_syl, 0) = 1 THEN 3
                 ELSE 4
             END AS schoolLevel,
             CASE
-                WHEN IFNULL(MAX(s.is_985), 0) = 1 THEN '985工程'
-                WHEN IFNULL(MAX(s.is_211), 0) = 1 THEN '211工程'
-                WHEN IFNULL(MAX(s.is_syl), 0) = 1 THEN '双一流'
+                WHEN IFNULL(s.is_985, 0) = 1 THEN '985工程'
+                WHEN IFNULL(s.is_211, 0) = 1 THEN '211工程'
+                WHEN IFNULL(s.is_syl, 0) = 1 THEN '双一流'
                 ELSE '普通院校'
             END AS schoolLevelName,
-            CAST(MAX(a.first_score) AS SIGNED) AS firstScore
-        <include refid="SameScoreBaseFrom" />
-        <include refid="SameScoreListWhere" />
-        GROUP BY a.school_id, a.college_id, a.major_id, a.year, a.study_mode
+            CAST(g.first_score AS SIGNED) AS firstScore
+        FROM (
+            SELECT
+                a.school_id,
+                MAX(a.school_name) AS school_name,
+                a.college_id,
+                MAX(a.college_name) AS college_name,
+                a.major_id,
+                MAX(a.major_code) AS major_code,
+                MAX(a.major_name) AS major_name,
+                a.year,
+                a.study_mode,
+                MAX(a.first_score) AS first_score
+            FROM biz_adjustment_admit a
+            LEFT JOIN biz_school s ON s.id = a.school_id
+            <include refid="SameScoreListInnerWhere" />
+            GROUP BY a.school_id, a.college_id, a.major_id, a.year, a.study_mode
+        ) g
+        LEFT JOIN biz_school s ON s.id = g.school_id
+        <include refid="SameScoreListOuterWhere" />
         ORDER BY
             CASE
                 WHEN #{targetMajorCode} IS NOT NULL
                     AND #{targetMajorCode} != ''
                     AND CHAR_LENGTH(#{targetMajorCode}) &gt;= 6
-                    AND MAX(a.major_code) = #{targetMajorCode}
+                    AND g.major_code = #{targetMajorCode}
                     THEN 3
                 WHEN #{targetMajorCode} IS NOT NULL
                     AND #{targetMajorCode} != ''
                     AND CHAR_LENGTH(#{targetMajorCode}) &gt;= 4
-                    AND CHAR_LENGTH(MAX(a.major_code)) &gt;= 4
-                    AND LEFT(MAX(a.major_code), 4) = LEFT(#{targetMajorCode}, 4)
+                    AND CHAR_LENGTH(g.major_code) &gt;= 4
+                    AND LEFT(g.major_code, 4) = LEFT(#{targetMajorCode}, 4)
                     THEN 2
                 WHEN #{targetMajorCode} IS NOT NULL
                     AND #{targetMajorCode} != ''
                     AND CHAR_LENGTH(#{targetMajorCode}) &gt;= 2
-                    AND CHAR_LENGTH(MAX(a.major_code)) &gt;= 2
-                    AND LEFT(MAX(a.major_code), 2) = LEFT(#{targetMajorCode}, 2)
+                    AND CHAR_LENGTH(g.major_code) &gt;= 2
+                    AND LEFT(g.major_code, 2) = LEFT(#{targetMajorCode}, 2)
                     THEN 1
                 ELSE 0
             END DESC,
-            firstScore DESC, schoolLevel ASC, a.school_id DESC
+            g.first_score DESC,
+            CASE
+                WHEN IFNULL(s.is_985, 0) = 1 THEN 1
+                WHEN IFNULL(s.is_211, 0) = 1 THEN 2
+                WHEN IFNULL(s.is_syl, 0) = 1 THEN 3
+                ELSE 4
+            END ASC,
+            g.school_id DESC
     </select>
 
     <select id="selectSameScoreStat"
