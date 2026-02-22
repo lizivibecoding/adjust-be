@@ -196,7 +196,12 @@ public class VipAppServiceImpl implements VipAppService {
         if (benefit == null) {
             return b;
         }
+        b.setBenefitKey(benefit.getBenefitKey());
+        b.setBenefitName(benefit.getBenefitName());
+        // 兼容历史：保留拼接文案字段
         b.setBenefitDesc(buildBenefitLabel(benefit));
+        b.setBenefitType(benefit.getBenefitType());
+        b.setBenefitValue(benefit.getBenefitValue());
         return b;
     }
 
