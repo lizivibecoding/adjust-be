@@ -14,6 +14,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.*;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.BizMajorKeyDTO;
+import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.BizMajorStudyKeyDTO;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.RecruitSnapshotRowDTO;
 import com.hongguoyan.module.biz.controller.app.school.vo.AppSchoolAdjustmentPageReqVO;
 import com.hongguoyan.module.biz.controller.app.school.vo.AppSchoolAdjustmentRespVO;
@@ -109,6 +110,11 @@ public interface AdjustmentMapper extends BaseMapperX<AdjustmentDO> {
      */
     List<BizMajorKeyDTO> selectMajorsHasHistoryAdjust(@Param("triplets") List<BizMajorKeyDTO> triplets,
                                                       @Param("currentYear") Integer currentYear);
+
+    /**
+     * 批量判断指定年份是否存在数据（学校/学院/专业/学习方式/年份）。
+     */
+    List<BizMajorStudyKeyDTO> selectExistsMajorStudyKeys(@Param("keys") List<BizMajorStudyKeyDTO> keys);
 
     List<Integer> selectOptionYears(@Param("schoolId") Long schoolId,
                                     @Param("collegeId") Long collegeId,

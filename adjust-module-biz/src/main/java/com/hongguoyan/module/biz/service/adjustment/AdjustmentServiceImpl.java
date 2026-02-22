@@ -37,6 +37,7 @@ import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
 import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.AdjustmentMapper;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.BizMajorKeyDTO;
+import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.BizMajorStudyKeyDTO;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.RecruitSnapshotRowDTO;
 import com.hongguoyan.module.biz.dal.mysql.area.AreaMapper;
 import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
@@ -106,6 +107,9 @@ public class AdjustmentServiceImpl implements AdjustmentService {
      * Preview limit for users with no opened major categories.
      */
     private static final int DEFAULT_MAJOR_CATEGORY_PREVIEW_LIMIT = 10;
+
+    private static final String HINT_CURRENT_YEAR_HAS_QUOTA = "今年有调剂名额";
+    private static final String HINT_ADJUST_CHANCE_HIGH = "以往年分析今年调剂概率大";
 
     private static int calcHeat(Long hotScore) {
         long score = hotScore != null ? hotScore : 0L;
@@ -236,6 +240,7 @@ public class AdjustmentServiceImpl implements AdjustmentService {
             PageResult<AppAdjustmentSearchRespVO> pageResult = adjustmentMapper.selectSearchMajorPage(reqVO);
             List<AppAdjustmentSearchRespVO> majorList = pageResult.getList();
             fillHighAdjustChance(majorList);
+            fillAdjustHintText(majorList);
             for (AppAdjustmentSearchRespVO item : majorList) {
                 item.setHeat(calcHeat(item.getHotScore()));
             }
@@ -642,6 +647,7 @@ public class AdjustmentServiceImpl implements AdjustmentService {
             return pageResult;
         }
         fillHighAdjustChance(list);
+        fillAdjustHintText(list);
         for (AppAdjustmentSearchRespVO item : list) {
             item.setHeat(calcHeat(item.getHotScore()));
         }
@@ -660,6 +666,66 @@ public class AdjustmentServiceImpl implements AdjustmentService {
             reqVO.setEndYear(currentYear);
         }
         return adjustmentMapper.selectSchoolAdjustmentPage(reqVO);
+    }
+
+    private void fillAdjustHintText(List<AppAdjustmentSearchRespVO> list) {
+        if (list == null || list.isEmpty()) {
+            return;
+        }
+        int currentYear = Year.now().getValue();
+
+        // collect prev-year keys for all history rows (year != currentYear)
+        Map<String, BizMajorStudyKeyDTO> uniqPrevYearKeys = new HashMap<>();
+        for (AppAdjustmentSearchRespVO item : list) {
+            if (item == null || item.getYear() == null) {
+                continue;
+            }
+            Integer y = item.getYear();
+            if (y == currentYear) {
+                continue;
+            }
+            if (item.getSchoolId() == null || item.getCollegeId() == null || item.getMajorId() == null
+                    || item.getStudyMode() == null) {
+                continue;
+            }
+            BizMajorStudyKeyDTO k = new BizMajorStudyKeyDTO();
+            k.setSchoolId(item.getSchoolId());
+            k.setCollegeId(item.getCollegeId());
+            k.setMajorId(item.getMajorId());
+            k.setStudyMode(item.getStudyMode());
+            k.setYear(y - 1);
+            String ks = key(k.getSchoolId(), k.getCollegeId(), k.getMajorId(), k.getStudyMode(), k.getYear());
+            if (ks != null) {
+                uniqPrevYearKeys.putIfAbsent(ks, k);
+            }
+        }
+
+        Set<String> prevYearExists = new HashSet<>();
+        if (!uniqPrevYearKeys.isEmpty()) {
+            List<BizMajorStudyKeyDTO> hits = adjustmentMapper.selectExistsMajorStudyKeys(new ArrayList<>(uniqPrevYearKeys.values()));
+            for (BizMajorStudyKeyDTO hit : hits) {
+                prevYearExists.add(key(hit.getSchoolId(), hit.getCollegeId(), hit.getMajorId(), hit.getStudyMode(), hit.getYear()));
+            }
+        }
+
+        for (AppAdjustmentSearchRespVO item : list) {
+            if (item == null || item.getYear() == null) {
+                continue;
+            }
+            Integer y = item.getYear();
+            if (y == currentYear) {
+                item.setAdjustHintText(HINT_CURRENT_YEAR_HAS_QUOTA);
+                continue;
+            }
+            if (item.getSchoolId() == null || item.getCollegeId() == null || item.getMajorId() == null
+                    || item.getStudyMode() == null) {
+                continue;
+            }
+            String prevKey = key(item.getSchoolId(), item.getCollegeId(), item.getMajorId(), item.getStudyMode(), y - 1);
+            if (prevKey != null && prevYearExists.contains(prevKey)) {
+                item.setAdjustHintText(HINT_ADJUST_CHANCE_HIGH);
+            }
+        }
     }
 
     private void fillHighAdjustChance(List<AppAdjustmentSearchRespVO> list) {
@@ -839,6 +905,13 @@ public class AdjustmentServiceImpl implements AdjustmentService {
             return null;
         }
         return schoolId + ":" + collegeId + ":" + majorId + ":" + (year != null ? year : "");
+    }
+
+    private String key(Long schoolId, Long collegeId, Long majorId, Integer studyMode, Integer year) {
+        if (schoolId == null || collegeId == null || majorId == null || studyMode == null) {
+            return null;
+        }
+        return schoolId + ":" + collegeId + ":" + majorId + ":" + studyMode + ":" + (year != null ? year : "");
     }
 
     private List<String> parseStringList(String value) {

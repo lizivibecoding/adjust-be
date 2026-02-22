@@ -178,7 +178,7 @@
         LEFT JOIN biz_school s ON s.id = a.school_id
         <include refid="SearchWhere" />
         GROUP BY a.school_id, a.college_id, a.major_id, a.year, a.study_mode
-        ORDER BY hotScore DESC, updateTime DESC
+        ORDER BY a.year DESC, hotScore DESC, updateTime DESC
     </select>
 
     <select id="selectHotRankingPage"
@@ -207,10 +207,10 @@
             LEFT JOIN biz_school s ON s.id = a.school_id
             <include refid="HotRankingWhere" />
             GROUP BY a.school_id, a.college_id, a.major_id, a.year, a.study_mode
-            ORDER BY hotScore DESC, updateTime DESC
+            ORDER BY a.year DESC, hotScore DESC, updateTime DESC
             LIMIT 100
         ) t
-        ORDER BY t.hotScore DESC, t.updateTime DESC
+        ORDER BY t.year DESC, t.hotScore DESC, t.updateTime DESC
     </select>
 
     <select id="selectSearchSchoolPage"
@@ -305,6 +305,21 @@
           <foreach collection="triplets" item="k" open="(" separator="," close=")">
               (#{k.schoolId}, #{k.collegeId}, #{k.majorId})
           </foreach>
+    </select>
+
+    <select id="selectExistsMajorStudyKeys"
+            resultType="com.hongguoyan.module.biz.dal.mysql.adjustment.dto.BizMajorStudyKeyDTO">
+        SELECT DISTINCT
+            a.school_id AS schoolId,
+            a.college_id AS collegeId,
+            a.major_id AS majorId,
+            a.study_mode AS studyMode,
+            a.year AS year
+        FROM biz_adjustment a
+        WHERE (a.school_id, a.college_id, a.major_id, a.study_mode, a.year) IN
+        <foreach collection="keys" item="k" open="(" separator="," close=")">
+            (#{k.schoolId}, #{k.collegeId}, #{k.majorId}, #{k.studyMode}, #{k.year})
+        </foreach>
     </select>
 
     <select id="selectOptionYears" resultType="java.lang.Integer">

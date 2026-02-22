@@ -78,4 +78,7 @@ public class AppAdjustmentSearchRespVO {
     @Schema(description = "今年调剂概率大")
     private Boolean highAdjustChance;
 
+    @Schema(description = "调剂提示文案（用于首页展示）")
+    private String adjustHintText;
+
 }
