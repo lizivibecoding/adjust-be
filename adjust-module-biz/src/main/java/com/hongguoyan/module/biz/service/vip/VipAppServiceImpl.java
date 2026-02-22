@@ -657,12 +657,7 @@ public class VipAppServiceImpl implements VipAppService {
         if (total != null && total == -1) { // unlimited: no need shrink
             return;
         }
-        int allowed = Math.max(1, total != null ? total : 0);
-
-        String keepCode = resolveProfileMajorCategoryCode(userId);
-        if (StrUtil.isBlank(keepCode)) {
-            keepCode = DEFAULT_MAJOR_CATEGORY_CODE;
-        }
+        int allowed = Math.max(0, total != null ? total : 0);
 
         // 查询已开通门类（按最早开通排序）
         List<VipBenefitLogDO> logs = vipBenefitLogMapper.selectList(new LambdaQueryWrapperX<VipBenefitLogDO>()
@@ -674,8 +669,20 @@ public class VipAppServiceImpl implements VipAppService {
                 .orderByAsc(VipBenefitLogDO::getId));
 
         LinkedHashSet<String> preserveKeys = new LinkedHashSet<>();
-        if (StrUtil.isNotBlank(keepCode)) {
-            preserveKeys.add(keepCode);
+        // 仅当用户真实开通过该门类时，才“保留 profileCode 对应门类”
+        if (allowed > 0 && logs != null && !logs.isEmpty()) {
+            String keepCode = resolveProfileMajorCategoryCode(userId);
+            if (StrUtil.isNotBlank(keepCode)) {
+                Set<String> opened = logs.stream()
+                        .filter(Objects::nonNull)
+                        .map(VipBenefitLogDO::getUniqueKey)
+                        .filter(StrUtil::isNotBlank)
+                        .map(String::trim)
+                        .collect(Collectors.toSet());
+                if (opened.contains(keepCode)) {
+                    preserveKeys.add(keepCode);
+                }
+            }
         }
         if (logs != null) {
             for (VipBenefitLogDO row : logs) {
@@ -731,10 +738,6 @@ public class VipAppServiceImpl implements VipAppService {
         if (exist != null && exist.getId() != null) {
             exist.setPeriodEndTime(PERIOD_END_LIFETIME);
             exist.setUsedCount(usedCount);
-            // 仅当仍为付费会员且 total>0 时，用当前 total 修正 grant_total（避免误置 0）
-            if (currentTotal > 0 && exist.getGrantTotal() != null && exist.getGrantTotal() >= 0) {
-                exist.setGrantTotal(Math.max(exist.getGrantTotal(), currentTotal));
-            }
             vipBenefitUsageMapper.updateById(exist);
             return;
         }
@@ -745,7 +748,8 @@ public class VipAppServiceImpl implements VipAppService {
         toCreate.setPeriodStartTime(PERIOD_START_LIFETIME);
         toCreate.setPeriodEndTime(PERIOD_END_LIFETIME);
         toCreate.setUsedCount(usedCount);
-        toCreate.setGrantTotal(Math.max(0, currentTotal));
+        // grant_total 仅用于“付费会员叠加额度”口径，修正 used_count 时不要联动修改 grant_total（避免下次开通被多送）
+        toCreate.setGrantTotal(0);
         vipBenefitUsageMapper.insert(toCreate);
     }
 
