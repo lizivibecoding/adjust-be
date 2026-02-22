@@ -178,9 +178,12 @@ public class VipAppServiceImpl implements VipAppService {
         LocalDateTime end = plan.getDiscountEndTime();
         boolean active = false;
         if (discountPrice != null && discountPrice > 0 && now != null) {
-            boolean afterStart = start == null || !now.isBefore(start);
-            boolean beforeEnd = end == null || !now.isAfter(end);
-            active = afterStart && beforeEnd;
+            // 活动价必须绑定时间：start/end 任何一个为空，都视为不生效
+            if (start != null && end != null) {
+                boolean afterStart = !now.isBefore(start);
+                boolean beforeEnd = !now.isAfter(end);
+                active = afterStart && beforeEnd;
+            }
         }
         respVO.setDiscountActive(active);
         respVO.setDiscountPrice(discountPrice);
@@ -360,10 +363,13 @@ public class VipAppServiceImpl implements VipAppService {
         }
         LocalDateTime start = plan.getDiscountStartTime();
         LocalDateTime end = plan.getDiscountEndTime();
-        boolean afterStart = start == null || !now.isBefore(start);
-        boolean beforeEnd = end == null || !now.isAfter(end);
-        if (afterStart && beforeEnd) {
-            return Math.min(planPrice, discountPrice);
+        // 活动价必须绑定时间：start/end 任何一个为空，都不使用活动价
+        if (start != null && end != null) {
+            boolean afterStart = !now.isBefore(start);
+            boolean beforeEnd = !now.isAfter(end);
+            if (afterStart && beforeEnd) {
+                return Math.min(planPrice, discountPrice);
+            }
         }
         return planPrice;
     }

@@ -43,6 +43,9 @@ public class VipPlanCardUpdateReqVO {
     @JsonDeserialize(using = LocalDateTimeOrTimestampDeserializer.class)
     private LocalDateTime discountEndTime;
 
+    @Schema(description = "是否取消活动：true=清空活动价与起止时间")
+    private Boolean cancelDiscount;
+
     @Schema(description = "开放专业门类次数（-1 表示不限）", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "开放专业门类次数不能为空")
     @Min(value = -1, message = "开放专业门类次数不能小于 -1")

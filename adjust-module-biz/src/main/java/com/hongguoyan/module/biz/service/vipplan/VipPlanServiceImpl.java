@@ -17,6 +17,7 @@ import com.hongguoyan.module.biz.dal.dataobject.vipplanbenefit.VipPlanBenefitDO;
 import com.hongguoyan.module.biz.dal.mysql.vipplan.VipPlanMapper;
 import com.hongguoyan.module.biz.dal.mysql.vipplanbenefit.VipPlanBenefitMapper;
 import jakarta.annotation.Resource;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -30,9 +31,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
-import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.VIP_PLAN_DISCOUNT_CONFIG_INVALID;
-import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.VIP_PLAN_NOT_EXISTS;
-import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.VIP_PLAN_FEATURE_NOT_EXISTS;
+import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.*;
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_MAJOR_CATEGORY_OPEN;
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_USER_REPORT;
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.PLAN_CODE_SVIP;
@@ -153,19 +152,31 @@ public class VipPlanServiceImpl implements VipPlanService {
         if (plan == null) {
             throw exception(VIP_PLAN_NOT_EXISTS);
         }
-        plan.setPlanPrice(updateReqVO.getPlanPrice());
-        plan.setDurationDays(updateReqVO.getDurationDays());
-        Integer discountPrice = normalizeDiscountPrice(updateReqVO.getDiscountPrice());
-        plan.setDiscountPrice(discountPrice);
-        if (discountPrice == null) {
-            plan.setDiscountStartTime(null);
-            plan.setDiscountEndTime(null);
+
+        boolean cancelDiscount = Boolean.TRUE.equals(updateReqVO.getCancelDiscount());
+        if (cancelDiscount) {
+            // 仅“取消活动”时才显式清空（写 NULL 入库）
+            vipPlanMapper.update(null, new LambdaUpdateWrapper<VipPlanDO>()
+                    .eq(VipPlanDO::getId, plan.getId())
+                    .set(VipPlanDO::getDiscountPrice, null)
+                    .set(VipPlanDO::getDiscountStartTime, null)
+                    .set(VipPlanDO::getDiscountEndTime, null));
+            return;
         } else {
-            plan.setDiscountStartTime(updateReqVO.getDiscountStartTime());
-            plan.setDiscountEndTime(updateReqVO.getDiscountEndTime());
+            // 正常保存：沿用 updateById 行为（非空字段更新），避免把 null 误解为“清空活动”
+            plan.setPlanPrice(updateReqVO.getPlanPrice());
+            plan.setDurationDays(updateReqVO.getDurationDays());
+            if (updateReqVO.getDiscountPrice() != null) {
+                Integer discountPrice = normalizeDiscountPrice(updateReqVO.getDiscountPrice());
+                if (discountPrice != null) {
+                    plan.setDiscountPrice(discountPrice);
+                    plan.setDiscountStartTime(updateReqVO.getDiscountStartTime());
+                    plan.setDiscountEndTime(updateReqVO.getDiscountEndTime());
+                    validateDiscountWindow(plan);
+                }
+            }
+            vipPlanMapper.updateById(plan);
         }
-        validateDiscountWindow(plan);
-        vipPlanMapper.updateById(plan);
 
         updateBenefitValue(planCode, BENEFIT_KEY_MAJOR_CATEGORY_OPEN, updateReqVO.getMajorCategoryOpenCount());
         updateBenefitValue(planCode, BENEFIT_KEY_USER_REPORT, updateReqVO.getUserReportCount());
@@ -192,6 +203,9 @@ public class VipPlanServiceImpl implements VipPlanService {
         }
         LocalDateTime start = plan.getDiscountStartTime();
         LocalDateTime end = plan.getDiscountEndTime();
+        if (start == null || end == null) {
+            throw exception(VIP_PLAN_DISCOUNT_TIME_REQUIRED);
+        }
         if (start != null && end != null && start.isAfter(end)) {
             throw exception(VIP_PLAN_DISCOUNT_CONFIG_INVALID);
         }

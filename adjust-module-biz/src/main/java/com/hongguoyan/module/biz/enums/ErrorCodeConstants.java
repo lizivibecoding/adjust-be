@@ -72,6 +72,7 @@ public interface ErrorCodeConstants {
     ErrorCode VIP_REFUND_NOTIFY_REFUND_PRICE_INVALID = new ErrorCode(71, "退款回调失败：退款金额不合法");
 
     ErrorCode VIP_PLAN_DISCOUNT_CONFIG_INVALID = new ErrorCode(79, "会员活动价配置不合法");
+    ErrorCode VIP_PLAN_DISCOUNT_TIME_REQUIRED = new ErrorCode(82, "活动价必须设置开始/结束时间");
     ErrorCode VIP_ORDER_REFUND_NOT_FOUND = new ErrorCode(80, "未找到可退款的订单");
     ErrorCode VIP_ORDER_REFUND_ALREADY_REQUESTED = new ErrorCode(81, "该订单已发起退款，请勿重复操作");
     ErrorCode NO_MATCHING_SCHOOLS = new ErrorCode(52, "没有匹配的学校");

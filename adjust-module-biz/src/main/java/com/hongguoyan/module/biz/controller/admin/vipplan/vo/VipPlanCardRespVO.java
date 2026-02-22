@@ -1,5 +1,6 @@
 package com.hongguoyan.module.biz.controller.admin.vipplan.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -26,9 +27,11 @@ public class VipPlanCardRespVO {
     private Integer discountPrice;
 
     @Schema(description = "活动开始时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime discountStartTime;
 
     @Schema(description = "活动结束时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime discountEndTime;
 
     @Schema(description = "权益列表", requiredMode = Schema.RequiredMode.REQUIRED)
