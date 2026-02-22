@@ -25,20 +25,13 @@ import com.hongguoyan.module.biz.dal.mysql.usercustomreport.UserCustomReportMapp
 import com.hongguoyan.module.biz.dal.mysql.userintention.UserIntentionMapper;
 import com.hongguoyan.module.biz.dal.mysql.userprofile.UserProfileMapper;
 import com.hongguoyan.module.biz.enums.ErrorCodeConstants;
-import com.itextpdf.io.image.ImageData;
-import com.itextpdf.io.image.ImageDataFactory;
+import com.hongguoyan.module.biz.service.pdf.PdfRenderSupport;
 import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.font.PdfFont;
-import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.geom.PageSize;
-import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.kernel.pdf.PdfPage;
-import com.itextpdf.kernel.pdf.PdfReader;
 import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
-import com.itextpdf.kernel.pdf.extgstate.PdfExtGState;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.layout.element.Cell;
@@ -50,6 +43,8 @@ import com.itextpdf.layout.properties.UnitValue;
 import jakarta.annotation.Resource;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -65,7 +60,6 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class RecommendPdfServiceImpl implements RecommendPdfService {
-
     @Resource
     private UserCustomReportMapper userCustomReportMapper;
     @Resource
@@ -82,11 +76,6 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
     private MajorMapper majorMapper;
     @Resource
     private AreaMapper areaMapper;
-
-    // 字体路径 (假设在 resources 目录下，或者使用系统字体)
-    // 使用 Noto Sans SC 字体，支持更广泛的字符集 (包括生僻字)
-    private static final String FONT_NAME = "fonts/NotoSansSC-Regular.ttf";
-    private static final String FONT_ENCODING = "Identity-H"; // 使用 Identity-H 编码以支持所有 Unicode 字符
 
     @Override
     public byte[] generateReportPdf(Long userId, Long reportId) {
@@ -125,17 +114,14 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
             PdfWriter writer = new PdfWriter(baos);
             PdfDocument pdf = new PdfDocument(writer);
             Document document = new Document(pdf, PageSize.A4);
-            
-            // 设置中文字体
-            // 尝试从 resources 加载字体文件
-            byte[] fontBytes;
-            try (java.io.InputStream is = getClass().getClassLoader().getResourceAsStream(FONT_NAME)) {
-                if (is == null) {
-                    throw new RuntimeException("Font file not found: " + FONT_NAME);
-                }
-                fontBytes = is.readAllBytes();
+            try {
+                PdfRenderSupport.registerWatermarkHandler(pdf);
+            } catch (Exception e) {
+                log.warn("注册水印处理器失败，继续生成无水印版本", e);
             }
-            PdfFont font = PdfFontFactory.createFont(fontBytes, FONT_ENCODING, PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED);
+            
+            // 设置中文字体（字体字节缓存复用，避免每次重复读取）
+            PdfFont font = PdfRenderSupport.createReportFont();
             document.setFont(font);
 
             // --- 标题 ---
@@ -275,67 +261,11 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
             addRecommendationGroup(document, "5.1 冲刺方案 (机会较小，值得一试)", grouped.get(1));
             addRecommendationGroup(document, "5.2 稳妥方案 (匹配度高，重点关注)", grouped.get(2));
             addRecommendationGroup(document, "5.3 保底方案 (成功率高，确保有学上)", grouped.get(3));
-
             document.close();
-            
-            // 第二步：重新打开 PDF，逐页添加水印
-            return addWatermarks(baos.toByteArray());
+            return baos.toByteArray();
         } catch (Exception e) {
             log.error("生成 PDF 失败", e);
             throw ServiceExceptionUtil.exception(ErrorCodeConstants.PDF_GENERATE_ERROR);
-        }
-    }
-
-    /**
-     * 重新打开已生成的 PDF，逐页添加水印图片
-     */
-    private byte[] addWatermarks(byte[] srcPdfBytes) {
-        try {
-            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-            if (classLoader == null) {
-                classLoader = getClass().getClassLoader();
-            }
-            ImageData centerImgData = ImageDataFactory.create(
-                    Objects.requireNonNull(classLoader.getResource("logo/hgy_shuban_mid.png"), "Center watermark not found"));
-            ImageData topRightImgData = ImageDataFactory.create(
-                    Objects.requireNonNull(classLoader.getResource("logo/hgy_hengban_top.png"), "Top-right watermark not found"));
-
-            ByteArrayOutputStream destBaos = new ByteArrayOutputStream();
-            PdfDocument pdfDoc = new PdfDocument(new PdfReader(new java.io.ByteArrayInputStream(srcPdfBytes)), new PdfWriter(destBaos));
-
-            PdfExtGState gs = new PdfExtGState().setFillOpacity(1f);
-
-            int numberOfPages = pdfDoc.getNumberOfPages();
-            for (int i = 1; i <= numberOfPages; i++) {
-                PdfPage page = pdfDoc.getPage(i);
-                Rectangle pageSize = page.getPageSize();
-                PdfCanvas canvas = new PdfCanvas(page);
-                canvas.saveState();
-                canvas.setExtGState(gs);
-
-                // 1. 居中水印（竖版 logo）
-                float centerImgWidth = 200;
-                float centerImgHeight = centerImgWidth * centerImgData.getHeight() / centerImgData.getWidth();
-                float centerX = (pageSize.getWidth() - centerImgWidth) / 2;
-                float centerY = (pageSize.getHeight() - centerImgHeight) / 2;
-                canvas.addImageFittedIntoRectangle(centerImgData,
-                        new Rectangle(centerX, centerY, centerImgWidth, centerImgHeight), false);
-
-                // 2. 右上角水印（横版 logo，10pt 边距）
-                float topRightImgWidth = 80;
-                float topRightImgHeight = topRightImgWidth * topRightImgData.getHeight() / topRightImgData.getWidth();
-                float topRightX = pageSize.getWidth() - topRightImgWidth - 40;
-                float topRightY = pageSize.getHeight() - topRightImgHeight - 10;
-                canvas.addImageFittedIntoRectangle(topRightImgData,
-                        new Rectangle(topRightX, topRightY, topRightImgWidth, topRightImgHeight), false);
-
-                canvas.restoreState();
-            }
-            pdfDoc.close();
-            return destBaos.toByteArray();
-        } catch (Exception e) {
-            log.warn("添加水印失败，返回无水印 PDF", e);
-            return srcPdfBytes;
         }
     }
 
@@ -367,81 +297,48 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
 
     private void addRecommendationGroup(Document doc, String groupTitle, List<UserRecommendSchoolDO> list) {
         doc.add(new Paragraph(groupTitle).setFontSize(12).setBold().setMarginTop(10).setMarginBottom(5));
-        
         if (CollUtil.isEmpty(list)) {
             doc.add(new Paragraph("暂无推荐院校").setFontSize(10).setItalic().setFontColor(ColorConstants.GRAY));
             return;
         }
-
-        // 1. 预加载 Major 数据 (majorId -> majorCode)
-        java.util.Set<Long> majorIds = list.stream()
-                .map(UserRecommendSchoolDO::getMajorId)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-        Map<Long, String> majorIdCodeMap = new java.util.HashMap<>();
-        if (CollUtil.isNotEmpty(majorIds)) {
-            List<MajorDO> majors = majorMapper.selectBatchIds(majorIds);
-            if (CollUtil.isNotEmpty(majors)) {
-                majorIdCodeMap = majors.stream().collect(Collectors.toMap(MajorDO::getId, MajorDO::getCode, (k1, k2) -> k1));
-            }
-        }
-
-        // 2. 预加载 Adjustment 数据 (adjustmentId -> studyMode)
-        java.util.Set<Long> adjustmentIds = list.stream()
-                .map(UserRecommendSchoolDO::getAdjustmentId)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-        Map<Long, Integer> adjustmentStudyModeMap = new java.util.HashMap<>();
-        if (CollUtil.isNotEmpty(adjustmentIds)) {
-            List<AdjustmentDO> adjustments = adjustmentMapper.selectBatchIds(adjustmentIds);
-            if (CollUtil.isNotEmpty(adjustments)) {
-                adjustmentStudyModeMap = adjustments.stream()
-                        .filter(a -> a.getStudyMode() != null)
-                        .collect(Collectors.toMap(AdjustmentDO::getId, AdjustmentDO::getStudyMode, (k1, k2) -> k1));
-            }
-        }
-
-        // 3. 预加载录取数据 (schoolId -> List<AdjustmentAdmitDO>)
+        int targetYearInt = DateUtil.thisYear() - 1;
+        // 分组 key: schoolId + collegeId + majorId + studyMode
+        // 使用 Map 存储分组后的数据，key 为复合键
+        // 这里为了简单，直接用拼接字符串作为 key
+        Map<String, List<UserRecommendSchoolDO>> groupedRecs = list.stream()
+                .collect(Collectors.groupingBy(r -> buildGroupKey(r.getSchoolId(),r.getCollegeId(),r.getMajorId(),r.getStudyMode())));
+        // 按维度整体预取录取名单，循环内仅做 map 读取
         java.util.Set<Long> schoolIds = list.stream()
                 .map(UserRecommendSchoolDO::getSchoolId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
-        
-        List<AdjustmentAdmitDO> allAdmitList = new java.util.ArrayList<>();
-        if (CollUtil.isNotEmpty(schoolIds)) {
-            // 统一使用 2025 年 (DateUtil.thisYear() - 1)
-            int targetYearInt = DateUtil.thisYear() - 1; 
-            // 注意数据库 year 可能是 Short 类型，MyBatis-Plus 会自动处理，但在内存过滤时需注意类型匹配
-            allAdmitList = adjustmentAdmitMapper.selectList(new LambdaQueryWrapperX<AdjustmentAdmitDO>()
+        java.util.Set<Long> majorIds = list.stream()
+                .map(UserRecommendSchoolDO::getMajorId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        List<AdjustmentAdmitDO> allAdmitList = new ArrayList<>();
+        if (CollUtil.isNotEmpty(schoolIds) && CollUtil.isNotEmpty(majorIds)) {
+            LambdaQueryWrapperX<AdjustmentAdmitDO> allAdmitQuery = new LambdaQueryWrapperX<AdjustmentAdmitDO>()
                     .in(AdjustmentAdmitDO::getSchoolId, schoolIds)
-                    .eq(AdjustmentAdmitDO::getYear, targetYearInt));
+                    .in(AdjustmentAdmitDO::getMajorId, majorIds)
+                    .eq(AdjustmentAdmitDO::getYear, targetYearInt)
+                    .orderByDesc(AdjustmentAdmitDO::getFirstScore);
+            allAdmitList = adjustmentAdmitMapper.selectList(allAdmitQuery);
         }
-
-        // 分组 key: schoolId + collegeId + majorId + studyMode
-        // 使用 Map 存储分组后的数据，key 为复合键
-        // 这里为了简单，直接用拼接字符串作为 key
-        final Map<Long, Integer> fAdjustmentStudyModeMap = adjustmentStudyModeMap;
-        Map<String, List<UserRecommendSchoolDO>> groupedRecs = list.stream()
-                .collect(Collectors.groupingBy(r -> {
-                    Integer studyMode = fAdjustmentStudyModeMap.get(r.getAdjustmentId());
-                    // 如果找不到 studyMode，默认归为 0 (未知/不限)
-                    int sm = studyMode != null ? studyMode : 0;
-                    return r.getSchoolId() + "_" + r.getCollegeId() + "_" + r.getMajorId() + "_" + sm;
-                }));
+        Map<String, List<AdjustmentAdmitDO>> groupedAdmitMap = allAdmitList.stream()
+                .collect(Collectors.groupingBy(a -> buildGroupKey(a.getSchoolId(), a.getCollegeId(), a.getMajorId(), a.getStudyMode())));
 
         for (List<UserRecommendSchoolDO> group : groupedRecs.values()) {
             UserRecommendSchoolDO first = group.get(0);
-            Integer studyMode = fAdjustmentStudyModeMap.get(first.getAdjustmentId());
-            
+
             // 容器框
             Div card = new Div()
                     .setBorder(new SolidBorder(ColorConstants.LIGHT_GRAY, 1))
                     .setPadding(10)
-                    .setMarginBottom(10)
-                    .setKeepTogether(true);
+                    .setMarginBottom(10);
 
             // 标题行：学校 | 学院 | 专业 | 学习方式
-            String studyModeStr = getStudyModeName(studyMode);
+            String studyModeStr = getStudyModeName(first.getStudyMode());
             String titleLine = String.format("%s | %s | %s | %s", 
                     sanitizeForPdf(first.getSchoolName()), 
                     sanitizeForPdf(StrUtil.blankToDefault(first.getCollegeName(), "未分院")), 
@@ -468,70 +365,33 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
                     .setFontSize(10).setFontColor(ColorConstants.BLUE);
             card.add(pCategory);
 
-            // 4. 在内存中筛选并计算录取数据
-            String majorCode = majorIdCodeMap.get(first.getMajorId());
-            List<AdjustmentAdmitDO> admitList = new java.util.ArrayList<>();
-            
-            if (majorCode != null) {
-                final String fMajorCode = majorCode;
-                final Integer fStudyMode = studyMode;
-                // 内存过滤：匹配 School, MajorCode, StudyMode, 并且 (如果推荐指定了 College，则必须匹配 College；否则忽略 College)
-                // 增加 studyMode 匹配 (如果用户指定了 studyMode)
-                admitList = allAdmitList.stream().filter(admit -> 
-                    Objects.equals(admit.getSchoolId(), first.getSchoolId()) &&
-                    Objects.equals(admit.getMajorCode(), fMajorCode) &&
-                    (first.getCollegeId() == null || Objects.equals(admit.getCollegeId(), first.getCollegeId())) &&
-                    (fStudyMode == null || Objects.equals(admit.getStudyMode(), fStudyMode))
-                ).collect(Collectors.toList());
+            // 4. 从循环外预取结果中按维度取数据
+            String groupKey = buildGroupKey(first.getSchoolId(), first.getCollegeId(), first.getMajorId(), first.getStudyMode());
+            List<AdjustmentAdmitDO> admitList = groupedAdmitMap.getOrDefault(groupKey, new ArrayList<>());
+
+            // 5. 统计数据由预取名单计算
+            AdmitStats stats = queryAdmitStats(admitList);
+            if (stats != null) {
+                Table statTable = new Table(UnitValue.createPercentArray(new float[]{1, 1, 1, 1})).useAllAvailableWidth().setMarginTop(5);
+                statTable.addHeaderCell(new Cell().add(new Paragraph("最低分").setFontSize(9)));
+                statTable.addHeaderCell(new Cell().add(new Paragraph("最高分").setFontSize(9)));
+                statTable.addHeaderCell(new Cell().add(new Paragraph("平均分").setFontSize(9)));
+                statTable.addHeaderCell(new Cell().add(new Paragraph("中位数").setFontSize(9)));
+
+                statTable.addCell(new Cell().add(new Paragraph(String.valueOf(stats.getMinScore())).setFontSize(9)));
+                statTable.addCell(new Cell().add(new Paragraph(String.valueOf(stats.getMaxScore())).setFontSize(9)));
+                statTable.addCell(new Cell().add(new Paragraph(String.format("%.1f", stats.getAvgScore())).setFontSize(9)));
+                statTable.addCell(new Cell().add(new Paragraph(String.format("%.1f", stats.getMedianScore())).setFontSize(9)));
+                card.add(statTable);
             }
 
-            // 5. 计算统计数据 & 显示
             if (CollUtil.isNotEmpty(admitList)) {
-                List<BigDecimal> scores = admitList.stream()
-                        .map(AdjustmentAdmitDO::getFirstScore)
-                        .filter(Objects::nonNull)
-                        .sorted()
-                        .collect(Collectors.toList());
-
-                if (CollUtil.isNotEmpty(scores)) {
-                    BigDecimal minScore = scores.get(0);
-                    BigDecimal maxScore = scores.get(scores.size() - 1);
-                    
-                    BigDecimal sum = scores.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
-                    BigDecimal avgScore = sum.divide(BigDecimal.valueOf(scores.size()), 1, java.math.RoundingMode.HALF_UP);
-                    
-                    BigDecimal medianScore;
-                    int size = scores.size();
-                    if (size % 2 == 0) {
-                        medianScore = scores.get(size / 2 - 1).add(scores.get(size / 2)).divide(BigDecimal.valueOf(2), 1, java.math.RoundingMode.HALF_UP);
-                    } else {
-                        medianScore = scores.get(size / 2);
-                    }
-
-                    Table statTable = new Table(UnitValue.createPercentArray(new float[]{1, 1, 1, 1})).useAllAvailableWidth().setMarginTop(5);
-                    statTable.addHeaderCell(new Cell().add(new Paragraph("最低分").setFontSize(9)));
-                    statTable.addHeaderCell(new Cell().add(new Paragraph("最高分").setFontSize(9)));
-                    statTable.addHeaderCell(new Cell().add(new Paragraph("平均分").setFontSize(9)));
-                    statTable.addHeaderCell(new Cell().add(new Paragraph("中位数").setFontSize(9)));
-
-                    statTable.addCell(new Cell().add(new Paragraph(String.valueOf(minScore)).setFontSize(9)));
-                    statTable.addCell(new Cell().add(new Paragraph(String.valueOf(maxScore)).setFontSize(9)));
-                    statTable.addCell(new Cell().add(new Paragraph(String.format("%.1f", avgScore)).setFontSize(9)));
-                    statTable.addCell(new Cell().add(new Paragraph(String.format("%.1f", medianScore)).setFontSize(9)));
-
-                    card.add(statTable);
-                } else {
-                     card.add(new Paragraph("暂无往年录取数据").setFontSize(9).setFontColor(ColorConstants.GRAY).setMarginTop(5));
-                }
-
-                // Display admit list
-                card.add(new Paragraph("2025年录取名单 (部分):").setFontSize(10).setBold().setMarginTop(5));
+                card.add(new Paragraph(targetYearInt+"年录取名单:").setFontSize(10).setBold().setMarginTop(5));
                 Table listTable = new Table(UnitValue.createPercentArray(new float[]{2, 1, 3})).useAllAvailableWidth();
                 listTable.setFontSize(9);
                 listTable.addHeaderCell("姓名");
                 listTable.addHeaderCell("初试");
                 listTable.addHeaderCell("一志愿院校");
-
                 for (AdjustmentAdmitDO admit : admitList) {
                     listTable.addCell(StrUtil.isBlank(admit.getCandidateName()) ? "-" : sanitizeForPdf(maskCandidateName(admit.getCandidateName())));
                     listTable.addCell(admit.getFirstScore() != null ? admit.getFirstScore().toString() : "-");
@@ -651,5 +511,51 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
         }
         // Remove control characters but keep newlines
         return text.replaceAll("[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]", "");
+    }
+
+    private AdmitStats queryAdmitStats(List<AdjustmentAdmitDO> admitList) {
+        if (CollUtil.isEmpty(admitList)) {
+            return null;
+        }
+        List<BigDecimal> scores = admitList.stream()
+                .map(AdjustmentAdmitDO::getFirstScore)
+                .filter(Objects::nonNull)
+                .sorted()
+                .toList();
+        if (CollUtil.isEmpty(scores)) {
+            return null;
+        }
+        BigDecimal minScore = scores.get(0);
+        BigDecimal maxScore = scores.get(scores.size() - 1);
+        BigDecimal sum = scores.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal avgScore = sum.divide(BigDecimal.valueOf(scores.size()), 1, RoundingMode.HALF_UP);
+        BigDecimal medianScore;
+        int size = scores.size();
+        if (size % 2 == 0) {
+            medianScore = scores.get(size / 2 - 1)
+                    .add(scores.get(size / 2))
+                    .divide(BigDecimal.valueOf(2), 1, RoundingMode.HALF_UP);
+        } else {
+            medianScore = scores.get(size / 2);
+        }
+        AdmitStats stats = new AdmitStats();
+        stats.setMinScore(minScore);
+        stats.setMaxScore(maxScore);
+        stats.setAvgScore(avgScore);
+        stats.setMedianScore(medianScore);
+        return stats;
+    }
+
+    private String buildGroupKey(Long schoolId, Long collegeId, Long majorId, Integer studyMode) {
+        int sm = studyMode != null ? studyMode : 0;
+        return schoolId + "_" + collegeId + "_" + majorId + "_" + sm;
+    }
+
+    @lombok.Data
+    private static class AdmitStats {
+        private BigDecimal minScore;
+        private BigDecimal maxScore;
+        private BigDecimal avgScore;
+        private BigDecimal medianScore;
     }
 }

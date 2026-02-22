@@ -33,6 +33,7 @@ ALTER TABLE `biz_recommend_rule` ADD COLUMN `bucket_name` varchar(128) DEFAULT N
 ALTER TABLE `biz_user_recommend_adjustment` ADD COLUMN `user_score_b` decimal(10,4) DEFAULT NULL COMMENT '用户基础分数' AFTER `sim_c`;
 ALTER TABLE `biz_user_recommend_adjustment` ADD COLUMN `max_c` decimal(10,4) DEFAULT NULL COMMENT '用户加分' AFTER `user_score_b`;
 ALTER TABLE `biz_user_recommend_adjustment` ADD COLUMN `school_score_a` decimal(10,4) DEFAULT NULL COMMENT '学校分数' AFTER `max_c`;
+ALTER TABLE `biz_user_recommend_adjustment` ADD COLUMN `study_mode` tinyint(4) DEFAULT NULL COMMENT '学习方式: 1=全日制, 2=非全日制' AFTER `direction_id`;
 
 ALTER TABLE `biz_user_custom_report` ADD COLUMN `source_profile_json` text DEFAULT NULL COMMENT '用户基础信息快照';
 ALTER TABLE `biz_user_custom_report` ADD COLUMN `source_intention_json` text DEFAULT NULL COMMENT '用户意向信息快照';

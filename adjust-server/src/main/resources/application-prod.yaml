@@ -48,7 +48,7 @@ spring:
 #          url: jdbc:mysql://rm-bp1bq6os2rt65n2sg0o.mysql.rds.aliyuncs.com:3306/adjust?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true&rewriteBatchedStatements=true
 #          username: root
 #          password: Z3uFf@rrn5Ghzyx
-          url: jdbc:mysql://rm-uf64101olpm7c18u88o.mysql.rds.aliyuncs.com:3306/adjust_dev?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true&rewriteBatchedStatements=true
+          url: jdbc:mysql://rm-uf64101olpm7c18u8.mysql.rds.aliyuncs.com:3306/adjust_dev?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true&rewriteBatchedStatements=true
           username: root
           password: Rv82&&-xDvfVR
           #          username: sa # SQL Server 连接的示例
@@ -74,10 +74,10 @@ spring:
   # Redis 配置。Redisson 默认的配置足够使用，一般不需要进行调优
   data:
     redis:
-      host: r-bp1ie44b7nwu63driypd.redis.rds.aliyuncs.com # 地址
+      host: r-uf6zq3tksphbbzwz9y.redis.rds.aliyuncs.com # 地址
       port: 6379 # 端口
       database: 0 # 数据库索引
-      password: 'meow123!@#' # 密码，建议生产环境开启
+      password: '2C(m+q9(&H!JhsQl5cWzO(qr' # 密码，建议生产环境开启
 
 --- #################### 定时任务相关配置 ####################
 
@@ -164,27 +164,27 @@ logging:
     name: ${user.home}/logs/${spring.application.name}.log # 日志文件名，全路径
   level:
     # 配置自己写的 MyBatis Mapper 打印日志
-    com.hongguoyan.module.bpm.dal.mysql: debug
-    com.hongguoyan.module.infra.dal.mysql: debug
+    com.hongguoyan.module.bpm.dal.mysql: INFO
+    com.hongguoyan.module.infra.dal.mysql: INFO
     com.hongguoyan.module.infra.dal.mysql.logger.ApiErrorLogMapper: INFO # 配置 ApiErrorLogMapper 的日志级别为 info，避免和 GlobalExceptionHandler 重复打印
     com.hongguoyan.module.infra.dal.mysql.job.JobLogMapper: INFO # 配置 JobLogMapper 的日志级别为 info
     com.hongguoyan.module.infra.dal.mysql.file.FileConfigMapper: INFO # 配置 FileConfigMapper 的日志级别为 info
-    com.hongguoyan.module.pay.dal.mysql: debug
+    com.hongguoyan.module.pay.dal.mysql: INFO
     com.hongguoyan.module.pay.dal.mysql.notify.PayNotifyTaskMapper: INFO # 配置 PayNotifyTaskMapper 的日志级别为 info
-    com.hongguoyan.module.system.dal.mysql: debug
+    com.hongguoyan.module.system.dal.mysql: INFO
     com.hongguoyan.module.system.dal.mysql.sms.SmsChannelMapper: INFO # 配置 SmsChannelMapper 的日志级别为 info
-    com.hongguoyan.module.tool.dal.mysql: debug
-    com.hongguoyan.module.member.dal.mysql: debug
-    com.hongguoyan.module.trade.dal.mysql: debug
-    com.hongguoyan.module.promotion.dal.mysql: debug
-    com.hongguoyan.module.statistics.dal.mysql: debug
-    com.hongguoyan.module.crm.dal.mysql: debug
-    com.hongguoyan.module.erp.dal.mysql: debug
-    com.hongguoyan.module.iot.dal.mysql: debug
-    com.hongguoyan.module.iot.dal.tdengine: DEBUG
-    com.hongguoyan.module.iot.service.rule: debug
-    com.hongguoyan.module.ai.dal.mysql: debug
-    com.hongguoyan.module.biz.dal.mysql: debug
+    com.hongguoyan.module.tool.dal.mysql: INFO
+    com.hongguoyan.module.member.dal.mysql: INFO
+    com.hongguoyan.module.trade.dal.mysql: INFO
+    com.hongguoyan.module.promotion.dal.mysql: INFO
+    com.hongguoyan.module.statistics.dal.mysql: INFO
+    com.hongguoyan.module.crm.dal.mysql: INFO
+    com.hongguoyan.module.erp.dal.mysql: INFO
+    com.hongguoyan.module.iot.dal.mysql: INFO
+    com.hongguoyan.module.iot.dal.tdengine: INFO
+    com.hongguoyan.module.iot.service.rule: INFO
+    com.hongguoyan.module.ai.dal.mysql: INFO
+    com.hongguoyan.module.biz.dal.mysql: INFO
     org.springframework.context.support.PostProcessorRegistrationDelegate: ERROR # TODO 芋艿：先禁用，Spring Boot 3.X 存在部分错误的 WARN 提示
 
 debug: false
@@ -192,11 +192,7 @@ debug: false
 --- #################### 微信公众号、小程序相关配置 ####################
 wx:
   mp: # 公众号配置（必填），参见 https://github.com/Wechat-Group/WxJava/blob/develop/spring-boot-starters/wx-java-mp-spring-boot-starter/README.md 文档
-    #    app-id: wx041349c6f39b268b # 测试号（牛希尧提供的）
-    #    secret: 5abee519483bc9f8cb37ce280e814bd0
-    #    app-id: wx5b23ba7a5589ecbb # 测试号（自己的）
-    #    secret: 2a7b3b20c537e52e74afd395eb85f61f
-    app-id: wxf56b1542b9e85f8a # 测试号（Kongdy 提供的）
+    app-id: wxf56b1542b9e85f8a
     secret: 496379dcef1ba869e9234de8d598cfd3
     # 存储配置，解决 AccessToken 的跨节点的共享
     config-storage:
@@ -204,9 +200,6 @@ wx:
       key-prefix: wx # Redis Key 的前缀
       http-client-type: HttpClient # 采用 HttpClient 请求微信公众号平台
   miniapp: # 小程序配置（必填），参见 https://github.com/Wechat-Group/WxJava/blob/develop/spring-boot-starters/wx-java-miniapp-spring-boot-starter/README.md 文档
-# 未备案
-#    appid: wx2c173b9a3384e084
-#    secret: 0979fde25889b42ac911b1b720a66611
     appid: wx8acea57a8eaf1bb7
     secret: 77b0bc3c96f9bde00972d93c077608b5
 
@@ -214,9 +207,9 @@ wx:
       type: RedisTemplate # 采用 RedisTemplate 操作 Redis，会自动从 Spring 中获取
       key-prefix: wa # Redis Key 的前缀
       http-client-type: HttpClient # 采用 HttpClient 请求微信公众号平台
---- #################### 芋道相关配置 ####################
+--- #################### 系统相关配置 ####################
 
-# 芋道配置项，设置当前项目所有自定义的配置
+# 系统配置项，设置当前项目所有自定义的配置
 adjust:
   captcha:
     enable: false # 本地环境，暂时关闭图片验证码，方便登录等接口的测试；
@@ -230,9 +223,9 @@ adjust:
     enable: true
   demo: false # 关闭演示模式
   wxa-code:
-    env-version: develop # 小程序版本: 正式版为 "release"；体验版为 "trial"；开发版为 "develop"
+    env-version: release # 小程序版本: 正式版为 "release"；体验版为 "trial"；开发版为 "develop"
   wxa-subscribe-message:
-    miniprogram-state: developer # 跳转小程序类型：开发版为 “developer”；体验版为 “trial”为；正式版为 “formal”
+    miniprogram-state: formal # 跳转小程序类型：开发版为 “developer”；体验版为 “trial”为；正式版为 “formal”
   tencent-lbs-key: TVDBZ-TDILD-4ON4B-PFDZA-RNLKH-VVF6E # QQ 地图的密钥 https://lbs.qq.com/service/staticV2/staticGuide/staticDoc
 
 justauth:

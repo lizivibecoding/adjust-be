@@ -90,6 +90,11 @@ public class UserRecommendSchoolDO extends BaseDO {
     private Long directionId;
 
     /**
+     * 学习方式: 1=全日制, 2=非全日制
+     */
+    private Integer studyMode;
+
+    /**
      * 最终推荐概率 (SimFinal)
      */
     private BigDecimal simFinal;

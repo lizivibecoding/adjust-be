@@ -224,6 +224,7 @@
         <if test="year != null"> AND year = #{year} </if>
     </select>
 
+
     <select id="selectAdmitScores" resultType="java.math.BigDecimal">
         SELECT first_score
         FROM biz_adjustment_admit

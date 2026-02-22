@@ -20,8 +20,6 @@ import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.hongguoyan.module.biz.controller.app.recommend.vo.AppRecommendSchoolListReqVO;
 import com.hongguoyan.module.biz.controller.app.recommend.vo.AppRecommendSchoolRespVO;
 import com.hongguoyan.module.biz.dal.dataobject.adjustment.AdjustmentDO;
-import com.hongguoyan.module.biz.dal.dataobject.major.MajorDO;
-import com.hongguoyan.module.biz.dal.dataobject.majorrank.SchoolMajorRankDO;
 import com.hongguoyan.module.biz.dal.dataobject.nationalscore.NationalScoreDO;
 import com.hongguoyan.module.biz.dal.dataobject.recommend.RecommendRuleDO;
 import com.hongguoyan.module.biz.dal.dataobject.recommend.RecommendRuleSimAItem;
@@ -35,7 +33,6 @@ import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.AdjustmentMapper;
 import com.hongguoyan.module.biz.dal.mysql.adjustmentadmit.AdjustmentAdmitMapper;
 import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
-import com.hongguoyan.module.biz.dal.mysql.majorrank.SchoolMajorRankMapper;
 import com.hongguoyan.module.biz.dal.mysql.nationalscore.NationalScoreMapper;
 import com.hongguoyan.module.biz.dal.mysql.recommend.RecommendRuleMapper;
 import com.hongguoyan.module.biz.dal.mysql.recommend.UserRecommendSchoolMapper;
@@ -546,6 +543,7 @@ public class RecommendServiceImpl implements RecommendService {
                 .directionId(adjustment.getDirectionId())
                 .directionCode(adjustment.getDirectionCode())
                 .directionName(adjustment.getDirectionName())
+                .studyMode(adjustment.getStudyMode())
                 .simFinal(BigDecimal.valueOf(simFinal))
                 .simA(BigDecimal.valueOf(simA))
                 .simB(BigDecimal.valueOf(simB))
