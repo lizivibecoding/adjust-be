@@ -7,10 +7,10 @@ import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderCreateRespVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderPageReqVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderRespVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipPlanRespVO;
-import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipRefundNotifyReqVO;
 
 import jakarta.validation.Valid;
 import com.hongguoyan.module.pay.api.notify.dto.PayOrderNotifyReqDTO;
+import com.hongguoyan.module.pay.api.notify.dto.PayRefundNotifyReqDTO;
 import com.hongguoyan.framework.common.pojo.PageResult;
 import java.util.List;
 
@@ -57,7 +57,7 @@ public interface VipAppService {
      * @param notifyReqVO 回调请求体
      * @return 是否成功（返回 true 表示无需重试）
      */
-    Boolean refundNotify(@Valid AppVipRefundNotifyReqVO notifyReqVO);
+    Boolean refundNotify(@Valid PayRefundNotifyReqDTO notifyReqVO);
 
     /**
      * 券码兑换并续期/开通订阅

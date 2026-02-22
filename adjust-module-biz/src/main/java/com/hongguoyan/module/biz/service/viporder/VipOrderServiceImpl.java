@@ -150,12 +150,11 @@ public class VipOrderServiceImpl implements VipOrderService {
         Long userId = reqVO.getUserId();
         String planCode = StrUtil.trim(reqVO.getPlanCode()).toUpperCase(Locale.ROOT);
 
-        // 1) 找最近一笔已支付且未发起退款的订单（LIFO）
+        // 1) 找最近一笔已支付订单（LIFO）。若已发起退款，则直接提示，避免连续点导致把更早订单也退掉
         VipOrderDO order = vipOrderMapper.selectOne(new LambdaQueryWrapperX<VipOrderDO>()
                 .eq(VipOrderDO::getUserId, userId)
                 .eq(VipOrderDO::getPlanCode, planCode)
                 .eq(VipOrderDO::getStatus, VipOrderStatusEnum.PAID.getCode())
-                .isNull(VipOrderDO::getPayRefundId)
                 .orderByDesc(VipOrderDO::getPayTime)
                 .orderByDesc(VipOrderDO::getId)
                 .last("LIMIT 1"));
@@ -163,6 +162,16 @@ public class VipOrderServiceImpl implements VipOrderService {
             throw exception(VIP_ORDER_REFUND_NOT_FOUND);
         }
         if (order.getPayRefundId() != null) {
+            throw exception(VIP_ORDER_REFUND_ALREADY_REQUESTED);
+        }
+
+        // 1.1) 并发保护：先占位 pay_refund_id，防止并发/重复点击导致创建多笔退款单
+        int locked = vipOrderMapper.update(null, new LambdaUpdateWrapper<VipOrderDO>()
+                .set(VipOrderDO::getPayRefundId, 0L)
+                .eq(VipOrderDO::getId, order.getId())
+                .isNull(VipOrderDO::getPayRefundId)
+                .eq(VipOrderDO::getStatus, VipOrderStatusEnum.PAID.getCode()));
+        if (locked == 0) {
             throw exception(VIP_ORDER_REFUND_ALREADY_REQUESTED);
         }
 

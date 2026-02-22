@@ -17,7 +17,7 @@ import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderPageReqVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipOrderRespVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipPlanBenefitRespVO;
 import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipPlanRespVO;
-import com.hongguoyan.module.biz.controller.app.vip.vo.AppVipRefundNotifyReqVO;
+import com.hongguoyan.module.pay.api.notify.dto.PayRefundNotifyReqDTO;
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.module.biz.dal.dataobject.vipcouponbatch.VipCouponBatchDO;
 import com.hongguoyan.module.biz.dal.dataobject.vipcouponcode.VipCouponCodeDO;
@@ -46,6 +46,8 @@ import com.hongguoyan.module.pay.api.notify.dto.PayOrderNotifyReqDTO;
 import com.hongguoyan.module.pay.api.order.PayOrderApi;
 import com.hongguoyan.module.pay.api.order.dto.PayOrderCreateReqDTO;
 import com.hongguoyan.module.pay.api.order.dto.PayOrderRespDTO;
+import com.hongguoyan.module.pay.api.refund.PayRefundApi;
+import com.hongguoyan.module.pay.api.refund.dto.PayRefundRespDTO;
 import com.hongguoyan.module.pay.enums.order.PayOrderStatusEnum;
 import jakarta.annotation.Resource;
 import org.springframework.dao.DuplicateKeyException;
@@ -121,6 +123,8 @@ public class VipAppServiceImpl implements VipAppService {
     private VipBenefitLogMapper vipBenefitLogMapper;
     @Resource
     private PayOrderApi payOrderApi;
+    @Resource
+    private PayRefundApi payRefundApi;
     @Resource
     private VipBenefitService vipBenefitService;
     @Resource
@@ -412,11 +416,10 @@ public class VipAppServiceImpl implements VipAppService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Boolean refundNotify(AppVipRefundNotifyReqVO notifyReqVO) {
+    public Boolean refundNotify(PayRefundNotifyReqDTO notifyReqVO) {
         String merchantOrderId = StrUtil.trim(notifyReqVO.getMerchantOrderId());
+        String merchantRefundId = StrUtil.trim(notifyReqVO.getMerchantRefundId());
         Long payRefundId = notifyReqVO.getPayRefundId();
-        Integer refundPrice = notifyReqVO.getRefundPrice();
-        LocalDateTime refundTime = parseNotifyTimeOrNow(notifyReqVO.getSuccessTime());
 
         // 1. 校验业务订单是否存在
         VipOrderDO order = vipOrderMapper.selectOne(new LambdaQueryWrapperX<VipOrderDO>()
@@ -429,7 +432,7 @@ public class VipAppServiceImpl implements VipAppService {
         if (Objects.equals(order.getStatus(), VIP_ORDER_STATUS_REFUNDED)) {
             if (order.getPayRefundId() != null && Objects.equals(order.getPayRefundId(), payRefundId)) {
                 // 兼容历史：旧逻辑可能只更新订单状态未做订阅/权益回滚；若未处理过则补偿执行一次
-                applyRefundShrinkIfNeeded(order, refundTime);
+                applyRefundShrinkIfNeeded(order, LocalDateTime.now());
                 return Boolean.TRUE;
             }
             throw exception(VIP_REFUND_NOTIFY_REFUND_ID_MISMATCH);
@@ -440,10 +443,24 @@ public class VipAppServiceImpl implements VipAppService {
             throw exception(VIP_REFUND_NOTIFY_ORDER_STATUS_INVALID);
         }
 
-        // 4. 金额校验：最小闭环，要求整单退款
+        // 4. 查询支付退款单，获取真实退款金额/成功时间（pay 通知体不包含 refundPrice）
+        PayRefundRespDTO refund = payRefundApi.getRefund(payRefundId);
+        if (refund == null) {
+            throw exception(VIP_REFUND_NOTIFY_REFUND_PRICE_INVALID);
+        }
+        if (!Objects.equals(refund.getMerchantOrderId(), order.getOrderNo())) {
+            throw exception(VIP_REFUND_NOTIFY_ORDER_STATUS_INVALID);
+        }
+        if (StrUtil.isNotBlank(merchantRefundId)
+                && !Objects.equals(StrUtil.trimToEmpty(refund.getMerchantRefundId()), merchantRefundId)) {
+            throw exception(VIP_REFUND_NOTIFY_REFUND_ID_MISMATCH);
+        }
+        Integer refundPrice = refund.getRefundPrice();
+        // 金额校验：最小闭环，要求整单退款
         if (refundPrice == null || refundPrice <= 0 || !Objects.equals(refundPrice, order.getAmount())) {
             throw exception(VIP_REFUND_NOTIFY_REFUND_PRICE_INVALID);
         }
+        LocalDateTime refundTime = refund.getSuccessTime() != null ? refund.getSuccessTime() : LocalDateTime.now();
 
         // 5. 更新订单为已退款（并发安全：只从已支付改为已退款）
         int updated = vipOrderMapper.update(null, new LambdaUpdateWrapper<VipOrderDO>()
