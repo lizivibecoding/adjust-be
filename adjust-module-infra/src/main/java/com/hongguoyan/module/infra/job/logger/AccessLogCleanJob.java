@@ -23,7 +23,7 @@ public class AccessLogCleanJob implements JobHandler {
     /**
      * 清理超过（14）天的日志
      */
-    private static final Integer JOB_CLEAN_RETAIN_DAY = 14;
+    private static final Integer JOB_CLEAN_RETAIN_DAY = 30;
 
     /**
      * 每次删除间隔的条数，如果值太高可能会造成数据库的压力过大

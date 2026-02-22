@@ -88,48 +88,12 @@
             us.major_id AS majorId,
             m3.code AS majorCode,
             m3.name AS majorName,
-            (
-                SELECT a1.id
-                FROM biz_adjustment a1
-                WHERE a1.school_id = us.school_id
-                  AND a1.college_id = us.college_id
-                  AND a1.major_id = us.major_id
-                ORDER BY a1.create_time DESC, a1.id DESC
-                LIMIT 1
-            ) AS adjustmentId,
-            (
-                SELECT MAX(a2.create_time)
-                FROM biz_adjustment a2
-                WHERE a2.school_id = us.school_id
-                  AND a2.college_id = us.college_id
-                  AND a2.major_id = us.major_id
-            ) AS updateTime,
-            (
-                SELECT a3.year
-                FROM biz_adjustment a3
-                WHERE a3.school_id = us.school_id
-                  AND a3.college_id = us.college_id
-                  AND a3.major_id = us.major_id
-                ORDER BY a3.create_time DESC, a3.id DESC
-                LIMIT 1
-            ) AS year,
-            (
-                SELECT a4.study_mode
-                FROM biz_adjustment a4
-                WHERE a4.school_id = us.school_id
-                  AND a4.college_id = us.college_id
-                  AND a4.major_id = us.major_id
-                ORDER BY a4.create_time DESC, a4.id DESC
-                LIMIT 1
-            ) AS studyMode,
+            latest.id AS adjustmentId,
+            latest.create_time AS updateTime,
+            latest.year AS year,
+            latest.study_mode AS studyMode,
             CASE
-                WHEN IFNULL((
-                    SELECT MAX(a2.create_time)
-                    FROM biz_adjustment a2
-                    WHERE a2.school_id = us.school_id
-                      AND a2.college_id = us.college_id
-                      AND a2.major_id = us.major_id
-                ), '1970-01-01 00:00:00') > COALESCE(us.last_read_time, us.create_time) THEN 1
+                WHEN IFNULL(latest.create_time, '1970-01-01 00:00:00') > COALESCE(us.last_read_time, us.create_time) THEN 1
                 ELSE 0
             END AS hasUpdate
         FROM biz_user_subscription us
@@ -137,6 +101,45 @@
         LEFT JOIN biz_major m3 ON m3.id = us.major_id
         LEFT JOIN biz_major m2 ON m2.code = m3.parent_code AND m2.level = 2
         LEFT JOIN biz_major m1 ON m1.code = m2.parent_code AND m1.level = 1
+        LEFT JOIN (
+            SELECT
+                a.id,
+                a.school_id,
+                a.college_id,
+                a.major_id,
+                a.year,
+                a.study_mode,
+                a.create_time
+            FROM biz_adjustment a
+            INNER JOIN (
+                SELECT
+                    k.school_id,
+                    k.college_id,
+                    k.major_id,
+                    MAX(CONCAT(DATE_FORMAT(a2.create_time, '%Y%m%d%H%i%s'), '-', LPAD(a2.id, 20, '0'))) AS latest_key
+                FROM (
+                    SELECT us2.school_id, us2.college_id, us2.major_id
+                    FROM biz_user_subscription us2
+                    WHERE us2.user_id = #{userId}
+                      AND us2.school_id IN
+                      <foreach collection="schoolIds" item="schoolId" open="(" separator="," close=")">
+                          #{schoolId}
+                      </foreach>
+                ) k
+                LEFT JOIN biz_adjustment a2
+                       ON a2.school_id = k.school_id
+                      AND a2.college_id = k.college_id
+                      AND a2.major_id = k.major_id
+                GROUP BY k.school_id, k.college_id, k.major_id
+            ) latest_key
+                    ON latest_key.school_id = a.school_id
+                   AND latest_key.college_id = a.college_id
+                   AND latest_key.major_id = a.major_id
+                   AND CONCAT(DATE_FORMAT(a.create_time, '%Y%m%d%H%i%s'), '-', LPAD(a.id, 20, '0')) = latest_key.latest_key
+        ) latest
+               ON latest.school_id = us.school_id
+              AND latest.college_id = us.college_id
+              AND latest.major_id = us.major_id
         <where>
             us.user_id = #{userId}
             AND us.school_id IN
@@ -153,13 +156,7 @@
                 AND (<include refid="SchoolLevelExpr" />) = #{reqVO.schoolLevel}
             </if>
             <if test="reqVO.updateDays != null and reqVO.updateDays &gt; 0">
-                AND (
-                    SELECT MAX(a2.create_time)
-                    FROM biz_adjustment a2
-                    WHERE a2.school_id = us.school_id
-                      AND a2.college_id = us.college_id
-                      AND a2.major_id = us.major_id
-                ) &gt;= DATE_SUB(NOW(), INTERVAL #{reqVO.updateDays} DAY)
+                AND latest.create_time &gt;= DATE_SUB(NOW(), INTERVAL #{reqVO.updateDays} DAY)
             </if>
         </where>
         ORDER BY updateTime DESC

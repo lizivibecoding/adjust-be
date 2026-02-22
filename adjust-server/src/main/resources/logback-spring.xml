@@ -110,13 +110,26 @@
     </appender>
     -->
 
-    <root level="INFO">
-        <appender-ref ref="STDOUT"/>
-        <appender-ref ref="ASYNC_INFO"/>
-        <appender-ref ref="ASYNC_DEBUG"/>
-        <appender-ref ref="ASYNC_ERROR"/>
-        <!-- 如果想接入【SkyWalking 日志服务】，可以取消注释掉本行 -->
-        <!-- <appender-ref ref="SKYWALKING"/> -->
-    </root>
+    <springProfile name="prod">
+        <root level="ERROR">
+            <appender-ref ref="STDOUT"/>
+            <appender-ref ref="ASYNC_INFO"/>
+            <appender-ref ref="ASYNC_DEBUG"/>
+            <appender-ref ref="ASYNC_ERROR"/>
+            <!-- 如果想接入【SkyWalking 日志服务】，可以取消注释掉本行 -->
+            <!-- <appender-ref ref="SKYWALKING"/> -->
+        </root>
+    </springProfile>
+
+    <springProfile name="!prod">
+        <root level="INFO">
+            <appender-ref ref="STDOUT"/>
+            <appender-ref ref="ASYNC_INFO"/>
+            <appender-ref ref="ASYNC_DEBUG"/>
+            <appender-ref ref="ASYNC_ERROR"/>
+            <!-- 如果想接入【SkyWalking 日志服务】，可以取消注释掉本行 -->
+            <!-- <appender-ref ref="SKYWALKING"/> -->
+        </root>
+    </springProfile>
 
 </configuration>
