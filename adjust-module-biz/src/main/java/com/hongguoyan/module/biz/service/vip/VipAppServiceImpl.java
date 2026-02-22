@@ -208,12 +208,14 @@ public class VipAppServiceImpl implements VipAppService {
         if (Objects.equals(benefit.getBenefitType(), 1)) {
             return name;
         }
+        boolean isMajorCategoryOpen = Objects.equals(StrUtil.trim(benefit.getBenefitKey()), BENEFIT_KEY_MAJOR_CATEGORY_OPEN);
+        String unit = isMajorCategoryOpen ? "个" : "次";
         Integer value = benefit.getBenefitValue();
         if (value != null && value == -1) {
-            return name + "（不限次）";
+            return name + "（不限" + unit + "）";
         }
         if (value != null && value > 0) {
-            return name + "（" + value + "次）";
+            return name + "（" + value + unit + "）";
         }
         return name;
     }
