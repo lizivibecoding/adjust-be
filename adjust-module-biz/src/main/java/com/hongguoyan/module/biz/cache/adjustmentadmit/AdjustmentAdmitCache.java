@@ -40,8 +40,7 @@ public class AdjustmentAdmitCache {
                 AdjustmentAdmitDO::getFirstScore,
                 AdjustmentAdmitDO::getRetestScore,
                 AdjustmentAdmitDO::getTotalScore);
-        wrapper.eq(AdjustmentAdmitDO::getDeleted, false)
-                .eq(AdjustmentAdmitDO::getSchoolId, reqVO.getSchoolId())
+        wrapper.eq(AdjustmentAdmitDO::getSchoolId, reqVO.getSchoolId())
                 .eq(AdjustmentAdmitDO::getCollegeId, reqVO.getCollegeId())
                 .eq(AdjustmentAdmitDO::getMajorId, reqVO.getMajorId())
                 .eq(AdjustmentAdmitDO::getYear, reqVO.getYear())

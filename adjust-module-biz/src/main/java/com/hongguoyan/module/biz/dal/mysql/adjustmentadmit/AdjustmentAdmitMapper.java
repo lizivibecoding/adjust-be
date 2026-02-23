@@ -17,6 +17,7 @@ import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreItemRe
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScorePageReqVO;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreStatItemRespVO;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreStatReqVO;
+import com.hongguoyan.module.biz.dal.mysql.adjustmentadmit.dto.SameScoreLevelStatDTO;
 import org.apache.ibatis.annotations.Select;
 import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentAdmitPageReqVO;
 import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentAdmitPageRespVO;
@@ -63,9 +64,11 @@ public interface AdjustmentAdmitMapper extends BaseMapperX<AdjustmentAdmitDO> {
     default PageResult<AppSameScoreItemRespVO> selectSameScorePage(AppSameScorePageReqVO reqVO, String targetMajorCode,
                                                                    List<String> openedMajorCodes) {
         Page<AppSameScoreItemRespVO> page = MyBatisUtils.buildPage(reqVO);
+        // Do NOT use MP auto count (it wraps full SQL with ORDER BY into subquery), use custom count SQL instead.
+        page.setSearchCount(false);
         List<AppSameScoreItemRespVO> records = selectSameScorePage(page, reqVO, targetMajorCode, openedMajorCodes);
-        page.setRecords(records);
-        return new PageResult<>(page.getRecords(), page.getTotal());
+        Long total = selectSameScoreCount(reqVO, openedMajorCodes);
+        return new PageResult<>(records != null ? records : List.of(), total != null ? total : 0L);
     }
 
     List<AppSameScoreItemRespVO> selectSameScorePage(IPage<AppSameScoreItemRespVO> page,
@@ -73,8 +76,14 @@ public interface AdjustmentAdmitMapper extends BaseMapperX<AdjustmentAdmitDO> {
                                                      @Param("targetMajorCode") String targetMajorCode,
                                                      @Param("openedMajorCodes") List<String> openedMajorCodes);
 
+    Long selectSameScoreCount(@Param("reqVO") AppSameScorePageReqVO reqVO,
+                              @Param("openedMajorCodes") List<String> openedMajorCodes);
+
     List<AppSameScoreStatItemRespVO> selectSameScoreStat(@Param("reqVO") AppSameScoreStatReqVO reqVO,
                                                          @Param("openedMajorCodes") List<String> openedMajorCodes);
+
+    SameScoreLevelStatDTO selectSameScoreStatAgg(@Param("reqVO") AppSameScoreStatReqVO reqVO,
+                                                 @Param("openedMajorCodes") List<String> openedMajorCodes);
 
 
     /**
@@ -84,8 +93,7 @@ public interface AdjustmentAdmitMapper extends BaseMapperX<AdjustmentAdmitDO> {
     @Select("<script>" +
         "SELECT school_id, college_id, major_code, study_mode, year, AVG(first_score) as avg_score " +
         "FROM biz_adjustment_admit " +
-        "WHERE deleted = 0 " +
-        "AND school_id IN <foreach item='id' collection='schoolIds' open='(' separator=',' close=')'> #{id} </foreach> " +
+        "WHERE school_id IN <foreach item='id' collection='schoolIds' open='(' separator=',' close=')'> #{id} </foreach> " +
         "AND year IN <foreach item='y' collection='years' open='(' separator=',' close=')'> #{y} </foreach> " +
         "GROUP BY school_id, college_id, major_code, study_mode, year" +
         "</script>")
@@ -104,8 +112,7 @@ public interface AdjustmentAdmitMapper extends BaseMapperX<AdjustmentAdmitDO> {
     @Select("<script>" +
         "SELECT school_id, college_id, major_code, study_mode, year, first_score " +
         "FROM biz_adjustment_admit " +
-        "WHERE deleted = 0 " +
-        "AND school_id IN <foreach item='id' collection='schoolIds' open='(' separator=',' close=')'> #{id} </foreach> " +
+        "WHERE school_id IN <foreach item='id' collection='schoolIds' open='(' separator=',' close=')'> #{id} </foreach> " +
         "AND year IN <foreach item='y' collection='years' open='(' separator=',' close=')'> #{y} </foreach> " +
         "ORDER BY first_score ASC" +
         "</script>")

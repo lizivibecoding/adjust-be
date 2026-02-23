@@ -12,6 +12,7 @@ import com.hongguoyan.module.biz.dal.dataobject.adjustmentadmit.AdjustmentAdmitD
 import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
 import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
 import com.hongguoyan.module.biz.dal.mysql.adjustmentadmit.AdjustmentAdmitMapper;
+import com.hongguoyan.module.biz.dal.mysql.adjustmentadmit.dto.SameScoreLevelStatDTO;
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
 import com.hongguoyan.module.biz.cache.adjustmentadmit.AdjustmentAdmitCache;
 import com.hongguoyan.module.biz.service.userprofile.UserProfileService;
@@ -110,8 +111,7 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
         LambdaQueryWrapperX<AdjustmentAdmitDO> wrapper = new LambdaQueryWrapperX<>();
         wrapper.select(AdjustmentAdmitDO::getFirstSchoolId,
                 AdjustmentAdmitDO::getFirstScore);
-        wrapper.eq(AdjustmentAdmitDO::getDeleted, false)
-                .eq(AdjustmentAdmitDO::getSchoolId, reqVO.getSchoolId())
+        wrapper.eq(AdjustmentAdmitDO::getSchoolId, reqVO.getSchoolId())
                 .eq(AdjustmentAdmitDO::getCollegeId, reqVO.getCollegeId())
                 .eq(AdjustmentAdmitDO::getMajorId, reqVO.getMajorId())
                 .eq(AdjustmentAdmitDO::getYear, reqVO.getYear())
@@ -225,8 +225,27 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
     public List<AppSameScoreStatItemRespVO> getSameScoreStat(Long userId, AppSameScoreStatReqVO reqVO) {
         vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_VIEW_SAME_SCORE);
         List<String> openedMajorCodes = resolveOpenedMajorCodes(userId);
-        List<AppSameScoreStatItemRespVO> list = adjustmentAdmitMapper.selectSameScoreStat(reqVO, openedMajorCodes);
-        return list != null ? list : Collections.emptyList();
+        SameScoreLevelStatDTO agg = adjustmentAdmitMapper.selectSameScoreStatAgg(reqVO, openedMajorCodes);
+
+        long c985 = agg != null && agg.getC985() != null ? agg.getC985() : 0L;
+        long c211 = agg != null && agg.getC211() != null ? agg.getC211() : 0L;
+        long csyl = agg != null && agg.getCsyl() != null ? agg.getCsyl() : 0L;
+        long cother = agg != null && agg.getCother() != null ? agg.getCother() : 0L;
+
+        List<AppSameScoreStatItemRespVO> list = new ArrayList<>(4);
+        list.add(stat("985工程", "", c985));
+        list.add(stat("211工程", "不含985", c211));
+        list.add(stat("双一流", "不含985、211", csyl));
+        list.add(stat("普通院校", "", cother));
+        return list;
+    }
+
+    private AppSameScoreStatItemRespVO stat(String name, String subName, long value) {
+        AppSameScoreStatItemRespVO vo = new AppSameScoreStatItemRespVO();
+        vo.setName(name);
+        vo.setSubName(subName);
+        vo.setValue(value);
+        return vo;
     }
 
     private List<String> resolveOpenedMajorCodes(Long userId) {

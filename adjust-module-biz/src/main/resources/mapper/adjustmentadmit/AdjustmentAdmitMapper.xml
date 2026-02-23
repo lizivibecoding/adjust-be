@@ -16,7 +16,6 @@
 
     <sql id="SameScoreStatWhere">
         <where>
-            AND a.deleted = b'0'
             <if test="reqVO.year != null">
                 AND a.year = #{reqVO.year}
             </if>
@@ -44,7 +43,6 @@
 
     <sql id="SameScoreListInnerWhere">
         <where>
-            AND a.deleted = b'0'
             <if test="reqVO.year != null">
                 AND a.year = #{reqVO.year}
             </if>
@@ -174,6 +172,22 @@
             g.school_id DESC
     </select>
 
+    <select id="selectSameScoreCount" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM (
+            SELECT
+                a.school_id,
+                a.college_id,
+                a.major_id,
+                a.year,
+                a.study_mode
+            FROM biz_adjustment_admit a
+            LEFT JOIN biz_school s ON s.id = a.school_id
+            <include refid="SameScoreListInnerWhere" />
+            GROUP BY a.school_id, a.college_id, a.major_id, a.year, a.study_mode
+        ) t
+    </select>
+
     <select id="selectSameScoreStat"
             resultType="com.hongguoyan.module.biz.controller.app.adjustment.vo.AppSameScoreStatItemRespVO">
         SELECT
@@ -211,13 +225,41 @@
         <include refid="SameScoreStatWhere" />
     </select>
 
+    <select id="selectSameScoreStatAgg"
+            resultType="com.hongguoyan.module.biz.dal.mysql.adjustmentadmit.dto.SameScoreLevelStatDTO">
+        SELECT
+            COUNT(DISTINCT CASE WHEN IFNULL(s.is_985, 0) = 1 THEN a.school_id ELSE NULL END) AS c985,
+            COUNT(DISTINCT CASE WHEN IFNULL(s.is_985, 0) = 0 AND IFNULL(s.is_211, 0) = 1 THEN a.school_id ELSE NULL END) AS c211,
+            COUNT(DISTINCT CASE WHEN IFNULL(s.is_985, 0) = 0 AND IFNULL(s.is_211, 0) = 0 AND IFNULL(s.is_syl, 0) = 1 THEN a.school_id ELSE NULL END) AS csyl,
+            COUNT(DISTINCT CASE WHEN IFNULL(s.is_985, 0) = 0 AND IFNULL(s.is_211, 0) = 0 AND IFNULL(s.is_syl, 0) = 0 THEN a.school_id ELSE NULL END) AS cother
+        <include refid="SameScoreBaseFrom" />
+        <include refid="SameScoreStatWhere" />
+    </select>
+
     <select id="selectAvgFirstScore" resultType="java.math.BigDecimal">
         SELECT AVG(first_score) FROM biz_adjustment_admit
-        WHERE deleted = 0
-        AND school_id = #{schoolId}
+        WHERE school_id = #{schoolId}
         <if test="collegeId != null"> AND college_id = #{collegeId} </if>
         <if test="majorCode != null and majorCode != ''"> AND major_code = #{majorCode} </if>
         <if test="year != null"> AND year = #{year} </if>
+    </select>
+
+    <select id="selectBatchAdmitFullStats" resultType="java.util.Map">
+        SELECT school_id, college_id, major_code, year,
+               MIN(first_score) as min_score,
+               MAX(first_score) as max_score,
+               AVG(first_score) as avg_score,
+               COUNT(*) as count
+        FROM biz_adjustment_admit
+        WHERE school_id IN
+        <foreach collection="schoolIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND year IN
+        <foreach collection="years" item="y" open="(" separator="," close=")">
+            #{y}
+        </foreach>
+        GROUP BY school_id, college_id, major_code, year
     </select>
 
     <select id="selectAdmitStats" resultType="java.util.Map">
@@ -227,8 +269,7 @@
             AVG(first_score) as avgScore,
             COUNT(*) as count
         FROM biz_adjustment_admit
-        WHERE deleted = 0
-        AND school_id = #{schoolId}
+        WHERE school_id = #{schoolId}
         <if test="collegeId != null"> AND college_id = #{collegeId} </if>
         <if test="majorCode != null and majorCode != ''"> AND major_code = #{majorCode} </if>
         <if test="year != null"> AND year = #{year} </if>
@@ -238,8 +279,7 @@
     <select id="selectAdmitScores" resultType="java.math.BigDecimal">
         SELECT first_score
         FROM biz_adjustment_admit
-        WHERE deleted = 0
-        AND school_id = #{schoolId}
+        WHERE school_id = #{schoolId}
         <if test="collegeId != null"> AND college_id = #{collegeId} </if>
         <if test="majorCode != null and majorCode != ''"> AND major_code = #{majorCode} </if>
         <if test="year != null"> AND year = #{year} </if>
@@ -249,8 +289,7 @@
     <select id="selectAdmitList" resultType="com.hongguoyan.module.biz.dal.dataobject.adjustmentadmit.AdjustmentAdmitDO">
         SELECT candidate_name, first_score, first_school_name
         FROM biz_adjustment_admit
-        WHERE deleted = 0
-        AND school_id = #{schoolId}
+        WHERE school_id = #{schoolId}
         <if test="collegeId != null"> AND college_id = #{collegeId} </if>
         <if test="majorCode != null and majorCode != ''"> AND major_code = #{majorCode} </if>
         <if test="year != null"> AND year = #{year} </if>
