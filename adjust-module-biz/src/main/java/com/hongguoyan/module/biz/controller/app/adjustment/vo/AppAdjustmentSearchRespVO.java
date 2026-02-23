@@ -1,6 +1,7 @@
 package com.hongguoyan.module.biz.controller.app.adjustment.vo;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.hongguoyan.module.biz.framework.jackson.StudyModeCodeDeserializer;
@@ -51,6 +52,7 @@ public class AppAdjustmentSearchRespVO {
     private Integer studyMode;
 
     @Schema(description = "学习方式名称", example = "全日制")
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     public String getStudyModeName() {
         return StudyModeEnum.getName(studyMode);
     }
