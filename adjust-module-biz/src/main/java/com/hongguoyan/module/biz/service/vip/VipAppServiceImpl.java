@@ -593,24 +593,9 @@ public class VipAppServiceImpl implements VipAppService {
         if (sub <= 0) {
             return;
         }
-        int after = before - sub;
-        int used = usage.getUsedCount() != null ? Math.max(0, usage.getUsedCount()) : 0;
-        // 夹紧：grant_total 不小于 used_count，避免出现“用量 > 总量”的展示/口径困扰（剩余依旧为 0）
-        int finalGrant = Math.max(after, used);
-        if (finalGrant == before) {
-            return;
-        }
-        if (finalGrant == after) {
-            vipBenefitUsageMapper.increaseGrantTotal(order.getUserId(), benefitKey, PERIOD_START_LIFETIME, PERIOD_END_LIFETIME, -sub);
-            return;
-        }
-        // after < used: 直接设置为 used（等价于 rollback 到“剩余 0”）
-        vipBenefitUsageMapper.update(null, new LambdaUpdateWrapper<VipBenefitUsageDO>()
-                .set(VipBenefitUsageDO::getGrantTotal, finalGrant)
-                .eq(VipBenefitUsageDO::getUserId, order.getUserId())
-                .eq(VipBenefitUsageDO::getBenefitKey, benefitKey)
-                .eq(VipBenefitUsageDO::getPeriodStartTime, PERIOD_START_LIFETIME)
-                .eq(VipBenefitUsageDO::getPeriodEndTime, PERIOD_END_LIFETIME));
+        // 退款缩容：强制扣减 grant_total（允许 grant_total < used_count）
+        // 原因：若 clamp 到 used_count，会导致 shrinking 逻辑（依赖 grant_total）无法触发，进而无法清理多余的 logs/used_count
+        vipBenefitUsageMapper.increaseGrantTotal(order.getUserId(), benefitKey, PERIOD_START_LIFETIME, PERIOD_END_LIFETIME, -sub);
     }
 
     private Integer resolveRollbackCount(VipOrderDO order, String benefitKey) {
