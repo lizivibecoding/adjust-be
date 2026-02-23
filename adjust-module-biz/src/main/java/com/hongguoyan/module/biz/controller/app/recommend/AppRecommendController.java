@@ -73,8 +73,7 @@ public class AppRecommendController {
 
     @GetMapping("/test")
     @Operation(summary = "测试推荐")
-    public CommonResult<Long> testRecommend(@RequestParam(value = "reportId", required = false) Long reportId ) {
-        Long userId = SecurityFrameworkUtils.getLoginUserId();
+    public CommonResult<Long> testRecommend(@RequestParam(value = "reportId", required = false) Long reportId,@RequestParam(value = "userId", required = false) Long userId ) {
         recommendService.generateRecommend(userId, reportId);
         return success(reportId);
     }

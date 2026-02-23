@@ -1,18 +1,24 @@
 package com.hongguoyan.module.biz.service.usercustomreport;
 
+import cn.hutool.core.date.DateUtil;
 import com.hongguoyan.module.member.api.user.MemberUserApi;
 import com.hongguoyan.module.member.api.user.dto.MemberUserRespDTO;
 import java.util.Map;
 import java.util.Set;
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertSet;
 import cn.hutool.core.collection.CollUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.hongguoyan.module.biz.controller.admin.recommend.report.vo.UserCustomReportPageReqVO;
+import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
 import com.hongguoyan.module.biz.dal.dataobject.usercustomreport.UserCustomReportDO;
+import com.hongguoyan.module.biz.dal.mysql.userprofile.UserProfileMapper;
 import com.hongguoyan.module.biz.dal.mysql.usercustomreport.UserCustomReportMapper;
 import com.hongguoyan.module.biz.enums.ErrorCodeConstants;
+import com.hongguoyan.module.biz.service.recommend.NationalLineContext;
+import com.hongguoyan.module.biz.service.recommend.NationalLineEligibilityService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +43,10 @@ public class UserCustomReportServiceImpl implements UserCustomReportService {
     private UserCustomReportMapper userCustomReportMapper;
     @Resource
     private MemberUserApi memberUserApi;
+    @Resource
+    private UserProfileMapper userProfileMapper;
+    @Resource
+    private NationalLineEligibilityService nationalLineEligibilityService;
 
     @Override
     public UserCustomReportDO getLatestByUserId(Long userId) {
@@ -88,6 +98,7 @@ public class UserCustomReportServiceImpl implements UserCustomReportService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long createNewVersionByUserId(Long userId) {
+        validateUserQualifiedForReport(userId);
         // 最终还是冲突，交由上层处理（会返回 500）
         UserCustomReportDO report = new UserCustomReportDO();
         report.setId(null);
@@ -99,6 +110,22 @@ public class UserCustomReportServiceImpl implements UserCustomReportService {
         report.setGenerateStatus(0); // 0-生成中
         userCustomReportMapper.insert(report);
         return report.getId();
+    }
+
+    private void validateUserQualifiedForReport(Long userId) {
+        UserProfileDO userProfile = userProfileMapper.selectOne(new LambdaQueryWrapper<UserProfileDO>()
+            .eq(UserProfileDO::getUserId, userId));
+        if (userProfile == null) {
+            throw exception(ErrorCodeConstants.USER_PROFILE_NOT_EXISTS);
+        }
+        if (userProfile.getScoreTotal() == null) {
+            throw exception(ErrorCodeConstants.CANDIDATE_SCORE_TOTAL_NOT_EXISTS);
+        }
+        NationalLineContext nationalLineContext = nationalLineEligibilityService
+            .resolveContextOrThrow(userProfile, DateUtil.thisYear(), null);
+        if (!nationalLineEligibilityService.checkQualified(userProfile, nationalLineContext.getMatchedLine())) {
+            throw exception(ErrorCodeConstants.USER_NOT_QUALIFIED);
+        }
     }
 
     @Override

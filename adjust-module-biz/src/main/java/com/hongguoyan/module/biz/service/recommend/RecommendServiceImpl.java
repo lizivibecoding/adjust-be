@@ -33,7 +33,6 @@ import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.AdjustmentMapper;
 import com.hongguoyan.module.biz.dal.mysql.adjustmentadmit.AdjustmentAdmitMapper;
 import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
-import com.hongguoyan.module.biz.dal.mysql.nationalscore.NationalScoreMapper;
 import com.hongguoyan.module.biz.dal.mysql.recommend.RecommendRuleMapper;
 import com.hongguoyan.module.biz.dal.mysql.recommend.UserRecommendSchoolMapper;
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
@@ -54,7 +53,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -89,8 +87,6 @@ public class RecommendServiceImpl implements RecommendService {
     @Resource
     private MajorMapper majorMapper;
     @Resource
-    private NationalScoreMapper nationalScoreMapper;
-    @Resource
     private SchoolScoreMapper schoolScoreMapper;
     @Resource
     private AdjustmentMapper adjustmentMapper;
@@ -112,6 +108,8 @@ public class RecommendServiceImpl implements RecommendService {
     private AdjustmentAdmitMapper adjustmentAdmitMapper;
     @Resource
     private RecommendRuleMapper recommendRuleMapper;
+    @Resource
+    private NationalLineEligibilityService nationalLineEligibilityService;
 
     @Override
     public PageResult<AppRecommendSchoolRespVO> recommendSchools(Long userId, AppRecommendSchoolListReqVO reqVO) {
@@ -380,25 +378,17 @@ public class RecommendServiceImpl implements RecommendService {
         Map<Long, SchoolDO> schoolMap = allSchools.stream()
             .collect(Collectors.toMap(SchoolDO::getId, Function.identity()));
 
-        Integer currentYear = DateUtil.thisYear() - 1;
-        List<NationalScoreDO> nationalScores = nationalScoreMapper.selectList(new LambdaQueryWrapper<NationalScoreDO>()
-            .eq(NationalScoreDO::getYear, currentYear));
+        Integer currentYear = DateUtil.thisYear();
+        NationalLineContext nationalLineContext = nationalLineEligibilityService
+            .resolveContextOrThrow(userProfile, currentYear, schoolMap);
+        currentYear = nationalLineContext.getNationalScoreYear();
 
         // --- Step 1: 硬性过滤 - 判断学生是否过国家线 (基于一志愿) ---
-        // 确定一志愿学校所在区域
-        String firstChoiceArea = "A";
-        if (userProfile.getTargetSchoolId() != null) {
-            SchoolDO firstChoiceSchool = schoolMap.get(userProfile.getTargetSchoolId());
-            if (firstChoiceSchool != null && StrUtil.isNotBlank(firstChoiceSchool.getProvinceArea())) {
-                firstChoiceArea = firstChoiceSchool.getProvinceArea();
-            }
-        }
-
-        // 检查用户是否过一志愿区域的国家线 (作为基本资格)
-        boolean qualified = checkNationalLineStrict(userProfile, firstChoiceArea, nationalScores);
+        boolean qualified = nationalLineEligibilityService.checkQualified(userProfile, nationalLineContext.getMatchedLine());
 
         if (!qualified) {
-            log.info("用户未过一志愿区域({})国家线，无法推荐: userId={}", firstChoiceArea, userId);
+            log.info("用户未过一志愿区域({})国家线，无法推荐: userId={}",
+                nationalLineContext.getFirstChoiceArea(), userId);
             throw ServiceExceptionUtil.exception(ErrorCodeConstants.USER_NOT_QUALIFIED);
         }
 
@@ -424,9 +414,15 @@ public class RecommendServiceImpl implements RecommendService {
             }
         }
 
-        // 预加载所有学校分数线 (自划线)
+        // 预加载所有学校分数线 (自划线)：优先当前年，无则回退到上一年
+        Integer schoolScoreYear = currentYear;
         List<SchoolScoreDO> allSchoolScores = schoolScoreMapper.selectList(new LambdaQueryWrapper<SchoolScoreDO>()
-            .eq(SchoolScoreDO::getYear, currentYear));
+            .eq(SchoolScoreDO::getYear, schoolScoreYear));
+        if (CollUtil.isEmpty(allSchoolScores)) {
+            schoolScoreYear = schoolScoreYear - 1;
+            allSchoolScores = schoolScoreMapper.selectList(new LambdaQueryWrapper<SchoolScoreDO>()
+                .eq(SchoolScoreDO::getYear, schoolScoreYear));
+        }
         // Map<SchoolId, List<SchoolScoreDO>> 记录具体分数线 (用于精筛)
         Map<Long, List<SchoolScoreDO>> schoolMajorScoreMap = new HashMap<>();
         for (SchoolScoreDO score : allSchoolScores) {
@@ -435,16 +431,13 @@ public class RecommendServiceImpl implements RecommendService {
         }
 
         // 获取匹配的国家线
-        NationalScoreDO matchedLine = findMatchedNationalLine(userProfile, firstChoiceArea, nationalScores);
-        if (matchedLine == null) {
-            throw ServiceExceptionUtil.exception(ErrorCodeConstants.NATIONAL_SCORE_NOT_EXISTS);
-        }
+        NationalScoreDO matchedLine = nationalLineContext.getMatchedLine();
         double nationalLineTotal = matchedLine.getTotal().doubleValue();
 
         // 4.0 获取算法参数 (基于 TargetMajorCode)
         RecommendRuleDO rule = fetchRecommendRule(userProfile.getTargetMajorCode());
 
-        double userScoreB = calculateUserScoreB(userProfile, schoolMap, schoolRankIdMap, nationalLineTotal, rule);
+        double userScoreB = calculateUserScoreB(userProfile, schoolRankIdMap, nationalLineTotal, rule);
         double baseBonusC0 = 5;
 
         Set<Long> candidateSchoolIds = new HashSet<>();
@@ -490,7 +483,7 @@ public class RecommendServiceImpl implements RecommendService {
             : null;
         List<AdjustmentDO> adjustments = adjustmentMapper.selectList(new LambdaQueryWrapper<AdjustmentDO>()
             .in(AdjustmentDO::getSchoolId, candidateSchoolIds)
-                .eq(AdjustmentDO::getYear,currentYear)
+                .eq(AdjustmentDO::getYear,currentYear-1)
             .apply(xuekemenleiInSql != null, xuekemenleiInSql));
 
         if (CollUtil.isEmpty(adjustments)) {
@@ -652,12 +645,7 @@ public class RecommendServiceImpl implements RecommendService {
 
             // 2. Resolve basic context
             // use profile createTime year as report year
-            int currentYear = DateUtil.thisYear() - 1;
-            List<NationalScoreDO> nationalScores = nationalScoreMapper.selectList(new LambdaQueryWrapper<NationalScoreDO>()
-                .eq(NationalScoreDO::getYear, currentYear));
-
-            // only load schools needed by report: graduate school + target school
-
+            int currentYear = DateUtil.thisYear();
 
             // Graduate school rank (Ruanke)
             SchoolRankDO ruanke = null;
@@ -684,8 +672,11 @@ public class RecommendServiceImpl implements RecommendService {
                 .filter(s -> s.getId() != null)
                 .collect(Collectors.toMap(SchoolDO::getId, Function.identity(), (a, b) -> a));
 
-            String firstChoiceArea = resolveFirstChoiceArea(userProfile, schoolMap);
-            NationalScoreDO matchedLine = findMatchedNationalLine(userProfile, firstChoiceArea, nationalScores);
+            NationalLineContext nationalLineContext = nationalLineEligibilityService
+                .resolveContextOrThrow(userProfile, currentYear, schoolMap);
+            currentYear = nationalLineContext.getNationalScoreYear();
+            String firstChoiceArea = nationalLineContext.getFirstChoiceArea();
+            NationalScoreDO matchedLine = nationalLineContext.getMatchedLine();
 
 
             // Intention majors
@@ -699,7 +690,7 @@ public class RecommendServiceImpl implements RecommendService {
             if (CollUtil.isNotEmpty(intentionMajorIds)) {
                 List<AdjustmentDO> rows = adjustmentMapper.selectList(new LambdaQueryWrapper<AdjustmentDO>()
                     .select(AdjustmentDO::getId, AdjustmentDO::getMajorId)
-                    .eq(AdjustmentDO::getYear, currentYear)
+                    .eq(AdjustmentDO::getYear, currentYear-1)
                     .in(AdjustmentDO::getMajorId, intentionMajorIds));
                 Map<Long, Long> grouped = rows.stream()
                     .filter(r -> r.getMajorId() != null)
@@ -758,80 +749,6 @@ public class RecommendServiceImpl implements RecommendService {
     }
 
     // --- Helper Methods ---
-
-    /**
-     * 严格检查国家线 (针对特定区域)
-     */
-    private boolean checkNationalLineStrict(UserProfileDO user, String area, List<NationalScoreDO> nationalScores) {
-        if (user.getScoreTotal() == null) {
-            return false;
-        }
-
-        NationalScoreDO matchedLine = findMatchedNationalLine(user, area, nationalScores);
-
-        if (matchedLine == null) {
-            return false; // 无线数据，默认过
-        }
-
-        // 总分
-        if (user.getScoreTotal().intValue() < matchedLine.getTotal()) {
-            return false;
-        }
-
-        // 单科
-        int s1 = user.getSubjectScore1() != null ? user.getSubjectScore1().intValue() : 0;
-        int s2 = user.getSubjectScore2() != null ? user.getSubjectScore2().intValue() : 0;
-        int s3 = user.getSubjectScore3() != null ? user.getSubjectScore3().intValue() : 0;
-        int s4 = user.getSubjectScore4() != null ? user.getSubjectScore4().intValue() : 0;
-
-        if (s1 < matchedLine.getSingle100()) {
-            return false;
-        }
-        if (s2 < matchedLine.getSingle100()) {
-            return false;
-        }
-        if (s3 < matchedLine.getSingle150()) {
-            return false;
-        }
-        return s4 >= matchedLine.getSingle150();
-    }
-
-    private String resolveFirstChoiceArea(UserProfileDO userProfile, Map<Long, SchoolDO> schoolMap) {
-        String firstChoiceArea = "A";
-        if (userProfile.getTargetSchoolId() != null) {
-            SchoolDO firstChoiceSchool = schoolMap.get(userProfile.getTargetSchoolId());
-            if (firstChoiceSchool != null && StrUtil.isNotBlank(firstChoiceSchool.getProvinceArea())) {
-                firstChoiceArea = firstChoiceSchool.getProvinceArea();
-            }
-        }
-        return firstChoiceArea;
-    }
-
-    private NationalScoreDO findMatchedNationalLine(UserProfileDO user, String area, List<NationalScoreDO> nationalScores) {
-        if (user == null || StrUtil.isBlank(area) || CollUtil.isEmpty(nationalScores)) {
-            return null;
-        }
-        String majorCode = user.getTargetMajorCode();
-        if (StrUtil.isBlank(majorCode)) {
-            return null;
-        }
-        NationalScoreDO matchedLine = nationalScores.stream()
-            .filter(ns -> area.equalsIgnoreCase(ns.getArea()))
-            .filter(ns -> ns.getMajorCode() != null && majorCode.startsWith(ns.getMajorCode()))
-            .max(Comparator.comparingInt(o -> o.getMajorCode().length()))
-            .orElse(null);
-        if (matchedLine != null) {
-            return matchedLine;
-        }
-        if (majorCode.length() < 2) {
-            throw ServiceExceptionUtil.exception(ErrorCodeConstants.NATIONAL_SCORE_NOT_EXISTS);
-        }
-        return nationalScores.stream()
-            .filter(ns -> area.equalsIgnoreCase(ns.getArea()))
-            .filter(ns -> ns.getMajorCode() != null && majorCode.substring(0, 2).equals(ns.getMajorCode()))
-            .findFirst()
-            .orElseThrow(() -> ServiceExceptionUtil.exception(ErrorCodeConstants.NATIONAL_SCORE_NOT_EXISTS));
-    }
 
     private List<Long> parseJsonLongList(String json) {
         if (StrUtil.isBlank(json)) {
@@ -1224,7 +1141,7 @@ public class RecommendServiceImpl implements RecommendService {
      * 计算用户综合分 (B)
      * B = B1 * w1 + B2 * w2
      */
-    private double calculateUserScoreB(UserProfileDO user, Map<Long, SchoolDO> schoolMap,
+    private double calculateUserScoreB(UserProfileDO user,
         Map<Long, Double> rankIdMap, double nationalLineTotal, RecommendRuleDO rule) {
         double b1 = getRankScore(user.getGraduateSchoolId(), rankIdMap);
 
