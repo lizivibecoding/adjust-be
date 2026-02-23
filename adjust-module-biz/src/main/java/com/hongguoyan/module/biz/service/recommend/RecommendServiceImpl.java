@@ -167,25 +167,19 @@ public class RecommendServiceImpl implements RecommendService {
         // Assume last year data (e.g. 2025 admission data if now is 2026)
         int currentYear = DateUtil.thisYear() - 1;
         List<Integer> years = Arrays.asList(currentYear, currentYear - 1);
-        Map<String, Map<String, Object>> statsMap = new HashMap<>();
+        Map<String, AdmitScoreAgg> statsMap = new HashMap<>();
         Map<String, List<BigDecimal>> scoresMap = new HashMap<>();
 
         if (CollUtil.isNotEmpty(schoolIds)) {
-            List<Map<String, Object>> batchStats = adjustmentAdmitMapper.selectBatchAdmitFullStats(schoolIds, years);
-            // Map key: schoolId_collegeId_majorCode_year
-            statsMap = batchStats.stream().collect(Collectors.toMap(
-                    m -> m.get("school_id") + "_" + m.get("college_id") + "_" + m.get("major_code") + "_" + m.get("year"),
-                    Function.identity(), (v1, v2) -> v1
-            ));
-
-            // Batch fetch scores for median calculation
+            // Batch fetch scores once, then derive min/max/avg/count + median in memory.
             List<Map<String, Object>> batchScores = adjustmentAdmitMapper.selectBatchAdmitScores(schoolIds, years);
             for (Map<String, Object> row : batchScores) {
-                String key = row.get("school_id") + "_" + row.get("college_id") + "_" + row.get("major_code") + "_" + row.get("year");
+                String key = row.get("school_id") + "_" + row.get("college_id") + "_" + row.get("major_code") + "_" + row.get("study_mode") + "_" + row.get("year");
                 Object scoreObj = row.get("first_score");
                 if (scoreObj != null) {
                     BigDecimal score = new BigDecimal(scoreObj.toString());
                     scoresMap.computeIfAbsent(key, k -> new ArrayList<>()).add(score);
+                    statsMap.computeIfAbsent(key, k -> new AdmitScoreAgg()).add(score);
                 }
             }
         }
@@ -290,22 +284,23 @@ public class RecommendServiceImpl implements RecommendService {
                 // Fill Stats (Min, Max, Avg, Median)
                 String majorCode = adj.getMajorCode();
                 if (StrUtil.isNotBlank(majorCode)) {
+                    Integer studyMode = rec.getStudyMode() != null ? rec.getStudyMode() : adj.getStudyMode();
                     // Try currentYear, then currentYear-1
-                    Map<String, Object> stats = statsMap.get(rec.getSchoolId() + "_" + rec.getCollegeId() + "_" + majorCode + "_" + currentYear);
+                    AdmitScoreAgg stats = statsMap.get(rec.getSchoolId() + "_" + rec.getCollegeId() + "_" + majorCode + "_" + studyMode + "_" + currentYear);
                     Integer statsYear = currentYear;
                     if (stats == null) {
-                        stats = statsMap.get(rec.getSchoolId() + "_" + rec.getCollegeId() + "_" + majorCode + "_" + (currentYear - 1));
+                        stats = statsMap.get(rec.getSchoolId() + "_" + rec.getCollegeId() + "_" + majorCode + "_" + studyMode + "_" + (currentYear - 1));
                         statsYear = currentYear - 1;
                     }
 
                     if (stats != null) {
                         // Fill Min/Max/Avg
-                        if (stats.get("min_score") != null) resp.setMinScore(new BigDecimal(stats.get("min_score").toString()));
-                        if (stats.get("max_score") != null) resp.setMaxScore(new BigDecimal(stats.get("max_score").toString()));
-                        if (stats.get("avg_score") != null) resp.setLastYearAvgScore(new BigDecimal(stats.get("avg_score").toString()));
+                        resp.setMinScore(stats.getMinScore());
+                        resp.setMaxScore(stats.getMaxScore());
+                        resp.setLastYearAvgScore(stats.getAvgScore());
 
                         // Calculate Median (memory)
-                        List<BigDecimal> scores = scoresMap.get(rec.getSchoolId() + "_" + rec.getCollegeId() + "_" + majorCode + "_" + statsYear);
+                        List<BigDecimal> scores = scoresMap.get(rec.getSchoolId() + "_" + rec.getCollegeId() + "_" + majorCode + "_" + studyMode + "_" + statsYear);
                         if (CollUtil.isNotEmpty(scores)) {
                             BigDecimal median;
                             int size = scores.size();
@@ -324,6 +319,43 @@ public class RecommendServiceImpl implements RecommendService {
         }
 
         return new PageResult<>(result, pageResult.getTotal());
+    }
+
+    private static class AdmitScoreAgg {
+
+        private BigDecimal minScore;
+        private BigDecimal maxScore;
+        private BigDecimal sumScore = BigDecimal.ZERO;
+        private int count;
+
+        void add(BigDecimal score) {
+            if (score == null) {
+                return;
+            }
+            if (minScore == null || score.compareTo(minScore) < 0) {
+                minScore = score;
+            }
+            if (maxScore == null || score.compareTo(maxScore) > 0) {
+                maxScore = score;
+            }
+            sumScore = sumScore.add(score);
+            count++;
+        }
+
+        BigDecimal getMinScore() {
+            return minScore;
+        }
+
+        BigDecimal getMaxScore() {
+            return maxScore;
+        }
+
+        BigDecimal getAvgScore() {
+            if (count <= 0) {
+                return null;
+            }
+            return sumScore.divide(BigDecimal.valueOf(count), 2, java.math.RoundingMode.HALF_UP);
+        }
     }
 
     @Override
@@ -487,8 +519,10 @@ public class RecommendServiceImpl implements RecommendService {
                 Long cId = cIdObj != null ? ((Number) cIdObj).longValue() : null;
                 String mc = (String) row.get("major_code");
                 Integer yr = ((Number) row.get("year")).intValue();
+                Object smObj = row.get("study_mode");
+                Integer sm = smObj != null ? ((Number) smObj).intValue() : null;
                 BigDecimal avg = (BigDecimal) row.get("avg_score");
-                String key = sId + "_" + cId + "_" + mc + "_" + yr;
+                String key = sId + "_" + cId + "_" + mc + "_" + sm + "_" + yr;
                 admitAvgScoreMap.put(key, avg);
             }
         }
@@ -498,6 +532,11 @@ public class RecommendServiceImpl implements RecommendService {
         double weightSimC = rule.getWeightSimC() != null ? rule.getWeightSimC().doubleValue() : 0.2;
         double catThreshold1 = rule.getCatThreshold1() != null ? rule.getCatThreshold1().doubleValue() : 0.4;
         double catThreshold2 = rule.getCatThreshold2() != null ? rule.getCatThreshold2().doubleValue() : 0.8;
+        boolean isUndergraduate985 = false;
+        if (userProfile.getGraduateSchoolId() != null) {
+            SchoolDO graduateSchool = schoolMap.get(userProfile.getGraduateSchoolId());
+            isUndergraduate985 = graduateSchool != null && Boolean.TRUE.equals(graduateSchool.getIs985());
+        }
 
         for (AdjustmentDO adjustment : adjustments) {
             SchoolDO school = schoolMap.get(adjustment.getSchoolId());
@@ -506,8 +545,8 @@ public class RecommendServiceImpl implements RecommendService {
             }
 
             // 如果没有往年录取数据，也没有国家线数据，直接跳过 (无法计算分数匹配度)
-            String key1 = adjustment.getSchoolId() + "_" + adjustment.getCollegeId() + "_" + adjustment.getMajorCode() + "_" + (currentYear - 1);
-            String key2 = adjustment.getSchoolId() + "_" + adjustment.getCollegeId() + "_" + adjustment.getMajorCode() + "_" + (currentYear - 2);
+            String key1 = adjustment.getSchoolId() + "_" + adjustment.getCollegeId() + "_" + adjustment.getMajorCode() + "_" + adjustment.getStudyMode() + "_" + (currentYear - 1);
+            String key2 = adjustment.getSchoolId() + "_" + adjustment.getCollegeId() + "_" + adjustment.getMajorCode() + "_" + adjustment.getStudyMode() + "_" + (currentYear - 2);
             boolean hasAdmitScore = admitAvgScoreMap.containsKey(key1) || admitAvgScoreMap.containsKey(key2);
             // 如果既没有往年录取分，国家线也是0或空，则无法评估，跳过
             if (!hasAdmitScore) {
@@ -529,6 +568,15 @@ public class RecommendServiceImpl implements RecommendService {
                 category = 2;
             } else {
                 category = 3;
+            }
+            // 概率分档后，按本科院校层次进行冲刺兜底。
+            // 本科985：目标院校是985 => 冲刺；本科非985：目标院校是985/211 => 冲刺。
+            if (isUndergraduate985) {
+                if (Boolean.TRUE.equals(school.getIs985())) {
+                    category = 1;
+                }
+            } else if (Boolean.TRUE.equals(school.getIs985()) || Boolean.TRUE.equals(school.getIs211())) {
+                category = 1;
             }
             UserRecommendSchoolDO recommendDO = UserRecommendSchoolDO.builder()
                 .userId(userId)
@@ -1335,10 +1383,10 @@ public class RecommendServiceImpl implements RecommendService {
         // 1. 从预加载的 Map 中查找调剂录取平均分 (优先 currentYear-1, 再 currentYear-2)
         BigDecimal admittedAvg = null;
         if (currentYear != null) {
-            String key = adjustment.getSchoolId() + "_" + adjustment.getCollegeId() + "_" + adjustment.getMajorCode() + "_" + (currentYear - 1);
+            String key = adjustment.getSchoolId() + "_" + adjustment.getCollegeId() + "_" + adjustment.getMajorCode() + "_" + adjustment.getStudyMode() + "_" + (currentYear - 1);
             admittedAvg = admitAvgScoreMap.get(key);
             if (admittedAvg == null) {
-                key = adjustment.getSchoolId() + "_" + adjustment.getCollegeId() + "_" + adjustment.getMajorCode() + "_" + (currentYear - 2);
+                key = adjustment.getSchoolId() + "_" + adjustment.getCollegeId() + "_" + adjustment.getMajorCode() + "_" + adjustment.getStudyMode() + "_" + (currentYear - 2);
                 admittedAvg = admitAvgScoreMap.get(key);
             }
         }
