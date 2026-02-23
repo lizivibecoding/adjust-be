@@ -42,6 +42,9 @@ import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.RecruitSnapshotRowDTO;
 import com.hongguoyan.module.biz.dal.mysql.area.AreaMapper;
 import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
+import com.hongguoyan.module.biz.cache.CacheNames;
+import com.hongguoyan.module.biz.cache.adjustment.AdjustmentDetailCache;
+import com.hongguoyan.module.biz.cache.adjustment.SchoolAdjustmentCache;
 import com.hongguoyan.module.biz.framework.config.AdjustProperties;
 import com.hongguoyan.module.biz.service.userprofile.UserProfileService;
 import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
@@ -60,6 +63,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
@@ -89,6 +93,10 @@ public class AdjustmentServiceImpl implements AdjustmentService {
     private ObjectMapper objectMapper;
     @Resource
     private AdjustProperties adjustProperties;
+    @Resource
+    private AdjustmentDetailCache adjustmentDetailCache;
+    @Resource
+    private SchoolAdjustmentCache schoolAdjustmentCache;
 
     private static final Pattern SPLIT_PATTERN = Pattern.compile("[\\n;,，；]+");
     /**
@@ -516,12 +524,8 @@ public class AdjustmentServiceImpl implements AdjustmentService {
 
     @Override
     public AppAdjustmentDetailRespVO getAdjustmentDetail(Long userId, AppAdjustmentDetailReqVO reqVO) {
-        List<AdjustmentDO> list = adjustmentMapper.selectList(new LambdaQueryWrapperX<AdjustmentDO>()
-                .eq(AdjustmentDO::getSchoolId, reqVO.getSchoolId())
-                .eq(AdjustmentDO::getMajorId, reqVO.getMajorId())
-                .eq(AdjustmentDO::getCollegeId, reqVO.getCollegeId())
-                .eq(AdjustmentDO::getYear, reqVO.getYear())
-                .eq(AdjustmentDO::getStudyMode, reqVO.getStudyMode()));
+        List<AdjustmentDO> list = adjustmentDetailCache.listDetailRows(
+                reqVO.getSchoolId(), reqVO.getMajorId(), reqVO.getCollegeId(), reqVO.getYear(), reqVO.getStudyMode());
         if (list == null || list.isEmpty()) {
             throw exception(ADJUSTMENT_NOT_EXISTS);
         }
@@ -613,6 +617,7 @@ public class AdjustmentServiceImpl implements AdjustmentService {
     }
 
     @Override
+    @Cacheable(cacheNames = CacheNames.ADJUSTMENT_UPDATE_STATS, key = "'default'", sync = true)
     public AppAdjustmentUpdateStatsRespVO getAdjustmentUpdateStats() {
         Integer statYear = resolveStatsYear();
         AppAdjustmentUpdateStatsRespVO respVO = adjustmentMapper.selectUpdateStats(statYear);
@@ -640,6 +645,13 @@ public class AdjustmentServiceImpl implements AdjustmentService {
     }
 
     @Override
+    @Cacheable(cacheNames = CacheNames.ADJUSTMENT_HOT_RANKING_PAGE,
+            key = "'y:' + (#reqVO.year == null ? '' : #reqVO.year)"
+                    + " + ':p:' + (#reqVO.provinceCode == null ? '' : #reqVO.provinceCode)"
+                    + " + ':sl:' + (#reqVO.schoolLevel == null ? '' : #reqVO.schoolLevel)"
+                    + " + ':sm:' + (#reqVO.studyMode == null ? '' : #reqVO.studyMode)"
+                    + " + ':pn:' + #reqVO.pageNo + ':ps:' + #reqVO.pageSize",
+            sync = true)
     public PageResult<AppAdjustmentSearchRespVO> getHotRankingPage(@Valid AppAdjustmentHotRankingReqVO reqVO) {
         PageResult<AppAdjustmentSearchRespVO> pageResult = adjustmentMapper.selectHotRankingPage(reqVO);
         List<AppAdjustmentSearchRespVO> list = pageResult.getList();
@@ -665,7 +677,7 @@ public class AdjustmentServiceImpl implements AdjustmentService {
             reqVO.setBeginYear(currentYear - 2);
             reqVO.setEndYear(currentYear);
         }
-        return adjustmentMapper.selectSchoolAdjustmentPage(reqVO);
+        return schoolAdjustmentCache.getSchoolAdjustmentPage(reqVO);
     }
 
     private void fillAdjustHintText(List<AppAdjustmentSearchRespVO> list) {

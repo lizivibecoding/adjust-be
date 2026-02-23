@@ -23,6 +23,8 @@ import com.hongguoyan.module.biz.dal.dataobject.adjustment.AdjustmentDO;
 import com.hongguoyan.module.biz.dal.dataobject.adjustmentadmit.AdjustmentAdmitDO;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.AdjustmentMapper;
 import com.hongguoyan.module.biz.dal.mysql.adjustmentadmit.AdjustmentAdmitMapper;
+import com.hongguoyan.module.biz.cache.CacheNames;
+import org.springframework.cache.annotation.Cacheable;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertList;
@@ -99,11 +101,20 @@ public class MajorServiceImpl implements MajorService {
     }
 
     @Override
+    @Cacheable(cacheNames = CacheNames.MAJOR_LEVEL1_LIST,
+            key = "'y:' + @adjustProperties.activeYear",
+            sync = true)
     public List<AppMajorLevel1RespVO> getMajorLevel1List() {
         return majorMapper.selectLevel1List(adjustProperties.getActiveYear());
     }
 
     @Override
+    @Cacheable(cacheNames = CacheNames.MAJOR_LIST,
+            key = "'y:' + @adjustProperties.activeYear"
+                    + " + ':l:' + #level"
+                    + " + ':p:' + (#parentCode == null ? '' : #parentCode)"
+                    + " + ':d:' + (#degreeType == null ? '' : #degreeType)",
+            sync = true)
     public List<AppMajorChildRespVO> getMajorList(String parentCode, Integer level, Integer degreeType) {
         if (level == null || level < 1 || level > 3) {
             throw exception(new ErrorCode(400, "level must be 1, 2 or 3"));
@@ -169,6 +180,9 @@ public class MajorServiceImpl implements MajorService {
     }
 
     @Override
+    @Cacheable(cacheNames = CacheNames.MAJOR_TREE,
+            key = "'y:' + @adjustProperties.activeYear",
+            sync = true)
     public List<AppMajorTreeNodeRespVO> getMajorTree() {
         // Only majors with code; sorted by code asc to keep stable tree order
         LambdaQueryWrapperX<MajorDO> qw = new LambdaQueryWrapperX<>();

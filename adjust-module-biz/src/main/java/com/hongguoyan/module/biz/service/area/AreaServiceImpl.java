@@ -3,9 +3,11 @@ package com.hongguoyan.module.biz.service.area;
 import com.hongguoyan.module.biz.controller.app.area.vo.AppAreaRespVO;
 import com.hongguoyan.module.biz.dal.dataobject.area.AreaDO;
 import com.hongguoyan.module.biz.dal.mysql.area.AreaMapper;
+import com.hongguoyan.module.biz.cache.CacheNames;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.cache.annotation.Cacheable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,6 +24,7 @@ public class AreaServiceImpl implements AreaService {
     private AreaMapper areaMapper;
 
     @Override
+    @Cacheable(cacheNames = CacheNames.AREA_LIST, key = "'all'", sync = true)
     public List<AppAreaRespVO> getAreaList() {
         List<AreaDO> list = areaMapper.selectAllOrderByAreaAndCode();
         if (list == null || list.isEmpty()) {

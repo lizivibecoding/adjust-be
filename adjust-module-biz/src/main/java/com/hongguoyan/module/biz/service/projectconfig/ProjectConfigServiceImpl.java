@@ -3,12 +3,14 @@ package com.hongguoyan.module.biz.service.projectconfig;
 import com.hongguoyan.module.biz.controller.app.projectconfig.vo.AppProjectConfigRespVO;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.AdjustmentMapper;
 import com.hongguoyan.module.biz.framework.config.AdjustProperties;
+import com.hongguoyan.module.biz.cache.CacheNames;
 import jakarta.annotation.Resource;
 import java.time.Year;
 import java.util.List;
 import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.cache.annotation.Cacheable;
 
 @Service
 @Validated
@@ -20,6 +22,9 @@ public class ProjectConfigServiceImpl implements ProjectConfigService {
     private AdjustmentMapper adjustmentMapper;
 
     @Override
+    @Cacheable(cacheNames = CacheNames.PROJECT_CONFIG,
+            key = "'y:' + @adjustProperties.activeYear",
+            sync = true)
     public AppProjectConfigRespVO getProjectConfig() {
         Integer activeYear = adjustProperties.getActiveYear();
         if (activeYear == null) {

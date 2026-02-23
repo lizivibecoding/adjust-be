@@ -13,6 +13,7 @@ import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
 import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
 import com.hongguoyan.module.biz.dal.mysql.adjustmentadmit.AdjustmentAdmitMapper;
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
+import com.hongguoyan.module.biz.cache.adjustmentadmit.AdjustmentAdmitCache;
 import com.hongguoyan.module.biz.service.userprofile.UserProfileService;
 import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 import jakarta.annotation.Resource;
@@ -44,6 +45,8 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
     private UserProfileService userProfileService;
     @Resource
     private VipBenefitService vipBenefitService;
+    @Resource
+    private AdjustmentAdmitCache adjustmentAdmitCache;
 
     @Override
     public Long createAdjustmentAdmit(AppAdjustmentAdmitSaveReqVO createReqVO) {
@@ -98,38 +101,7 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
     @Override
     public List<AppAdjustmentAdmitListItemRespVO> getAdmitList(Long userId, AppAdjustmentAdmitListReqVO reqVO) {
         vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_VIEW_ADMIT_LIST);
-        LambdaQueryWrapperX<AdjustmentAdmitDO> wrapper = new LambdaQueryWrapperX<>();
-        // 注意：LambdaQueryWrapperX 未重写 select 的返回类型，因此这里不要链式赋值
-        wrapper.select(AdjustmentAdmitDO::getCandidateName,
-                AdjustmentAdmitDO::getFirstSchoolName,
-                AdjustmentAdmitDO::getFirstScore,
-                AdjustmentAdmitDO::getRetestScore,
-                AdjustmentAdmitDO::getTotalScore);
-        wrapper.eq(AdjustmentAdmitDO::getDeleted, false)
-                .eq(AdjustmentAdmitDO::getSchoolId, reqVO.getSchoolId())
-                .eq(AdjustmentAdmitDO::getCollegeId, reqVO.getCollegeId())
-                .eq(AdjustmentAdmitDO::getMajorId, reqVO.getMajorId())
-                .eq(AdjustmentAdmitDO::getYear, reqVO.getYear())
-                .eq(AdjustmentAdmitDO::getStudyMode, reqVO.getStudyMode());
-        // wrapper.eqIfPresent(AdjustmentAdmitDO::getDirectionId, reqVO.getDirectionId());
-        wrapper.orderByDesc(AdjustmentAdmitDO::getTotalScore)
-                .orderByDesc(AdjustmentAdmitDO::getFirstScore)
-                .orderByDesc(AdjustmentAdmitDO::getId);
-        List<AdjustmentAdmitDO> list = adjustmentAdmitMapper.selectList(wrapper);
-        if (list == null || list.isEmpty()) {
-            return Collections.emptyList();
-        }
-        List<AppAdjustmentAdmitListItemRespVO> resp = new ArrayList<>(list.size());
-        for (AdjustmentAdmitDO item : list) {
-            AppAdjustmentAdmitListItemRespVO vo = new AppAdjustmentAdmitListItemRespVO();
-            vo.setCandidateName(maskCandidateName(item.getCandidateName()));
-            vo.setFirstSchoolName(item.getFirstSchoolName());
-            vo.setFirstScore(item.getFirstScore());
-            vo.setRetestScore(item.getRetestScore());
-            vo.setTotalScore(item.getTotalScore());
-            resp.add(vo);
-        }
-        return resp;
+        return adjustmentAdmitCache.getAdmitList(reqVO);
     }
 
     @Override
@@ -424,45 +396,6 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
         item.setSubName(subName);
         item.setValue(value);
         return item;
-    }
-
-    /**
-     * Mask candidate name for admit list display.
-     * <p>
-     * Rules:
-     * - 2 chars: mask last char (e.g. 张三 -> 张*)
-     * - 3 chars: mask middle char (e.g. 王小明 -> 王*明)
-     * - 4 chars: mask middle two chars (e.g. 欧阳娜娜 -> 欧**娜)
-     * - other lengths: keep first & last, mask the rest
-     */
-    private String maskCandidateName(String name) {
-        if (name == null) {
-            return null;
-        }
-        String trimmed = name.trim();
-        if (trimmed.isEmpty()) {
-            return trimmed;
-        }
-        int[] cps = trimmed.codePoints().toArray();
-        int n = cps.length;
-        if (n <= 0) {
-            return trimmed;
-        }
-        if (n == 1) {
-            return "*";
-        }
-        String first = new String(cps, 0, 1);
-        String last = new String(cps, n - 1, 1);
-        if (n == 2) {
-            return first + "*";
-        }
-        if (n == 3) {
-            return first + "*" + last;
-        }
-        if (n == 4) {
-            return first + "**" + last;
-        }
-        return first + "*".repeat(n - 2) + last;
     }
 
 }
