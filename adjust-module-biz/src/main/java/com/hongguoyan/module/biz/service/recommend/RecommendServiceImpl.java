@@ -381,7 +381,6 @@ public class RecommendServiceImpl implements RecommendService {
         Integer currentYear = DateUtil.thisYear();
         NationalLineContext nationalLineContext = nationalLineEligibilityService
             .resolveContextOrThrow(userProfile, currentYear, schoolMap);
-        currentYear = nationalLineContext.getNationalScoreYear();
 
         // --- Step 1: 硬性过滤 - 判断学生是否过国家线 (基于一志愿) ---
         boolean qualified = nationalLineEligibilityService.checkQualified(userProfile, nationalLineContext.getMatchedLine());
@@ -674,7 +673,6 @@ public class RecommendServiceImpl implements RecommendService {
 
             NationalLineContext nationalLineContext = nationalLineEligibilityService
                 .resolveContextOrThrow(userProfile, currentYear, schoolMap);
-            currentYear = nationalLineContext.getNationalScoreYear();
             String firstChoiceArea = nationalLineContext.getFirstChoiceArea();
             NationalScoreDO matchedLine = nationalLineContext.getMatchedLine();
 
