@@ -7,6 +7,7 @@ import com.hongguoyan.module.biz.dal.mysql.adjustment.AdjustmentMapper;
 import jakarta.annotation.Resource;
 import java.util.Collections;
 import java.util.List;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -36,6 +37,14 @@ public class AdjustmentDetailCache {
                 .eq(AdjustmentDO::getCollegeId, collegeId)
                 .eq(AdjustmentDO::getYear, year)
                 .eq(AdjustmentDO::getStudyMode, studyMode));
+    }
+
+    @CacheEvict(cacheNames = CacheNames.ADJUSTMENT_DETAIL_ROWS,
+            key = "'year:' + #year"
+                    + " + ':school:' + #schoolId + ':college:' + #collegeId + ':major:' + #majorId"
+                    + " + ':study:' + #studyMode")
+    public void evictDetailRows(Long schoolId, Long majorId, Long collegeId, Integer year, Integer studyMode) {
+        // no-op (used for cache eviction)
     }
 }
 

@@ -1,5 +1,15 @@
 server:
   port: 48080
+--- #################### 接口文档（生产关闭）####################
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+knife4j:
+  enable: false
 --- #################### 数据库相关配置 ####################
 spring:
   autoconfigure:
@@ -55,8 +65,7 @@ spring:
       host: r-uf6zq3tksphbbzwz9y.redis.rds.aliyuncs.com # 地址
       port: 6379 # 端口
       database: 0 # 数据库索引
-      password: '2C(m+q9(&H!JhsQl5cWzO(qr' # 密码，建议生产环境开启
-
+      password: "2C(m+q9(&H!JhsQl5cWzO(qr" # 密码，建议生产环境开启
 --- #################### 定时任务相关配置 ####################
 
 # Quartz 配置项，对应 QuartzProperties 配置类
@@ -120,7 +129,7 @@ management:
     web:
       base-path: /actuator # Actuator 提供的 API 接口的根目录。默认为 /actuator
       exposure:
-        include: "*" # 需要开放的端点。默认值只打开 health 和 info 两个端点。通过设置 * ，可以开放所有端点。
+        include: "health" # 生产环境仅开放 health
 
 # Spring Boot Admin 配置项
 spring:
@@ -128,6 +137,7 @@ spring:
     admin:
       # Spring Boot Admin Client 客户端的相关配置
       client:
+        enabled: false
         url: http://127.0.0.1:${server.port}/${spring.boot.admin.context-path} # 设置 Spring Boot Admin Server 地址
         instance:
           service-host-type: IP # 注册实例时，优先使用 IP [IP, HOST_NAME, CANONICAL_HOST_NAME]
