@@ -150,9 +150,10 @@ public class UserProfileServiceImpl implements UserProfileService {
         boolean otherInfoChanged = hasOtherInfoChanged(existing, toSave);
         int used = existing.getEditNum() != null ? existing.getEditNum() : 0;
         if (otherInfoChanged) {
-            if (used >= 1) {
-                throw exception(USER_PROFILE_EDIT_EXCEEDED);
-            }
+            // TODO 临时：取消用户 profile 修改次数限制（除一志愿外）；一志愿不可改逻辑保留
+//            if (used >= 1) {
+//                throw exception(USER_PROFILE_EDIT_EXCEEDED);
+//            }
             toSave.setEditNum(used + 1);
         } else {
             toSave.setEditNum(existing.getEditNum());
