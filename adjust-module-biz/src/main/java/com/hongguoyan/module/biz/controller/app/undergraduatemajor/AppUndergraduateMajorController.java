@@ -7,6 +7,7 @@ import com.hongguoyan.module.biz.service.undergraduatemajor.UndergraduateMajorSe
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,6 +17,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.hongguoyan.framework.common.pojo.CommonResult.success;
+import static com.hongguoyan.module.biz.cache.CacheNames.UNDERGRADUATE_MAJOR_LIST;
 
 @Tag(name = "API - 学科专业")
 @RestController
@@ -28,6 +30,7 @@ public class AppUndergraduateMajorController {
 
     @GetMapping("/tree")
     @Operation(summary = "获取学科专业树形列表")
+    @Cacheable(value = UNDERGRADUATE_MAJOR_LIST+"#86400")
     public CommonResult<List<AppUndergraduateMajorTreeRespVO>> getUndergraduateMajorTree() {
         List<UndergraduateMajorDO> list = undergraduateMajorService.getUndergraduateMajorList();
         return success(buildTree(list));

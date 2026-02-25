@@ -8,6 +8,8 @@ import cn.hutool.core.util.StrUtil;
 import com.hongguoyan.framework.common.pojo.CommonResult;
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.framework.common.util.object.BeanUtils;
+import com.hongguoyan.framework.ratelimiter.core.annotation.RateLimiter;
+import com.hongguoyan.framework.ratelimiter.core.keyresolver.impl.UserRateLimiterKeyResolver;
 import com.hongguoyan.framework.security.core.util.SecurityFrameworkUtils;
 import com.hongguoyan.module.biz.controller.app.recommend.vo.AppRecommendSchoolListReqVO;
 import com.hongguoyan.module.biz.controller.app.recommend.vo.AppRecommendSchoolRespVO;
@@ -26,6 +28,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -62,6 +66,7 @@ public class AppRecommendController {
 
     @PostMapping("/generate")
     @Operation(summary = "生成调剂推荐与报告")
+    @RateLimiter(count = 1,timeUnit = TimeUnit.MINUTES,message = "操作太频繁了，服务器处理中，请稍候再试！",keyResolver = UserRateLimiterKeyResolver.class)
     public CommonResult<Long> generateRecommend() {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
         // 1. 同步创建空报告（generateStatus=0 生成中），立即返回报告ID
@@ -109,6 +114,7 @@ public class AppRecommendController {
 
     @GetMapping("/my/report/export-pdf")
     @Operation(summary = "导出报告 PDF")
+    @RateLimiter(count = 3,timeUnit = TimeUnit.MINUTES,message = "操作太频繁了，服务器处理中，请稍候再试！",keyResolver = UserRateLimiterKeyResolver.class)
     public CommonResult<String> exportReportPdf(@RequestParam("reportId") Long reportId) {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
         // 校验权限
