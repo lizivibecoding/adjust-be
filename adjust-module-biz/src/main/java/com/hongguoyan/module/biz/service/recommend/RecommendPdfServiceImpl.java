@@ -131,6 +131,12 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
                     .setTextAlignment(TextAlignment.CENTER)
                     .setMarginBottom(20);
             document.add(title);
+            Paragraph subtitle = new Paragraph("推荐结果仅供参考，更多调剂信息或要求请以招生单位公布为准。")
+                    .setFontSize(11)
+                    .setFontColor(new DeviceRgb(0, 153, 153))
+                    .setTextAlignment(TextAlignment.CENTER)
+                    .setMarginBottom(14);
+            document.add(subtitle);
 
             // --- 1. 基本信息 ---
             addSectionTitle(document, "一、 基本信息");
@@ -372,6 +378,11 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
             // 5. 统计数据由预取名单计算
             AdmitStats stats = queryAdmitStats(admitList);
             if (stats != null) {
+                card.add(new Paragraph("温馨提示：调剂复试时专业课可能不计入总分，请合理评估录取分数、录取名单")
+                    .setFontSize(9)
+                    .setFontColor(ColorConstants.RED)
+                    .setMarginTop(4)
+                    .setMarginBottom(4));
                 Table statTable = new Table(UnitValue.createPercentArray(new float[]{1, 1, 1, 1})).useAllAvailableWidth().setMarginTop(5);
                 statTable.addHeaderCell(new Cell().add(new Paragraph("最低分").setFontSize(9)));
                 statTable.addHeaderCell(new Cell().add(new Paragraph("最高分").setFontSize(9)));

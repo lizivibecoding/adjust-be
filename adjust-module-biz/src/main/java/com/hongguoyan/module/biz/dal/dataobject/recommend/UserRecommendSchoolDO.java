@@ -75,6 +75,11 @@ public class UserRecommendSchoolDO extends BaseDO {
     private String majorName;
 
     /**
+     * 专业代码
+     */
+    private String majorCode;
+
+    /**
      * 研究方向代码
      */
     private String directionCode;

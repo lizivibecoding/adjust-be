@@ -29,6 +29,7 @@ import com.hongguoyan.module.biz.dal.dataobject.schoolrank.SchoolRankDO;
 import com.hongguoyan.module.biz.dal.dataobject.schoolscore.SchoolScoreDO;
 import com.hongguoyan.module.biz.dal.dataobject.usercustomreport.UserCustomReportDO;
 import com.hongguoyan.module.biz.dal.dataobject.userintention.UserIntentionDO;
+import com.hongguoyan.module.biz.dal.dataobject.userpreference.UserPreferenceDO;
 import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.AdjustmentMapper;
 import com.hongguoyan.module.biz.dal.mysql.adjustmentadmit.AdjustmentAdmitMapper;
@@ -40,6 +41,7 @@ import com.hongguoyan.module.biz.dal.mysql.schoolrank.SchoolRankMapper;
 import com.hongguoyan.module.biz.dal.mysql.schoolscore.SchoolScoreMapper;
 import com.hongguoyan.module.biz.dal.mysql.usercustomreport.UserCustomReportMapper;
 import com.hongguoyan.module.biz.dal.mysql.userintention.UserIntentionMapper;
+import com.hongguoyan.module.biz.dal.mysql.userpreference.UserPreferenceMapper;
 import com.hongguoyan.module.biz.dal.mysql.userprofile.UserProfileMapper;
 import com.hongguoyan.module.biz.enums.ErrorCodeConstants;
 import com.hongguoyan.module.biz.service.ai.AiTextService;
@@ -51,7 +53,6 @@ import com.hongguoyan.module.biz.service.vipbenefit.model.VipResolvedBenefit;
 import jakarta.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -110,6 +111,8 @@ public class RecommendServiceImpl implements RecommendService {
     private RecommendRuleMapper recommendRuleMapper;
     @Resource
     private NationalLineEligibilityService nationalLineEligibilityService;
+    @Resource
+    private UserPreferenceMapper userPreferenceMapper;
 
     @Override
     public PageResult<AppRecommendSchoolRespVO> recommendSchools(Long userId, AppRecommendSchoolListReqVO reqVO) {
@@ -131,7 +134,8 @@ public class RecommendServiceImpl implements RecommendService {
             .eqIfPresent(UserRecommendSchoolDO::getCategory, reqVO.getCategory());
         if (StrUtil.isNotBlank(keyword)) {
             queryWrapper.and(w -> w.like(UserRecommendSchoolDO::getSchoolName, keyword)
-                .or().like(UserRecommendSchoolDO::getMajorName, keyword));
+                .or().like(UserRecommendSchoolDO::getMajorName, keyword)
+                .or().like(UserRecommendSchoolDO::getMajorCode, keyword));
         }
         queryWrapper.orderByDesc(UserRecommendSchoolDO::getSimFinal);
         PageResult<UserRecommendSchoolDO> pageResult = userRecommendSchoolMapper.selectPage(reqVO, queryWrapper);
@@ -153,6 +157,20 @@ public class RecommendServiceImpl implements RecommendService {
             }
         }
 
+        // 3.0 Fetch User Preferences (to check isJoinPreference)
+        Set<Long> userPreferenceAdjustmentIds = new HashSet<>();
+        if (CollUtil.isNotEmpty(adjustmentIds)) {
+            List<UserPreferenceDO> userPreferences = userPreferenceMapper.selectList(new LambdaQueryWrapperX<UserPreferenceDO>()
+                .eq(UserPreferenceDO::getUserId, userId)
+                .in(UserPreferenceDO::getSourceAdjustmentId, adjustmentIds));
+            if (CollUtil.isNotEmpty(userPreferences)) {
+                userPreferenceAdjustmentIds = userPreferences.stream()
+                    .map(UserPreferenceDO::getSourceAdjustmentId)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+            }
+        }
+
         Map<Long, AdjustmentDO> adjustmentMap = adjustmentIds.isEmpty() ? Collections.emptyMap() :
             adjustmentMapper.selectBatchIds(adjustmentIds).stream()
                 .collect(Collectors.toMap(AdjustmentDO::getId, Function.identity()));
@@ -164,20 +182,71 @@ public class RecommendServiceImpl implements RecommendService {
         // --- 3.1 Batch fetch admission stats (Min, Max, Avg) & Scores (for Median) ---
         // Assume last year data (e.g. 2025 admission data if now is 2026)
         int currentYear = DateUtil.thisYear() - 1;
-        List<Integer> years = Arrays.asList(currentYear, currentYear - 1);
         Map<String, AdmitScoreAgg> statsMap = new HashMap<>();
         Map<String, List<BigDecimal>> scoresMap = new HashMap<>();
+        Map<String, Boolean> remarkMap = new HashMap<>();
 
         if (CollUtil.isNotEmpty(schoolIds)) {
             // Batch fetch scores once, then derive min/max/avg/count + median in memory.
-            List<Map<String, Object>> batchScores = adjustmentAdmitMapper.selectBatchAdmitScores(schoolIds, years);
+            List<Map<String, Object>> batchScores = adjustmentAdmitMapper.selectBatchAdmitScores(schoolIds, currentYear);
+
+            // Fetch National Scores for filtering
+            List<NationalScoreDO> nationalScores = nationalLineEligibilityService.getNationalScoresWithFallback(currentYear);
+
+            // Group raw scores by key
+            Map<String, List<Map<String, Object>>> groupedRows = new HashMap<>();
             for (Map<String, Object> row : batchScores) {
                 String key = row.get("school_id") + "_" + row.get("college_id") + "_" + row.get("major_code") + "_" + row.get("study_mode") + "_" + row.get("year");
-                Object scoreObj = row.get("first_score");
-                if (scoreObj != null) {
+                groupedRows.computeIfAbsent(key, k -> new ArrayList<>()).add(row);
+            }
+
+            // Process each group
+            for (Map.Entry<String, List<Map<String, Object>>> entry : groupedRows.entrySet()) {
+                String key = entry.getKey();
+                List<Map<String, Object>> rows = entry.getValue();
+
+                List<BigDecimal> validScores = new ArrayList<>();
+                int belowCount = 0;
+                List<BigDecimal> belowScores = new ArrayList<>();
+
+                for (Map<String, Object> row : rows) {
+                    Object scoreObj = row.get("first_score");
+                    if (scoreObj == null) continue;
                     BigDecimal score = new BigDecimal(scoreObj.toString());
-                    scoresMap.computeIfAbsent(key, k -> new ArrayList<>()).add(score);
-                    statsMap.computeIfAbsent(key, k -> new AdmitScoreAgg()).add(score);
+
+                    // Check National Line
+                    boolean isBelow = false;
+                    String area = (String) row.get("first_choice_area");
+                    String majorCode = (String) row.get("major_code");
+
+                    if (StrUtil.isNotBlank(area) && StrUtil.isNotBlank(majorCode) && CollUtil.isNotEmpty(nationalScores)) {
+                        NationalScoreDO line = nationalLineEligibilityService.findMatchedNationalLine(nationalScores, area, majorCode);
+                        if (line != null && line.getTotal() != null && score.intValue() < line.getTotal()) {
+                            isBelow = true;
+                        }
+                    }
+                    if (isBelow) {
+                        belowCount++;
+                        belowScores.add(score);
+                    } else {
+                        validScores.add(score);
+                    }
+                }
+                // Decision Rule
+                if (belowCount > 0) {
+                    // 如果全部小于国家线(validScores为空) 或 小于国家线的数量>=3，则认定为专业课不计入总分
+                    if (validScores.isEmpty() || belowCount >= 3) {
+                        // Include them back (认定为专业课不计入总分)
+                        validScores.addAll(belowScores);
+                        // Add remark
+                        remarkMap.put(key, true);
+                    } 
+                }
+
+                // Add to statsMap and scoresMap
+                for (BigDecimal s : validScores) {
+                    scoresMap.computeIfAbsent(key, k -> new ArrayList<>()).add(s);
+                    statsMap.computeIfAbsent(key, k -> new AdmitScoreAgg()).add(s);
                 }
             }
         }
@@ -309,8 +378,20 @@ public class RecommendServiceImpl implements RecommendService {
                             }
                             resp.setMedianScore(median);
                         }
+
+                        // Add Remark
+                        String key = rec.getSchoolId() + "_" + rec.getCollegeId() + "_" + majorCode + "_" + studyMode + "_" + statsYear;
+                        if (Boolean.TRUE.equals(remarkMap.get(key))) {
+                            resp.setRemark("该院校复试时一志愿专业课不计入总分，请谨慎参考");
+                        }
                     }
                 }
+            }
+            // Check if joined preference
+            if (rec.getAdjustmentId() != null && userPreferenceAdjustmentIds.contains(rec.getAdjustmentId())) {
+                resp.setIsJoinPreference(true);
+            } else {
+                resp.setIsJoinPreference(false);
             }
 
             result.add(resp);
@@ -503,8 +584,7 @@ public class RecommendServiceImpl implements RecommendService {
         // 批量预加载调剂录取平均分，避免循环内逐条查库
         Map<String, BigDecimal> admitAvgScoreMap = new HashMap<>();
         if (!candidateSchoolIds.isEmpty()) {
-            List<Integer> admitYears = Arrays.asList(currentYear - 1, currentYear - 2);
-            List<Map<String, Object>> batchRows = adjustmentAdmitMapper.selectBatchAvgFirstScore(candidateSchoolIds, admitYears);
+            List<Map<String, Object>> batchRows = adjustmentAdmitMapper.selectBatchAvgFirstScore(candidateSchoolIds, currentYear - 1);
             for (Map<String, Object> row : batchRows) {
                 Long sId = ((Number) row.get("school_id")).longValue();
                 Object cIdObj = row.get("college_id");
@@ -538,8 +618,7 @@ public class RecommendServiceImpl implements RecommendService {
 
             // 如果没有往年录取数据，也没有国家线数据，直接跳过 (无法计算分数匹配度)
             String key1 = adjustment.getSchoolId() + "_" + adjustment.getCollegeId() + "_" + adjustment.getMajorCode() + "_" + adjustment.getStudyMode() + "_" + (currentYear - 1);
-            String key2 = adjustment.getSchoolId() + "_" + adjustment.getCollegeId() + "_" + adjustment.getMajorCode() + "_" + adjustment.getStudyMode() + "_" + (currentYear - 2);
-            boolean hasAdmitScore = admitAvgScoreMap.containsKey(key1) || admitAvgScoreMap.containsKey(key2);
+            boolean hasAdmitScore = admitAvgScoreMap.containsKey(key1);
             // 如果既没有往年录取分，国家线也是0或空，则无法评估，跳过
             if (!hasAdmitScore) {
                 log.info("没有匹配的录取平均分");
@@ -549,6 +628,11 @@ public class RecommendServiceImpl implements RecommendService {
             // Sim Calculations
             double simA = calculateSimAInMemory(userProfile, adjustment, currentYear, rule, admitAvgScoreMap, BigDecimal.valueOf(nationalLineTotal));
             double simB = calculateSimB(userProfile, adjustment, rule);
+
+            if (simA == 0 || simB == 0) {
+                continue;
+            }
+
             double simC = calculateSimC(userProfile, adjustment);
             double simFinal = weightSimA * simA + weightSimB * simB + weightSimC * simC;
 
@@ -580,6 +664,7 @@ public class RecommendServiceImpl implements RecommendService {
                 .collegeName(adjustment.getCollegeName())
                 .majorId(adjustment.getMajorId())
                 .majorName(adjustment.getMajorName())
+                .majorCode(adjustment.getMajorCode())
                 .directionId(adjustment.getDirectionId())
                 .directionCode(adjustment.getDirectionCode())
                 .directionName(adjustment.getDirectionName())
@@ -1295,15 +1380,11 @@ public class RecommendServiceImpl implements RecommendService {
         }
         double userScore = user.getScoreTotal().doubleValue();
         double avgScore = 0; // 默认
-        // 1. 从预加载的 Map 中查找调剂录取平均分 (优先 currentYear-1, 再 currentYear-2)
+        // 1. 从预加载的 Map 中查找调剂录取平均分 (优先 currentYear-1)
         BigDecimal admittedAvg = null;
         if (currentYear != null) {
             String key = adjustment.getSchoolId() + "_" + adjustment.getCollegeId() + "_" + adjustment.getMajorCode() + "_" + adjustment.getStudyMode() + "_" + (currentYear - 1);
             admittedAvg = admitAvgScoreMap.get(key);
-            if (admittedAvg == null) {
-                key = adjustment.getSchoolId() + "_" + adjustment.getCollegeId() + "_" + adjustment.getMajorCode() + "_" + adjustment.getStudyMode() + "_" + (currentYear - 2);
-                admittedAvg = admitAvgScoreMap.get(key);
-            }
         }
         if (admittedAvg != null) {
             avgScore = admittedAvg.doubleValue();

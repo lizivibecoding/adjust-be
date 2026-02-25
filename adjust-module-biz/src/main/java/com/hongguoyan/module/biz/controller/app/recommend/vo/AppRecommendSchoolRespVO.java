@@ -88,4 +88,10 @@ public class AppRecommendSchoolRespVO {
     @Schema(description = "去年录取平均分", example = "350")
     private BigDecimal lastYearAvgScore;
 
+    @Schema(description = "提示备注字段", example = "350")
+    private String remark;
+
+    @Schema(description = "是否加入志愿", example = "true")
+    private Boolean isJoinPreference;
+
 }

@@ -13,8 +13,10 @@ import com.hongguoyan.module.biz.enums.ErrorCodeConstants;
 import jakarta.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
@@ -45,7 +47,7 @@ public class NationalLineEligibilityServiceImpl implements NationalLineEligibili
         }
 
         String firstChoiceArea = resolveFirstChoiceArea(userProfile, schoolMap);
-        NationalScoreDO matchedLine = findMatchedNationalLine(userProfile, firstChoiceArea, nationalScores);
+        NationalScoreDO matchedLine = findMatchedNationalLine(nationalScores, firstChoiceArea, userProfile.getTargetMajorCode());
         if (matchedLine == null) {
             throw exception(ErrorCodeConstants.NATIONAL_SCORE_NOT_EXISTS);
         }
@@ -95,6 +97,22 @@ public class NationalLineEligibilityServiceImpl implements NationalLineEligibili
         return false;
     }
 
+    @Override
+    public List<NationalScoreDO> getNationalScoresWithFallback(Integer year) {
+        if (year == null) {
+            return CollUtil.newArrayList();
+        }
+        // 1. Try to fetch requested year
+        List<NationalScoreDO> list = nationalScoreMapper.selectList(new LambdaQueryWrapper<NationalScoreDO>()
+            .eq(NationalScoreDO::getYear, year));
+        if (CollUtil.isNotEmpty(list)) {
+            return list;
+        }
+        // 2. Fallback to year - 1
+        return nationalScoreMapper.selectList(new LambdaQueryWrapper<NationalScoreDO>()
+            .eq(NationalScoreDO::getYear, year - 1));
+    }
+
     private String resolveFirstChoiceArea(UserProfileDO userProfile, Map<Long, SchoolDO> schoolMap) {
         String firstChoiceArea = "A";
         if (userProfile.getTargetSchoolId() == null) {
@@ -110,11 +128,11 @@ public class NationalLineEligibilityServiceImpl implements NationalLineEligibili
         return firstChoiceArea;
     }
 
-    private NationalScoreDO findMatchedNationalLine(UserProfileDO userProfile, String area, List<NationalScoreDO> nationalScores) {
-        if (StrUtil.isBlank(area) || CollUtil.isEmpty(nationalScores)) {
+    @Override
+    public NationalScoreDO findMatchedNationalLine(List<NationalScoreDO> nationalScores, String area, String majorCode) {
+        if (StrUtil.isBlank(area) || StrUtil.isBlank(majorCode) || CollUtil.isEmpty(nationalScores)) {
             return null;
         }
-        String majorCode = userProfile.getTargetMajorCode();
         NationalScoreDO matchedLine = nationalScores.stream()
             .filter(ns -> area.equalsIgnoreCase(ns.getArea()))
             .filter(ns -> ns.getMajorCode() != null && majorCode.startsWith(ns.getMajorCode()))
@@ -124,7 +142,7 @@ public class NationalLineEligibilityServiceImpl implements NationalLineEligibili
             return matchedLine;
         }
         if (majorCode.length() < 2) {
-            throw exception(ErrorCodeConstants.NATIONAL_SCORE_NOT_EXISTS);
+            return null;
         }
         return nationalScores.stream()
             .filter(ns -> area.equalsIgnoreCase(ns.getArea()))

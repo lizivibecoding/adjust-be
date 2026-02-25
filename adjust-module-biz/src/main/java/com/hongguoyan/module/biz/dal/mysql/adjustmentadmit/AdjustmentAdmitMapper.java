@@ -94,11 +94,11 @@ public interface AdjustmentAdmitMapper extends BaseMapperX<AdjustmentAdmitDO> {
         "SELECT school_id, college_id, major_code, study_mode, year, AVG(first_score) as avg_score " +
         "FROM biz_adjustment_admit " +
         "WHERE school_id IN <foreach item='id' collection='schoolIds' open='(' separator=',' close=')'> #{id} </foreach> " +
-        "AND year IN <foreach item='y' collection='years' open='(' separator=',' close=')'> #{y} </foreach> " +
+        "AND year = #{year} " +
         "GROUP BY school_id, college_id, major_code, study_mode, year" +
         "</script>")
     List<Map<String, Object>> selectBatchAvgFirstScore(@Param("schoolIds") Collection<Long> schoolIds,
-                                                       @Param("years") List<Integer> years);
+                                                       @Param("year") Integer year);
 
     Map<String, Object> selectAdmitStats(@Param("schoolId") Long schoolId,
                                          @Param("collegeId") Long collegeId,
@@ -110,14 +110,15 @@ public interface AdjustmentAdmitMapper extends BaseMapperX<AdjustmentAdmitDO> {
      * 返回: school_id, college_id, major_code, study_mode, year, first_score
      */
     @Select("<script>" +
-        "SELECT school_id, college_id, major_code, study_mode, year, first_score " +
-        "FROM biz_adjustment_admit " +
-        "WHERE school_id IN <foreach item='id' collection='schoolIds' open='(' separator=',' close=')'> #{id} </foreach> " +
-        "AND year IN <foreach item='y' collection='years' open='(' separator=',' close=')'> #{y} </foreach> " +
-        "ORDER BY first_score ASC" +
+        "SELECT a.school_id, a.college_id, a.major_code, a.study_mode, a.year, a.first_score, s.province_area as first_choice_area " +
+        "FROM biz_adjustment_admit a " +
+        "LEFT JOIN biz_school s ON s.id = a.first_school_id " +
+        "WHERE a.school_id IN <foreach item='id' collection='schoolIds' open='(' separator=',' close=')'> #{id} </foreach> " +
+        "AND a.year = #{year} " +
+        "ORDER BY a.first_score ASC" +
         "</script>")
     List<Map<String, Object>> selectBatchAdmitScores(@Param("schoolIds") Collection<Long> schoolIds,
-                                                     @Param("years") List<Integer> years);
+                                                     @Param("year") Integer year);
 
     List<BigDecimal> selectAdmitScores(@Param("schoolId") Long schoolId,
                                        @Param("collegeId") Long collegeId,
