@@ -10,12 +10,16 @@ import com.hongguoyan.module.biz.controller.admin.useradjustment.vo.UserAdjustme
 import com.hongguoyan.module.biz.controller.admin.useradjustment.vo.UserAdjustmentAdminCreateReqVO;
 import com.hongguoyan.module.biz.controller.admin.useradjustment.vo.UserAdjustmentAdminPageReqVO;
 import com.hongguoyan.module.biz.controller.admin.useradjustment.vo.UserAdjustmentAdminPageRespVO;
+import com.hongguoyan.module.biz.controller.admin.useradjustment.vo.UserAdjustmentAdminRespVO;
+import com.hongguoyan.module.biz.controller.admin.useradjustment.vo.UserAdjustmentAdminUpdateReqVO;
+import com.hongguoyan.module.biz.dal.dataobject.adjustment.AdjustmentDO;
 import com.hongguoyan.module.biz.dal.dataobject.major.MajorDO;
 import com.hongguoyan.module.biz.dal.dataobject.publisher.PublisherDO;
 import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
 import com.hongguoyan.module.biz.dal.dataobject.schoolcollege.SchoolCollegeDO;
 import com.hongguoyan.module.biz.dal.dataobject.schooldirection.SchoolDirectionDO;
 import com.hongguoyan.module.biz.dal.dataobject.useradjustment.UserAdjustmentDO;
+import com.hongguoyan.module.biz.dal.mysql.adjustment.AdjustmentMapper;
 import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
 import com.hongguoyan.module.biz.dal.mysql.publisher.PublisherMapper;
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
@@ -55,6 +59,8 @@ public class UserAdjustmentAdminServiceImpl implements UserAdjustmentAdminServic
     private ProjectConfigService projectConfigService;
     @Resource
     private AdjustmentService adjustmentService;
+    @Resource
+    private AdjustmentMapper adjustmentMapper;
 
     @Override
     public PageResult<UserAdjustmentAdminPageRespVO> getApprovedPage(UserAdjustmentAdminPageReqVO reqVO) {
@@ -119,7 +125,8 @@ public class UserAdjustmentAdminServiceImpl implements UserAdjustmentAdminServic
         }
 
         UserAdjustmentDO toCreate = buildToSave(finalUserId, null, reqVO.getDirectionId(), year,
-                reqVO.getAdjustCount(), reqVO.getAdjustLeft(), reqVO.getContact(), reqVO.getTitle(), reqVO.getRemark());
+                reqVO.getAdjustCount(), reqVO.getAdjustLeft(), reqVO.getContact(), reqVO.getSourceUrl(),
+                reqVO.getTitle(), reqVO.getRemark());
         toCreate.setId(null);
         toCreate.setSourceType(sourceType);
         toCreate.setAuditStatus(UserAdjustmentAuditStatusEnum.APPROVED.getCode());
@@ -135,6 +142,57 @@ public class UserAdjustmentAdminServiceImpl implements UserAdjustmentAdminServic
     }
 
     @Override
+    public UserAdjustmentAdminRespVO get(Long id) {
+        UserAdjustmentDO existing = validateExists(id);
+        return BeanUtils.toBean(existing, UserAdjustmentAdminRespVO.class);
+    }
+
+    @Override
+    public void update(Long adminUserId, UserAdjustmentAdminUpdateReqVO reqVO) {
+        UserAdjustmentDO existing = validateExists(reqVO != null ? reqVO.getId() : null);
+        UserAdjustmentDO toUpdate = buildToSave(existing.getUserId(), existing.getId(), reqVO.getDirectionId(), existing.getYear(),
+                reqVO.getAdjustCount(), reqVO.getAdjustLeft(), reqVO.getContact(), reqVO.getSourceUrl(),
+                reqVO.getTitle(), reqVO.getRemark());
+        // keep immutable fields
+        toUpdate.setUserId(existing.getUserId());
+        toUpdate.setSourceType(existing.getSourceType());
+        toUpdate.setAuditStatus(existing.getAuditStatus());
+        toUpdate.setAuditUserId(existing.getAuditUserId());
+        toUpdate.setAuditTime(existing.getAuditTime());
+        toUpdate.setAuditReason(existing.getAuditReason());
+        toUpdate.setPublishTime(existing.getPublishTime());
+        toUpdate.setViewCount(existing.getViewCount());
+        toUpdate.setStatus(existing.getStatus());
+        userAdjustmentMapper.updateById(toUpdate);
+        if (existing.getStatus() != null && existing.getStatus() == 1) {
+            adjustmentService.syncFromUserAdjustment(toUpdate);
+        }
+    }
+
+    @Override
+    public void delete(Long adminUserId, Long id) {
+        UserAdjustmentDO existing = validateExists(id);
+        userAdjustmentMapper.deleteById(id);
+        // best-effort: delete corresponding adjustment record when it's third-party(sourceType=3)
+        if (existing.getYear() == null || existing.getSchoolId() == null || existing.getMajorId() == null) {
+            return;
+        }
+        Long collegeId = existing.getCollegeId() != null ? existing.getCollegeId() : 0L;
+        Long directionId = existing.getDirectionId() != null ? existing.getDirectionId() : 0L;
+        Integer studyMode = existing.getStudyMode() != null ? existing.getStudyMode() : 1;
+        AdjustmentDO adj = adjustmentMapper.selectOne(new LambdaQueryWrapperX<AdjustmentDO>()
+                .eq(AdjustmentDO::getYear, existing.getYear())
+                .eq(AdjustmentDO::getSchoolId, existing.getSchoolId())
+                .eq(AdjustmentDO::getCollegeId, collegeId)
+                .eq(AdjustmentDO::getMajorId, existing.getMajorId())
+                .eq(AdjustmentDO::getStudyMode, studyMode)
+                .eq(AdjustmentDO::getDirectionId, directionId));
+        if (adj != null && adj.getSourceType() != null && adj.getSourceType() == 3) {
+            adjustmentMapper.deleteById(adj.getId());
+        }
+    }
+
+    @Override
     public void approve(Long adminUserId, UserAdjustmentAdminAuditReqVO reqVO) {
         UserAdjustmentDO existing = validateExists(reqVO != null ? reqVO.getId() : null);
         userAdjustmentMapper.update(null, new LambdaUpdateWrapper<UserAdjustmentDO>()
@@ -144,6 +202,25 @@ public class UserAdjustmentAdminServiceImpl implements UserAdjustmentAdminServic
                 .set(UserAdjustmentDO::getAuditTime, LocalDateTime.now())
                 .set(UserAdjustmentDO::getAuditReason, null)
                 .set(UserAdjustmentDO::getStatus, 1));
+
+        // 审核通过后同步到调剂表：按“用户发布”口径写入，避免被识别为运营写入优先级
+        UserAdjustmentDO refreshed = userAdjustmentMapper.selectById(existing.getId());
+        if (refreshed != null
+                && refreshed.getDirectionId() != null
+                && refreshed.getYear() != null
+                && refreshed.getStatus() != null && refreshed.getStatus() == 1
+                && UserAdjustmentAuditStatusEnum.APPROVED.getCode().equals(refreshed.getAuditStatus())) {
+            UserAdjustmentDO toSync = new UserAdjustmentDO();
+            toSync.setUserId(refreshed.getUserId());
+            toSync.setYear(refreshed.getYear());
+            toSync.setDirectionId(refreshed.getDirectionId());
+            toSync.setAdjustCount(refreshed.getAdjustCount());
+            toSync.setAdjustLeft(refreshed.getAdjustLeft());
+            toSync.setPublishTime(refreshed.getPublishTime());
+            toSync.setSourceUrl(refreshed.getSourceUrl());
+            toSync.setRemark(refreshed.getRemark());
+            adjustmentService.syncFromUserAdjustment(toSync);
+        }
     }
 
     @Override
@@ -198,6 +275,7 @@ public class UserAdjustmentAdminServiceImpl implements UserAdjustmentAdminServic
                                         Integer adjustCount,
                                         Integer adjustLeft,
                                         String contact,
+                                        String sourceUrl,
                                         String title,
                                         String remark) {
         SchoolDirectionDO direction = schoolDirectionMapper.selectById(directionId);
@@ -237,6 +315,7 @@ public class UserAdjustmentAdminServiceImpl implements UserAdjustmentAdminServic
         toSave.setAdjustCount(adjustCount != null ? adjustCount : 0);
         toSave.setAdjustLeft(adjustLeft != null ? adjustLeft : 0);
         toSave.setContact(StrUtil.blankToDefault(contact, ""));
+        toSave.setSourceUrl(StrUtil.blankToDefault(StrUtil.trimToNull(sourceUrl), ""));
         toSave.setTitle(StrUtil.blankToDefault(title, ""));
         toSave.setRemark(StrUtil.blankToDefault(remark, ""));
         return toSave;

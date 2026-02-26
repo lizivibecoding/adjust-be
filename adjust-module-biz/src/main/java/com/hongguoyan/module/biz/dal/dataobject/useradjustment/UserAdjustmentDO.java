@@ -121,6 +121,10 @@ public class UserAdjustmentDO extends BaseDO {
      */
     private String contact;
     /**
+     * 来源URL/原文链接
+     */
+    private String sourceUrl;
+    /**
      * 备注
      */
     private String remark;

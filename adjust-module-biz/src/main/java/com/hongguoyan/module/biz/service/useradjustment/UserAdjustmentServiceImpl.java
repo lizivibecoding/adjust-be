@@ -80,15 +80,14 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
         }
         UserAdjustmentDO toCreate = buildToSave(userId, null, createReqVO.getDirectionId(),
                 createReqVO.getYear(), createReqVO.getAdjustCount(), createReqVO.getAdjustLeft(),
-                createReqVO.getContact(), createReqVO.getTitle(), createReqVO.getRemark());
+                createReqVO.getContact(), null, createReqVO.getTitle(), createReqVO.getRemark());
         toCreate.setId(null);
         toCreate.setSourceType(sourceType);
-        toCreate.setAuditStatus(UserAdjustmentAuditStatusEnum.APPROVED.getCode());
-        toCreate.setStatus(1);
+        toCreate.setAuditStatus(UserAdjustmentAuditStatusEnum.PENDING.getCode());
+        toCreate.setStatus(0);
         toCreate.setPublishTime(LocalDateTime.now());
         toCreate.setViewCount(0);
         userAdjustmentMapper.insert(toCreate);
-        adjustmentService.syncFromUserAdjustment(toCreate);
         return toCreate.getId();
     }
 
@@ -101,7 +100,7 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
         }
         UserAdjustmentDO toUpdate = buildToSave(userId, existing.getId(), updateReqVO.getDirectionId(),
                 updateReqVO.getYear(), updateReqVO.getAdjustCount(), updateReqVO.getAdjustLeft(),
-                updateReqVO.getContact(), updateReqVO.getTitle(), updateReqVO.getRemark());
+                updateReqVO.getContact(), null, updateReqVO.getTitle(), updateReqVO.getRemark());
         // keep immutable fields
         toUpdate.setUserId(existing.getUserId());
         toUpdate.setPublishTime(existing.getPublishTime());
@@ -219,6 +218,7 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
                                         Integer adjustCount,
                                         Integer adjustLeft,
                                         String contact,
+                                        String sourceUrl,
                                         String title,
                                         String remark) {
         SchoolDirectionDO direction = schoolDirectionMapper.selectById(directionId);
@@ -257,6 +257,7 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
         toSave.setAdjustCount(adjustCount != null ? adjustCount : 0);
         toSave.setAdjustLeft(adjustLeft != null ? adjustLeft : 0);
         toSave.setContact(StrUtil.blankToDefault(contact, ""));
+        toSave.setSourceUrl(StrUtil.blankToDefault(StrUtil.trimToNull(sourceUrl), ""));
         toSave.setTitle(StrUtil.blankToDefault(title, ""));
         toSave.setRemark(StrUtil.blankToDefault(remark, ""));
         return toSave;

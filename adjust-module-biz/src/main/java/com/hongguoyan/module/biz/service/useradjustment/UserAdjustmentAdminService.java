@@ -5,6 +5,8 @@ import com.hongguoyan.module.biz.controller.admin.useradjustment.vo.UserAdjustme
 import com.hongguoyan.module.biz.controller.admin.useradjustment.vo.UserAdjustmentAdminCreateReqVO;
 import com.hongguoyan.module.biz.controller.admin.useradjustment.vo.UserAdjustmentAdminPageReqVO;
 import com.hongguoyan.module.biz.controller.admin.useradjustment.vo.UserAdjustmentAdminPageRespVO;
+import com.hongguoyan.module.biz.controller.admin.useradjustment.vo.UserAdjustmentAdminRespVO;
+import com.hongguoyan.module.biz.controller.admin.useradjustment.vo.UserAdjustmentAdminUpdateReqVO;
 
 /**
  * 用户发布调剂 - 管理后台 Service
@@ -16,6 +18,12 @@ public interface UserAdjustmentAdminService {
     PageResult<UserAdjustmentAdminPageRespVO> getAuditPage(UserAdjustmentAdminPageReqVO reqVO);
 
     Long createByAdmin(Long adminUserId, UserAdjustmentAdminCreateReqVO reqVO);
+
+    UserAdjustmentAdminRespVO get(Long id);
+
+    void update(Long adminUserId, UserAdjustmentAdminUpdateReqVO reqVO);
+
+    void delete(Long adminUserId, Long id);
 
     void approve(Long adminUserId, UserAdjustmentAdminAuditReqVO reqVO);
 

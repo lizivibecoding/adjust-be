@@ -224,7 +224,7 @@ public class AdjustmentServiceImpl implements AdjustmentService {
         }
         AdjustmentDO incoming = buildIncomingByDirection(userAdjustment.getYear(), 3, direction,
                 userAdjustment.getAdjustCount(), userAdjustment.getAdjustLeft(),
-                userAdjustment.getPublishTime(), null, userAdjustment.getRemark(), null);
+                userAdjustment.getPublishTime(), userAdjustment.getSourceUrl(), userAdjustment.getRemark(), null);
         // 运营创建的 user_adjustment 会写 auditUserId；三方覆盖时运营 > 用户
         boolean fromAdmin = userAdjustment.getAuditUserId() != null;
         Long writerId = fromAdmin ? userAdjustment.getAuditUserId() : userAdjustment.getUserId();
