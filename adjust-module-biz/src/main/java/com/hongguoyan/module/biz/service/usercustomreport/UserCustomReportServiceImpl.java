@@ -1,6 +1,7 @@
 package com.hongguoyan.module.biz.service.usercustomreport;
 
 import cn.hutool.core.date.DateUtil;
+import com.hongguoyan.module.biz.service.projectconfig.ProjectConfigService;
 import com.hongguoyan.module.member.api.user.MemberUserApi;
 import com.hongguoyan.module.member.api.user.dto.MemberUserRespDTO;
 import java.util.Map;
@@ -47,6 +48,9 @@ public class UserCustomReportServiceImpl implements UserCustomReportService {
     private UserProfileMapper userProfileMapper;
     @Resource
     private NationalLineEligibilityService nationalLineEligibilityService;
+
+    @Resource
+    private ProjectConfigService projectConfigService;
 
     @Override
     public UserCustomReportDO getLatestByUserId(Long userId) {
@@ -122,7 +126,7 @@ public class UserCustomReportServiceImpl implements UserCustomReportService {
             throw exception(ErrorCodeConstants.CANDIDATE_SCORE_TOTAL_NOT_EXISTS);
         }
         NationalLineContext nationalLineContext = nationalLineEligibilityService
-            .resolveContextOrThrow(userProfile, DateUtil.thisYear(), null);
+            .resolveContextOrThrow(userProfile, projectConfigService.getAdjustYear(), null);
         if (!nationalLineEligibilityService.checkQualified(userProfile, nationalLineContext.getMatchedLine())) {
             throw exception(ErrorCodeConstants.USER_NOT_QUALIFIED);
         }

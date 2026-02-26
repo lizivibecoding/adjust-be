@@ -10,6 +10,7 @@ import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
 import com.hongguoyan.module.biz.dal.mysql.nationalscore.NationalScoreMapper;
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
 import com.hongguoyan.module.biz.enums.ErrorCodeConstants;
+import com.hongguoyan.module.biz.service.projectconfig.ProjectConfigService;
 import jakarta.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.Comparator;
@@ -28,6 +29,8 @@ public class NationalLineEligibilityServiceImpl implements NationalLineEligibili
     private NationalScoreMapper nationalScoreMapper;
     @Resource
     private SchoolMapper schoolMapper;
+    @Resource
+    private ProjectConfigService projectConfigService;
 
     @Override
     public NationalLineContext resolveContextOrThrow(UserProfileDO userProfile, Integer preferredYear, Map<Long, SchoolDO> schoolMap) {
@@ -37,7 +40,7 @@ public class NationalLineEligibilityServiceImpl implements NationalLineEligibili
         if (StrUtil.isBlank(userProfile.getTargetMajorCode())) {
             throw exception(ErrorCodeConstants.NATIONAL_SCORE_NOT_EXISTS);
         }
-        int year = preferredYear != null ? preferredYear : DateUtil.thisYear();
+        int year = preferredYear != null ? preferredYear : projectConfigService.getAdjustYear();
         List<NationalScoreDO> nationalScores = nationalScoreMapper.selectList(new LambdaQueryWrapper<NationalScoreDO>()
             .eq(NationalScoreDO::getYear, year));
         if (CollUtil.isEmpty(nationalScores)) {

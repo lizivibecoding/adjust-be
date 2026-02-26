@@ -1,5 +1,8 @@
 package com.hongguoyan.module.biz.controller.app.userpreference;
 
+import com.hongguoyan.framework.ratelimiter.core.annotation.RateLimiter;
+import com.hongguoyan.framework.ratelimiter.core.keyresolver.impl.UserRateLimiterKeyResolver;
+import com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.validation.annotation.Validated;
@@ -13,6 +16,8 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+
 import com.hongguoyan.framework.common.pojo.CommonResult;
 import static com.hongguoyan.framework.common.pojo.CommonResult.success;
 
@@ -77,6 +82,7 @@ public class AppUserPreferenceController {
 
     @GetMapping("/export")
     @Operation(summary = "导出已选志愿")
+    @RateLimiter(count = 3,timeUnit = TimeUnit.MINUTES,message = "操作太频繁了，服务器处理中，请稍候再试！",keyResolver = UserRateLimiterKeyResolver.class)
     public CommonResult<String> exportMyPreferences(@Valid AppUserPreferenceExportReqVO reqVO) {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
         vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_PREFERENCE_EXPORT);
@@ -85,6 +91,9 @@ public class AppUserPreferenceController {
             reqVO = new AppUserPreferenceExportReqVO();
         }
         List<AppUserPreferenceGroupRespVO> list = userPreferenceService.getMyList(userId);
+        if (list == null || list.isEmpty()) {
+            throw ServiceExceptionUtil.invalidParamException("你还未添加志愿信息，请添加后再操作。");
+        }
         Set<Integer> allowed = resolveAllowedPreferenceNos(reqVO);
         List<AppUserPreferenceExportRespVO> exportList = new ArrayList<>();
         for (AppUserPreferenceGroupRespVO group : list) {
