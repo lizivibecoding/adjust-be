@@ -30,6 +30,7 @@ import com.hongguoyan.module.biz.dal.mysql.useradjustmentapply.UserAdjustmentApp
 import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 import com.hongguoyan.module.biz.enums.useradjustment.UserAdjustmentAuditStatusEnum;
 import com.hongguoyan.module.biz.enums.useradjustment.UserAdjustmentSourceTypeEnum;
+import com.hongguoyan.module.biz.service.adjustment.AdjustmentService;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertList;
@@ -62,6 +63,8 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
     private UserAdjustmentApplyMapper userAdjustmentApplyMapper;
     @Resource
     private VipBenefitService vipBenefitService;
+    @Resource
+    private AdjustmentService adjustmentService;
 
     @Override
     public Long createUserAdjustment(Long userId, AppUserAdjustmentCreateReqVO createReqVO) {
@@ -85,6 +88,7 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
         toCreate.setPublishTime(LocalDateTime.now());
         toCreate.setViewCount(0);
         userAdjustmentMapper.insert(toCreate);
+        adjustmentService.syncFromUserAdjustment(toCreate);
         return toCreate.getId();
     }
 

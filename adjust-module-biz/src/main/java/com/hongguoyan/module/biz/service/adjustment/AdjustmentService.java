@@ -6,8 +6,11 @@ import com.hongguoyan.module.biz.controller.app.adjustment.vo.*;
 import com.hongguoyan.module.biz.controller.app.school.vo.AppSchoolAdjustmentPageReqVO;
 import com.hongguoyan.module.biz.controller.app.school.vo.AppSchoolAdjustmentRespVO;
 import com.hongguoyan.module.biz.dal.dataobject.adjustment.AdjustmentDO;
+import com.hongguoyan.module.biz.dal.dataobject.useradjustment.UserAdjustmentDO;
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.framework.common.pojo.PageParam;
+import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentUpsertByDirectionIdReqVO;
+import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentUpsertByNameReqVO;
 
 /**
  * 调剂 Service 接口
@@ -125,5 +128,20 @@ public interface AdjustmentService {
      * @return 分页
      */
     PageResult<AppSchoolAdjustmentRespVO> getSchoolAdjustmentPage(Long userId, @Valid AppSchoolAdjustmentPageReqVO reqVO);
+
+    /**
+     * 按方向ID覆盖写入调剂（管理后台）
+     */
+    Long upsertByDirectionId(@Valid AdjustmentUpsertByDirectionIdReqVO reqVO);
+
+    /**
+     * 按名称解析覆盖写入调剂（管理后台）
+     */
+    Long upsertByName(@Valid AdjustmentUpsertByNameReqVO reqVO);
+
+    /**
+     * 用户/运营发布调剂同步到调剂表
+     */
+    void syncFromUserAdjustment(UserAdjustmentDO userAdjustment);
 
 }

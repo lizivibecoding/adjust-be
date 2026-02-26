@@ -1,39 +1,27 @@
 package com.hongguoyan.module.biz.service.adjustment;
 
-import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
-import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.ADJUSTMENT_NOT_EXISTS;
-import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.VIP_MAJOR_CATEGORY_NOT_OPENED;
-import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_MAJOR_CATEGORY_OPEN;
-import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.VIEW_SCHOOL_ADJUSTMENT_3Y;
-
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.framework.common.util.object.BeanUtils;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
-import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentDetailReqVO;
-import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentDetailRespVO;
-import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentDirectionDetailRespVO;
-import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentFilterConfigRespVO;
-import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentHotRankingReqVO;
-import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentOptionsReqVO;
-import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentOptionsRespVO;
-import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentPageReqVO;
-import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentSaveReqVO;
-import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentSearchReqVO;
-import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentSearchRespVO;
-import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentSearchSchoolRespVO;
-import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentSearchTabRespVO;
-import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentSubjectsRespVO;
-import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentSuggestRespVO;
-import com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentUpdateStatsRespVO;
+import com.hongguoyan.module.biz.cache.CacheNames;
+import com.hongguoyan.module.biz.cache.adjustment.AdjustmentDetailCache;
+import com.hongguoyan.module.biz.cache.adjustment.AdjustmentUpdateStatsCache;
+import com.hongguoyan.module.biz.cache.adjustment.SchoolAdjustmentCache;
+import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentUpsertByDirectionIdReqVO;
+import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentUpsertByNameReqVO;
+import com.hongguoyan.module.biz.controller.app.adjustment.vo.*;
 import com.hongguoyan.module.biz.controller.app.school.vo.AppSchoolAdjustmentPageReqVO;
 import com.hongguoyan.module.biz.controller.app.school.vo.AppSchoolAdjustmentRespVO;
 import com.hongguoyan.module.biz.dal.dataobject.adjustment.AdjustmentDO;
 import com.hongguoyan.module.biz.dal.dataobject.area.AreaDO;
 import com.hongguoyan.module.biz.dal.dataobject.major.MajorDO;
 import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
+import com.hongguoyan.module.biz.dal.dataobject.schoolcollege.SchoolCollegeDO;
+import com.hongguoyan.module.biz.dal.dataobject.schooldirection.SchoolDirectionDO;
+import com.hongguoyan.module.biz.dal.dataobject.useradjustment.UserAdjustmentDO;
 import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.AdjustmentMapper;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.BizMajorKeyDTO;
@@ -42,30 +30,30 @@ import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.RecruitSnapshotRowDTO;
 import com.hongguoyan.module.biz.dal.mysql.area.AreaMapper;
 import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
-import com.hongguoyan.module.biz.cache.CacheNames;
-import com.hongguoyan.module.biz.cache.adjustment.AdjustmentDetailCache;
-import com.hongguoyan.module.biz.cache.adjustment.SchoolAdjustmentCache;
+import com.hongguoyan.module.biz.dal.mysql.schoolcollege.SchoolCollegeMapper;
+import com.hongguoyan.module.biz.dal.mysql.schooldirection.SchoolDirectionMapper;
 import com.hongguoyan.module.biz.service.projectconfig.ProjectConfigService;
 import com.hongguoyan.module.biz.service.userprofile.UserProfileService;
 import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
+import com.hongguoyan.framework.security.core.util.SecurityFrameworkUtils;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
-import java.time.Year;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
+
+import java.time.LocalDateTime;
+import java.time.Year;
+import java.util.*;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
+import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.ADJUSTMENT_NOT_EXISTS;
+import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.VIP_MAJOR_CATEGORY_NOT_OPENED;
+import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_MAJOR_CATEGORY_OPEN;
+import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.VIEW_SCHOOL_ADJUSTMENT_3Y;
 
 /**
  * 调剂 Service 实现类
@@ -97,6 +85,12 @@ public class AdjustmentServiceImpl implements AdjustmentService {
     private AdjustmentDetailCache adjustmentDetailCache;
     @Resource
     private SchoolAdjustmentCache schoolAdjustmentCache;
+    @Resource
+    private SchoolDirectionMapper schoolDirectionMapper;
+    @Resource
+    private SchoolCollegeMapper schoolCollegeMapper;
+    @Resource
+    private AdjustmentUpdateStatsCache adjustmentUpdateStatsCache;
 
     private static final Pattern SPLIT_PATTERN = Pattern.compile("[\\n;,，；]+");
     /**
@@ -141,6 +135,417 @@ public class AdjustmentServiceImpl implements AdjustmentService {
 
         // 返回
         return adjustment.getId();
+    }
+
+    @Override
+    public Long upsertByDirectionId(@Valid AdjustmentUpsertByDirectionIdReqVO reqVO) {
+        if (reqVO == null || reqVO.getDirectionId() == null) {
+            throw exception(ADJUSTMENT_NOT_EXISTS);
+        }
+        Integer year = reqVO.getYear();
+        SchoolDirectionDO direction = schoolDirectionMapper.selectById(reqVO.getDirectionId());
+        if (direction == null) {
+            throw exception(ADJUSTMENT_NOT_EXISTS);
+        }
+        AdjustmentDO incoming = buildIncomingByDirection(year, reqVO.getSourceType(), direction,
+                reqVO.getAdjustCount(), reqVO.getAdjustLeft(),
+                reqVO.getPublishTime(), reqVO.getSourceUrl(), reqVO.getRemark(), reqVO.getRetestBooks());
+        // source_type=3 时，标记为运营写入，避免用户覆盖
+        markThirdPartyWriterIfNeeded(incoming, true, SecurityFrameworkUtils.getLoginUserId());
+        return upsertByBizKey(incoming);
+    }
+
+    @Override
+    public Long upsertByName(@Valid AdjustmentUpsertByNameReqVO reqVO) {
+        Integer activeYear = projectConfigService.getActiveYear();
+        Long schoolId = resolveSchoolIdByCode(reqVO.getSchoolCode());
+        SchoolDO school = schoolId != null ? schoolMapper.selectById(schoolId) : null;
+        if (schoolId == null || school == null) {
+            throw exception(ADJUSTMENT_NOT_EXISTS);
+        }
+
+        Long collegeId = resolveCollegeIdByName(schoolId, activeYear, reqVO.getCollegeName());
+        SchoolCollegeDO college = collegeId != null ? schoolCollegeMapper.selectById(collegeId) : null;
+        if (collegeId == null || college == null) {
+            throw exception(ADJUSTMENT_NOT_EXISTS);
+        }
+
+        MajorDO major = resolveMajorByCodeAndName(activeYear, reqVO.getMajorCode(), reqVO.getMajorName());
+        if (major == null || major.getId() == null) {
+            throw exception(ADJUSTMENT_NOT_EXISTS);
+        }
+
+        SchoolDirectionDO direction = resolveDirectionByName(schoolId, collegeId, major.getId(), activeYear,
+                reqVO.getStudyMode(), reqVO.getDirectionName());
+        Long directionId = direction != null ? direction.getId() : 0L;
+        String directionCode = direction != null ? direction.getDirectionCode() : "00";
+        String subjects = direction != null ? direction.getSubjects() : null;
+
+        AdjustmentDO incoming = new AdjustmentDO();
+        incoming.setId(null);
+        incoming.setYear(reqVO.getYear());
+        incoming.setSourceType(reqVO.getSourceType());
+        incoming.setSourceUrl(StrUtil.blankToDefault(StrUtil.trimToNull(reqVO.getSourceUrl()), ""));
+        incoming.setSchoolId(schoolId);
+        incoming.setSchoolName(StrUtil.blankToDefault(school.getSchoolName(), ""));
+        incoming.setCollegeId(collegeId);
+        incoming.setCollegeName(StrUtil.blankToDefault(college.getName(), ""));
+        incoming.setMajorId(major.getId());
+        incoming.setMajorCode(StrUtil.blankToDefault(major.getCode(), ""));
+        incoming.setMajorName(StrUtil.blankToDefault(major.getName(), ""));
+        incoming.setDegreeType(major.getDegreeType() != null ? major.getDegreeType() : 0);
+        incoming.setStudyMode(reqVO.getStudyMode());
+        incoming.setDirectionId(directionId);
+        incoming.setDirectionCode(StrUtil.blankToDefault(directionCode, "00"));
+        incoming.setDirectionName(StrUtil.blankToDefault(reqVO.getDirectionName(), ""));
+        incoming.setSubjects(subjects);
+        incoming.setAdjustCount(reqVO.getAdjustCount());
+        incoming.setAdjustLeft(reqVO.getAdjustLeft());
+        incoming.setRemark(StrUtil.blankToDefault(reqVO.getRemark(), ""));
+        incoming.setPublishTime(reqVO.getPublishTime() != null ? reqVO.getPublishTime() : LocalDateTime.now());
+        incoming.setRetestBooks(writeJsonArray(reqVO.getRetestBooks()));
+        incoming.setStatus(1);
+        incoming.setViewCount(0);
+        incoming.setHotScore(0L);
+        // source_type=3 时，标记为运营写入，避免用户覆盖
+        markThirdPartyWriterIfNeeded(incoming, true, SecurityFrameworkUtils.getLoginUserId());
+        return upsertByBizKey(incoming);
+    }
+
+    @Override
+    public void syncFromUserAdjustment(UserAdjustmentDO userAdjustment) {
+        if (userAdjustment == null || userAdjustment.getDirectionId() == null || userAdjustment.getYear() == null) {
+            return;
+        }
+        SchoolDirectionDO direction = schoolDirectionMapper.selectById(userAdjustment.getDirectionId());
+        if (direction == null) {
+            return;
+        }
+        AdjustmentDO incoming = buildIncomingByDirection(userAdjustment.getYear(), 3, direction,
+                userAdjustment.getAdjustCount(), userAdjustment.getAdjustLeft(),
+                userAdjustment.getPublishTime(), null, userAdjustment.getRemark(), null);
+        // 运营创建的 user_adjustment 会写 auditUserId；三方覆盖时运营 > 用户
+        boolean fromAdmin = userAdjustment.getAuditUserId() != null;
+        Long writerId = fromAdmin ? userAdjustment.getAuditUserId() : userAdjustment.getUserId();
+        markThirdPartyWriterIfNeeded(incoming, fromAdmin, writerId);
+        upsertByBizKey(incoming);
+    }
+
+    private AdjustmentDO buildIncomingByDirection(Integer year,
+                                                  Integer sourceType,
+                                                  SchoolDirectionDO direction,
+                                                  Integer adjustCount,
+                                                  Integer adjustLeft,
+                                                  LocalDateTime publishTime,
+                                                  String sourceUrl,
+                                                  String remark,
+                                                  List<String> retestBooks) {
+        Long schoolId = direction.getSchoolId();
+        Long collegeId = direction.getCollegeId();
+        Long majorId = direction.getMajorId();
+        Integer studyMode = direction.getStudyMode() != null ? direction.getStudyMode() : 1;
+
+        SchoolDO school = schoolId != null ? schoolMapper.selectById(schoolId) : null;
+        SchoolCollegeDO college = collegeId != null ? schoolCollegeMapper.selectById(collegeId) : null;
+        MajorDO major = majorId != null ? majorMapper.selectById(majorId) : null;
+
+        AdjustmentDO incoming = new AdjustmentDO();
+        incoming.setId(null);
+        incoming.setYear(year);
+        incoming.setSourceType(sourceType);
+        incoming.setSourceUrl(StrUtil.blankToDefault(StrUtil.trimToNull(sourceUrl), ""));
+        incoming.setSchoolId(schoolId);
+        incoming.setSchoolName(school != null ? StrUtil.blankToDefault(school.getSchoolName(), "") : "");
+        incoming.setCollegeId(collegeId != null ? collegeId : 0L);
+        incoming.setCollegeName(college != null ? StrUtil.blankToDefault(college.getName(), "") : "");
+        incoming.setMajorId(majorId);
+        incoming.setMajorCode(major != null ? StrUtil.blankToDefault(major.getCode(), "") : "");
+        incoming.setMajorName(major != null ? StrUtil.blankToDefault(major.getName(), "") : "");
+        incoming.setDegreeType(major != null && major.getDegreeType() != null ? major.getDegreeType() : 0);
+        incoming.setDirectionId(direction.getId());
+        incoming.setDirectionCode(StrUtil.blankToDefault(direction.getDirectionCode(), "00"));
+        incoming.setDirectionName(StrUtil.blankToDefault(direction.getDirectionName(), ""));
+        incoming.setStudyMode(studyMode);
+        incoming.setSubjects(direction.getSubjects());
+        incoming.setAdjustCount(adjustCount != null ? adjustCount : 0);
+        incoming.setAdjustLeft(adjustLeft != null ? adjustLeft : 0);
+        incoming.setRemark(StrUtil.blankToDefault(remark, ""));
+        incoming.setPublishTime(publishTime != null ? publishTime : LocalDateTime.now());
+        incoming.setRetestBooks(writeJsonArray(retestBooks));
+        incoming.setStatus(1);
+        incoming.setViewCount(0);
+        incoming.setHotScore(0L);
+        return incoming;
+    }
+
+    private Long resolveSchoolIdByCode(String schoolCode) {
+        String code = StrUtil.trimToNull(schoolCode);
+        if (code == null) {
+            return null;
+        }
+        SchoolDO school = schoolMapper.selectOne(new LambdaQueryWrapperX<SchoolDO>()
+                .eq(SchoolDO::getSchoolCode, code));
+        return school != null ? school.getId() : null;
+    }
+
+    private Long resolveCollegeIdByName(Long schoolId, Integer activeYear, String collegeName) {
+        String name = StrUtil.trimToNull(collegeName);
+        if (schoolId == null || name == null) {
+            return null;
+        }
+        SchoolCollegeDO college = schoolCollegeMapper.selectOne(new LambdaQueryWrapperX<SchoolCollegeDO>()
+                .eq(SchoolCollegeDO::getSchoolId, schoolId)
+                .eq(SchoolCollegeDO::getName, name)
+                .eqIfPresent(SchoolCollegeDO::getYear, activeYear));
+        return college != null ? college.getId() : null;
+    }
+
+    private MajorDO resolveMajorByCodeAndName(Integer activeYear, String majorCode, String majorName) {
+        String code = StrUtil.trimToNull(majorCode);
+        String name = StrUtil.trimToNull(majorName);
+        if (code == null || name == null) {
+            return null;
+        }
+        return majorMapper.selectOne(new LambdaQueryWrapperX<MajorDO>()
+                .eq(MajorDO::getCode, code)
+                .eq(MajorDO::getName, name)
+                .eqIfPresent(MajorDO::getYear, activeYear));
+    }
+
+    private SchoolDirectionDO resolveDirectionByName(Long schoolId,
+                                                     Long collegeId,
+                                                     Long majorId,
+                                                     Integer activeYear,
+                                                     Integer studyMode,
+                                                     String directionName) {
+        String name = StrUtil.trimToNull(directionName);
+        if (schoolId == null || collegeId == null || majorId == null || name == null) {
+            return null;
+        }
+        List<SchoolDirectionDO> list = schoolDirectionMapper.selectList(new LambdaQueryWrapperX<SchoolDirectionDO>()
+                .eq(SchoolDirectionDO::getSchoolId, schoolId)
+                .eq(SchoolDirectionDO::getCollegeId, collegeId)
+                .eq(SchoolDirectionDO::getMajorId, majorId)
+                .eqIfPresent(SchoolDirectionDO::getStudyMode, studyMode)
+                .eqIfPresent(SchoolDirectionDO::getYear, activeYear)
+                .eq(SchoolDirectionDO::getDirectionName, name)
+                .orderByAsc(SchoolDirectionDO::getId));
+        return list != null && !list.isEmpty() ? list.get(0) : null;
+    }
+
+    private Long upsertByBizKey(AdjustmentDO incoming) {
+        if (incoming == null) {
+            return null;
+        }
+        normalizeKeyFields(incoming);
+        AdjustmentDO existing = adjustmentMapper.selectOne(new LambdaQueryWrapperX<AdjustmentDO>()
+                .eq(AdjustmentDO::getYear, incoming.getYear())
+                .eq(AdjustmentDO::getSchoolId, incoming.getSchoolId())
+                .eq(AdjustmentDO::getCollegeId, incoming.getCollegeId())
+                .eq(AdjustmentDO::getMajorId, incoming.getMajorId())
+                .eq(AdjustmentDO::getStudyMode, incoming.getStudyMode())
+                .eq(AdjustmentDO::getDirectionId, incoming.getDirectionId()));
+
+        if (existing == null) {
+            adjustmentMapper.insert(incoming);
+            evictAdjustmentCaches(incoming);
+            return incoming.getId();
+        }
+
+        boolean updated = applyUpdateRule(existing, incoming);
+        if (!updated) {
+            return existing.getId();
+        }
+        adjustmentMapper.updateById(existing);
+        evictAdjustmentCaches(existing);
+        return existing.getId();
+    }
+
+    private void normalizeKeyFields(AdjustmentDO incoming) {
+        if (incoming.getCollegeId() == null) {
+            incoming.setCollegeId(0L);
+        }
+        if (incoming.getDirectionId() == null) {
+            incoming.setDirectionId(0L);
+        }
+        if (incoming.getStudyMode() == null) {
+            incoming.setStudyMode(1);
+        }
+        if (incoming.getPublishTime() == null) {
+            incoming.setPublishTime(LocalDateTime.now());
+        }
+        if (incoming.getStatus() == null) {
+            incoming.setStatus(1);
+        }
+    }
+
+    private boolean applyUpdateRule(AdjustmentDO existing, AdjustmentDO incoming) {
+        Integer oldSource = existing.getSourceType() != null ? existing.getSourceType() : 3;
+        Integer newSource = incoming.getSourceType() != null ? incoming.getSourceType() : 3;
+        int oldP = priority(oldSource);
+        int newP = priority(newSource);
+        if (newP < oldP) {
+            copyBusinessFields(existing, incoming);
+            return true;
+        }
+        if (newP > oldP) {
+            return false;
+        }
+        // same priority
+        if (newSource == 3) {
+            // 三方覆盖：运营写入永远大于用户写入
+            boolean existingAdmin = isThirdPartyAdmin(existing.getUpdater());
+            boolean incomingAdmin = isThirdPartyAdmin(incoming.getUpdater());
+            if (incomingAdmin && !existingAdmin) {
+                copyBusinessFields(existing, incoming);
+                return true;
+            }
+            if (!incomingAdmin && existingAdmin) {
+                return false;
+            }
+            LocalDateTime oldPt = existing.getPublishTime();
+            LocalDateTime newPt = incoming.getPublishTime();
+            if (oldPt == null || (newPt != null && newPt.isAfter(oldPt))) {
+                copyBusinessFields(existing, incoming);
+                return true;
+            }
+            return false;
+        }
+        // official / school site: special handle counts (official-style)
+        mergeCountsOfficial(existing, incoming);
+        // other fields: keep latest publish_time to reflect refresh
+        LocalDateTime oldPt = existing.getPublishTime();
+        LocalDateTime newPt = incoming.getPublishTime();
+        if (oldPt == null || (newPt != null && newPt.isAfter(oldPt))) {
+            existing.setPublishTime(newPt);
+            existing.setSourceUrl(incoming.getSourceUrl());
+            existing.setRemark(incoming.getRemark());
+            if (StrUtil.isNotBlank(incoming.getRetestBooks())) {
+                existing.setRetestBooks(incoming.getRetestBooks());
+            }
+            if (StrUtil.isNotBlank(incoming.getSubjects())) {
+                existing.setSubjects(incoming.getSubjects());
+            }
+        }
+        existing.setSourceType(newSource);
+        existing.setStatus(1);
+        return true;
+    }
+
+    private void copyBusinessFields(AdjustmentDO existing, AdjustmentDO incoming) {
+        existing.setSourceType(incoming.getSourceType());
+        existing.setSourceUrl(incoming.getSourceUrl());
+        existing.setSchoolName(incoming.getSchoolName());
+        existing.setCollegeName(incoming.getCollegeName());
+        existing.setMajorCode(incoming.getMajorCode());
+        existing.setMajorName(incoming.getMajorName());
+        existing.setDegreeType(incoming.getDegreeType());
+        existing.setDirectionCode(incoming.getDirectionCode());
+        existing.setDirectionName(incoming.getDirectionName());
+        existing.setSubjects(incoming.getSubjects());
+        existing.setAdjustCount(incoming.getAdjustCount());
+        existing.setAdjustLeft(incoming.getAdjustLeft());
+        existing.setRemark(incoming.getRemark());
+        existing.setPublishTime(incoming.getPublishTime());
+        existing.setRetestBooks(incoming.getRetestBooks());
+        existing.setStatus(1);
+        if (incoming.getUpdater() != null) {
+            existing.setUpdater(incoming.getUpdater());
+        }
+        if (incoming.getCreator() != null) {
+            existing.setCreator(incoming.getCreator());
+        }
+        // keep viewCount/hotScore
+    }
+
+    private void mergeCountsOfficial(AdjustmentDO existing, AdjustmentDO incoming) {
+        Integer oldTotal = existing.getAdjustCount();
+        Integer newTotal = incoming.getAdjustCount();
+        Integer mergedTotal = mergeMaxPreferPositive(oldTotal, newTotal);
+
+        Integer oldLeft = existing.getAdjustLeft();
+        Integer newLeft = incoming.getAdjustLeft();
+        Integer mergedLeft = mergeMinPreferPositive(oldLeft, newLeft);
+        if (mergedTotal != null && mergedTotal > 0 && mergedLeft != null && mergedLeft > mergedTotal) {
+            mergedLeft = mergedTotal;
+        }
+        existing.setAdjustCount(mergedTotal != null ? mergedTotal : 0);
+        existing.setAdjustLeft(mergedLeft != null ? mergedLeft : 0);
+    }
+
+    private Integer mergeMaxPreferPositive(Integer a, Integer b) {
+        int av = a != null ? a : 0;
+        int bv = b != null ? b : 0;
+        if (av <= 0 && bv <= 0) {
+            return 0;
+        }
+        return Math.max(av, bv);
+    }
+
+    private Integer mergeMinPreferPositive(Integer a, Integer b) {
+        int av = a != null ? a : 0;
+        int bv = b != null ? b : 0;
+        if (av > 0 && bv > 0) {
+            return Math.min(av, bv);
+        }
+        if (av > 0) {
+            return av;
+        }
+        return bv;
+    }
+
+    private int priority(Integer sourceType) {
+        if (sourceType == null) {
+            return 3;
+        }
+        if (sourceType == 1) {
+            return 1;
+        }
+        if (sourceType == 2) {
+            return 2;
+        }
+        return 3;
+    }
+
+    private String writeJsonArray(List<String> list) {
+        if (list == null) {
+            return null;
+        }
+        try {
+            return objectMapper.writeValueAsString(list);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private void markThirdPartyWriterIfNeeded(AdjustmentDO incoming, boolean admin, Long writerId) {
+        if (incoming == null) {
+            return;
+        }
+        Integer sourceType = incoming.getSourceType();
+        if (sourceType == null || sourceType != 3) {
+            return;
+        }
+        if (writerId == null) {
+            return;
+        }
+        String marker = (admin ? "admin:" : "user:") + writerId;
+        incoming.setUpdater(marker);
+        if (incoming.getCreator() == null) {
+            incoming.setCreator(marker);
+        }
+    }
+
+    private boolean isThirdPartyAdmin(String updater) {
+        return updater != null && updater.startsWith("admin:");
+    }
+
+    private void evictAdjustmentCaches(AdjustmentDO row) {
+        if (row == null) {
+            return;
+        }
+        adjustmentDetailCache.evictDetailRows(row.getSchoolId(), row.getMajorId(), row.getCollegeId(), row.getYear(), row.getStudyMode());
+        adjustmentUpdateStatsCache.evictDefault();
     }
 
     @Override

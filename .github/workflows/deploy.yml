@@ -119,6 +119,8 @@ jobs:
   deploy_app2:
     runs-on: ubuntu-latest
     needs: build
+    # dev 只部署第一台机器，prod 部署两台
+    if: (github.event_name == 'push' && github.ref_name == 'prod') || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'prod')
     environment: ${{ github.event.inputs.environment || (github.ref_name == 'prod' && 'prod' || 'dev') }}
     steps:
       - name: Download build artifacts

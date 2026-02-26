@@ -25,6 +25,7 @@ import com.hongguoyan.module.biz.dal.mysql.useradjustment.UserAdjustmentMapper;
 import com.hongguoyan.module.biz.enums.useradjustment.UserAdjustmentAuditStatusEnum;
 import com.hongguoyan.module.biz.enums.useradjustment.UserAdjustmentSourceTypeEnum;
 import com.hongguoyan.module.biz.service.projectconfig.ProjectConfigService;
+import com.hongguoyan.module.biz.service.adjustment.AdjustmentService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -52,6 +53,8 @@ public class UserAdjustmentAdminServiceImpl implements UserAdjustmentAdminServic
     private MajorMapper majorMapper;
     @Resource
     private ProjectConfigService projectConfigService;
+    @Resource
+    private AdjustmentService adjustmentService;
 
     @Override
     public PageResult<UserAdjustmentAdminPageRespVO> getApprovedPage(UserAdjustmentAdminPageReqVO reqVO) {
@@ -119,11 +122,15 @@ public class UserAdjustmentAdminServiceImpl implements UserAdjustmentAdminServic
                 reqVO.getAdjustCount(), reqVO.getAdjustLeft(), reqVO.getContact(), reqVO.getTitle(), reqVO.getRemark());
         toCreate.setId(null);
         toCreate.setSourceType(sourceType);
-        toCreate.setAuditStatus(UserAdjustmentAuditStatusEnum.PENDING.getCode());
-        toCreate.setStatus(0);
+        toCreate.setAuditStatus(UserAdjustmentAuditStatusEnum.APPROVED.getCode());
+        toCreate.setAuditUserId(adminUserId);
+        toCreate.setAuditTime(LocalDateTime.now());
+        toCreate.setAuditReason(null);
+        toCreate.setStatus(1);
         toCreate.setPublishTime(LocalDateTime.now());
         toCreate.setViewCount(0);
         userAdjustmentMapper.insert(toCreate);
+        adjustmentService.syncFromUserAdjustment(toCreate);
         return toCreate.getId();
     }
 
