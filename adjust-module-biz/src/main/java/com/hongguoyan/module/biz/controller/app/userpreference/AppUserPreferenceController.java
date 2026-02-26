@@ -31,6 +31,8 @@ import com.hongguoyan.module.infra.service.file.FileService;
 import com.hongguoyan.module.infra.service.file.bo.FileCreateRespBO;
 
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_USER_PREFERENCE_EXPORT;
+import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
+import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.USER_PREFERENCE_EXPORT_EMPTY;
 
 @Tag(name = "API - 用户志愿")
 @RestController
@@ -125,6 +127,9 @@ public class AppUserPreferenceController {
                 vo.setStudyMode(item.getStudyMode());
                 exportList.add(vo);
             }
+        }
+        if (exportList.isEmpty()) {
+            throw exception(USER_PREFERENCE_EXPORT_EMPTY);
         }
         // Generate PDF and upload
         byte[] pdfBytes = userPreferencePdfService.generatePdf(exportList);

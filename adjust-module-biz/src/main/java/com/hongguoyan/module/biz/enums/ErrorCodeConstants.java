@@ -107,4 +107,6 @@ public interface ErrorCodeConstants {
     ErrorCode UNDERGRADUATE_MAJOR_NOT_EXISTS = new ErrorCode(72, "学科专业不存在");
     ErrorCode SCHOOL_RANK_NOT_EXISTS = new ErrorCode(73, "软科排名不存在");
     ErrorCode BANNER_NOT_EXISTS = new ErrorCode(77, "轮播图不存在");
+
+    ErrorCode USER_PREFERENCE_EXPORT_EMPTY = new ErrorCode(111, "暂无可导出的志愿内容");
 }
