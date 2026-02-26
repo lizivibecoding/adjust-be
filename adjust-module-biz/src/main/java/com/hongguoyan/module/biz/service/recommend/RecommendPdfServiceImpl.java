@@ -26,6 +26,7 @@ import com.hongguoyan.module.biz.dal.mysql.userintention.UserIntentionMapper;
 import com.hongguoyan.module.biz.dal.mysql.userprofile.UserProfileMapper;
 import com.hongguoyan.module.biz.enums.ErrorCodeConstants;
 import com.hongguoyan.module.biz.service.pdf.PdfRenderSupport;
+import com.hongguoyan.module.biz.service.projectconfig.ProjectConfigService;
 import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.font.PdfFont;
@@ -76,6 +77,8 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
     private MajorMapper majorMapper;
     @Resource
     private AreaMapper areaMapper;
+    @Resource
+    private ProjectConfigService projectConfigService;
 
     @Override
     public byte[] generateReportPdf(Long userId, Long reportId) {
@@ -125,7 +128,7 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
             document.setFont(font);
 
             // --- 标题 ---
-            Paragraph title = new Paragraph(DateUtil.thisYear() + " 年考研调剂智能评估报告")
+            Paragraph title = new Paragraph(projectConfigService.getAdjustYear() + " 年考研调剂智能评估报告")
                     .setFontSize(20)
                     .setBold()
                     .setTextAlignment(TextAlignment.CENTER)
@@ -307,7 +310,7 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
             doc.add(new Paragraph("暂无推荐院校").setFontSize(10).setItalic().setFontColor(ColorConstants.GRAY));
             return;
         }
-        int targetYearInt = DateUtil.thisYear() - 1;
+        int targetYearInt = projectConfigService.getAdjustYear() - 1;
         // 分组 key: schoolId + collegeId + majorId + studyMode
         // 使用 Map 存储分组后的数据，key 为复合键
         // 这里为了简单，直接用拼接字符串作为 key
