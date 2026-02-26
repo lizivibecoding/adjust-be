@@ -6,7 +6,7 @@ import com.hongguoyan.module.biz.dal.dataobject.schoolcollege.SchoolCollegeDO;
 import com.hongguoyan.module.biz.dal.dataobject.schooldirection.SchoolDirectionDO;
 import com.hongguoyan.module.biz.dal.dataobject.schoolmajor.SchoolMajorDO;
 import com.hongguoyan.module.biz.enums.StudyModeEnum;
-import com.hongguoyan.module.biz.framework.config.AdjustProperties;
+import com.hongguoyan.module.biz.service.projectconfig.ProjectConfigService;
 import com.hongguoyan.module.biz.service.schoolcollege.SchoolCollegeService;
 import com.hongguoyan.module.biz.service.schooldirection.SchoolDirectionService;
 import com.hongguoyan.module.biz.service.schoolmajor.SchoolMajorService;
@@ -35,7 +35,7 @@ public class SchoolCascadeOptionsServiceImpl implements SchoolCascadeOptionsServ
     @Resource
     private SchoolDirectionService schoolDirectionService;
     @Resource
-    private AdjustProperties adjustProperties;
+    private ProjectConfigService projectConfigService;
 
     @Override
     public AdjustmentCascadeOptionsRespVO getAdjustmentCascadeOptions(AdjustmentCascadeOptionsReqVO reqVO) {
@@ -43,7 +43,7 @@ public class SchoolCascadeOptionsServiceImpl implements SchoolCascadeOptionsServ
         if (reqVO == null || reqVO.getSchoolId() == null) {
             return respVO;
         }
-        Integer activeYear = adjustProperties.getActiveYear();
+        Integer activeYear = projectConfigService.getActiveYear();
 
         Long schoolId = reqVO.getSchoolId();
         Long collegeId = reqVO.getCollegeId();

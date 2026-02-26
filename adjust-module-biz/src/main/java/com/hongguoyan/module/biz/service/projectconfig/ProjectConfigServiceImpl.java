@@ -8,9 +8,7 @@ import com.hongguoyan.module.biz.controller.admin.projectconfig.vo.AdminProjectC
 import com.hongguoyan.module.biz.controller.app.projectconfig.vo.AppProjectConfigRespVO;
 import com.hongguoyan.module.biz.dal.redis.BizRedisKeyConstants;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.AdjustmentMapper;
-import com.hongguoyan.module.biz.framework.config.AdjustProperties;
 import com.hongguoyan.module.biz.cache.CacheNames;
-import com.hongguoyan.module.biz.service.ai.doubao.config.DoubaoProperties;
 import jakarta.annotation.Resource;
 import java.time.Year;
 import java.util.List;
@@ -21,35 +19,48 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.cache.annotation.Cacheable;
 
-@Service
+@Service("projectConfigService")
 @Validated
 public class ProjectConfigServiceImpl implements ProjectConfigService {
 
     @Resource
-    private AdjustProperties adjustProperties;
-    @Resource
     private AdjustmentMapper adjustmentMapper;
-    @Resource
-    private DoubaoProperties doubaoProperties;
     @Resource
     private StringRedisTemplate stringRedisTemplate;
 
+    private static final String DEFAULT_DOUBAO_BASE_URL = "https://ark.cn-beijing.volces.com/api";
+    private static final long DEFAULT_DOUBAO_TIMEOUT_MS = 60_000L;
+
+    @Override
+    public Integer getAdjustYear() {
+        return getOrBuildCache().getAdjustYear();
+    }
+
+    @Override
+    public Integer getActiveYear() {
+        return getOrBuildCache().getActiveYear();
+    }
+
+    @Override
+    public DoubaoRuntimeConfig getDoubaoRuntimeConfig() {
+        ProjectConfigCacheDTO cache = getOrBuildCache();
+        return new DoubaoRuntimeConfig(cache.getDoubaoBaseUrl(), cache.getDoubaoApiKey(),
+                cache.getDoubaoDefaultModel(), cache.getDoubaoDefaultTimeoutMs());
+    }
+
     @Override
     @Cacheable(cacheNames = CacheNames.PROJECT_CONFIG,
-            key = "'y:' + @adjustProperties.activeYear",
+            key = "'y:' + @projectConfigService.adjustYear",
             sync = true)
     public AppProjectConfigRespVO getProjectConfig() {
-        Integer activeYear = adjustProperties.getActiveYear();
-        if (activeYear == null) {
-            activeYear = Year.now().getValue();
-        }
+        Integer adjustYear = getAdjustYear();
 
         List<Integer> adjustmentYears = adjustmentMapper.selectYearList();
         if (adjustmentYears == null || adjustmentYears.isEmpty()) {
-            adjustmentYears = List.of(activeYear);
+            adjustmentYears = List.of(adjustYear);
         }
 
-        int sameScoreUpperYear = activeYear - 1;
+        int sameScoreUpperYear = adjustYear != null ? (adjustYear - 1) : (Year.now().getValue() - 1);
         List<Integer> sameScoreYears = adjustmentYears.stream()
                 .filter(Objects::nonNull)
                 .filter(y -> y <= sameScoreUpperYear)
@@ -124,38 +135,32 @@ public class ProjectConfigServiceImpl implements ProjectConfigService {
             cache = buildDefaultCache();
         }
         // 最低限度兜底，避免空指针
-        if (cache.getActiveYear() == null) {
-            cache.setActiveYear(resolveDefaultActiveYear());
-        }
         if (cache.getAdjustYear() == null) {
-            cache.setAdjustYear(cache.getActiveYear());
+            cache.setAdjustYear(resolveDefaultAdjustYear());
+        }
+        if (cache.getActiveYear() == null) {
+            cache.setActiveYear(cache.getAdjustYear());
         }
         if (cache.getDoubaoDefaultTimeoutMs() == null) {
-            cache.setDoubaoDefaultTimeoutMs(60_000L);
+            cache.setDoubaoDefaultTimeoutMs(DEFAULT_DOUBAO_TIMEOUT_MS);
         }
         if (cache.getDoubaoBaseUrl() == null) {
-            cache.setDoubaoBaseUrl("https://ark.cn-beijing.volces.com/api");
+            cache.setDoubaoBaseUrl(DEFAULT_DOUBAO_BASE_URL);
         }
         return cache;
     }
 
     private ProjectConfigCacheDTO buildDefaultCache() {
         ProjectConfigCacheDTO cache = new ProjectConfigCacheDTO();
-        Integer activeYear = resolveDefaultActiveYear();
-        cache.setActiveYear(activeYear);
-        cache.setAdjustYear(activeYear);
-        cache.setDoubaoBaseUrl(StrUtil.trimToNull(doubaoProperties.getBaseUrl()));
-        cache.setDoubaoApiKey(StrUtil.trimToNull(doubaoProperties.getApiKey()));
-        cache.setDoubaoDefaultModel(StrUtil.trimToNull(doubaoProperties.getDefaultModel()));
-        cache.setDoubaoDefaultTimeoutMs(doubaoProperties.getDefaultTimeoutMs());
+        Integer adjustYear = resolveDefaultAdjustYear();
+        cache.setAdjustYear(adjustYear);
+        cache.setActiveYear(adjustYear);
+        cache.setDoubaoBaseUrl(DEFAULT_DOUBAO_BASE_URL);
+        cache.setDoubaoDefaultTimeoutMs(DEFAULT_DOUBAO_TIMEOUT_MS);
         return cache;
     }
 
-    private Integer resolveDefaultActiveYear() {
-        Integer activeYear = adjustProperties.getActiveYear();
-        if (activeYear != null) {
-            return activeYear;
-        }
+    private Integer resolveDefaultAdjustYear() {
         return Year.now().getValue();
     }
 

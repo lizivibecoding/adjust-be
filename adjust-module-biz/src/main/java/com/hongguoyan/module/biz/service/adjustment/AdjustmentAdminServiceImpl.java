@@ -20,7 +20,7 @@ import com.hongguoyan.module.biz.dal.mysql.adjustmentadmit.AdjustmentAdmitMapper
 import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
 import com.hongguoyan.module.biz.dal.mysql.schoolcollege.SchoolCollegeMapper;
-import com.hongguoyan.module.biz.framework.config.AdjustProperties;
+import com.hongguoyan.module.biz.service.projectconfig.ProjectConfigService;
 import com.hongguoyan.module.biz.service.schooldirection.SchoolDirectionService;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.hongguoyan.module.infra.api.file.FileApi;
@@ -55,7 +55,7 @@ public class AdjustmentAdminServiceImpl implements AdjustmentAdminService {
     @Resource
     private MajorMapper majorMapper;
     @Resource
-    private AdjustProperties adjustProperties;
+    private ProjectConfigService projectConfigService;
     @Resource
     private AdjustmentDetailCache adjustmentDetailCache;
     @Resource
@@ -119,7 +119,11 @@ public class AdjustmentAdminServiceImpl implements AdjustmentAdminService {
         if (reqVO == null || reqVO.getDirectionId() == null) {
             throw exception(new ErrorCode(400, "directionId is required"));
         }
-        Integer activeYear = adjustProperties.getActiveYear();
+        Integer activeYear = projectConfigService.getActiveYear();
+        Integer adjustYear = projectConfigService.getAdjustYear();
+        if (activeYear == null || adjustYear == null || !activeYear.equals(adjustYear)) {
+            throw exception(new ErrorCode(400, "字典年份与调剂年份不一致，禁止新增调剂"));
+        }
 
         Long directionId = reqVO.getDirectionId();
         SchoolDirectionDO direction = schoolDirectionService.getSchoolDirection(directionId);
@@ -131,7 +135,7 @@ public class AdjustmentAdminServiceImpl implements AdjustmentAdminService {
         }
 
         Long exists = adjustmentMapper.selectCount(new LambdaQueryWrapperX<AdjustmentDO>()
-                .eq(AdjustmentDO::getYear, activeYear)
+                .eq(AdjustmentDO::getYear, adjustYear)
                 .eq(AdjustmentDO::getDirectionId, directionId));
         if (exists != null && exists > 0) {
             throw exception(new ErrorCode(400, "adjustment already exists"));
@@ -163,7 +167,7 @@ public class AdjustmentAdminServiceImpl implements AdjustmentAdminService {
 
         AdjustmentDO adjustment = new AdjustmentDO();
         adjustment.setId(null);
-        adjustment.setYear(activeYear);
+        adjustment.setYear(adjustYear);
 
         adjustment.setSourceType(3); // 人工/第三方
         adjustment.setSourceUrl(StrUtil.trimToNull(reqVO.getSourceUrl()));
@@ -195,7 +199,7 @@ public class AdjustmentAdminServiceImpl implements AdjustmentAdminService {
         adjustmentMapper.insert(adjustment);
 
         // 定向清理缓存（App 详情按 year/school/college/major/studyMode）
-        adjustmentDetailCache.evictDetailRows(schoolId, majorId, collegeId, activeYear, studyMode);
+        adjustmentDetailCache.evictDetailRows(schoolId, majorId, collegeId, adjustYear, studyMode);
         // 调剂更新统计缓存
         adjustmentUpdateStatsCache.evictDefault();
         return adjustment.getId();

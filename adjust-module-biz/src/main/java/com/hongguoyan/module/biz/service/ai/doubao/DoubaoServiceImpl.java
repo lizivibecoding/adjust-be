@@ -9,7 +9,7 @@ import com.hongguoyan.module.biz.controller.admin.ai.doubao.vo.DoubaoResponsesRe
 import com.hongguoyan.module.biz.service.ai.AiTextService;
 import com.hongguoyan.module.biz.service.ai.dto.AiTextRequest;
 import com.hongguoyan.module.biz.service.ai.dto.AiTextResult;
-import com.hongguoyan.module.biz.service.ai.doubao.config.DoubaoProperties;
+import com.hongguoyan.module.biz.service.projectconfig.ProjectConfigService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -38,7 +38,7 @@ public class DoubaoServiceImpl implements DoubaoService, AiTextService {
     private static final Duration DEFAULT_CONNECT_TIMEOUT = Duration.ofSeconds(10);
 
     @Resource
-    private DoubaoProperties properties;
+    private ProjectConfigService projectConfigService;
     @Resource
     private ObjectMapper objectMapper;
 
@@ -49,22 +49,23 @@ public class DoubaoServiceImpl implements DoubaoService, AiTextService {
 
     @Override
     public DoubaoResponsesRespVO generate(DoubaoResponsesReqVO reqVO) {
-        String apiKey = properties.getApiKey();
+        ProjectConfigService.DoubaoRuntimeConfig cfg = projectConfigService.getDoubaoRuntimeConfig();
+        String apiKey = cfg != null ? cfg.apiKey() : null;
         if (StrUtil.isBlank(apiKey)) {
             throw exception(DOUBAO_CONFIG_MISSING);
         }
 
-        String model = StrUtil.blankToDefault(reqVO.getModel(), properties.getDefaultModel());
+        String model = StrUtil.blankToDefault(reqVO.getModel(), cfg != null ? cfg.defaultModel() : null);
         if (StrUtil.isBlank(model)) {
             throw exception(DOUBAO_CONFIG_MISSING);
         }
 
-        Long timeoutMs = reqVO.getTimeoutMs() != null ? reqVO.getTimeoutMs() : properties.getDefaultTimeoutMs();
+        Long timeoutMs = reqVO.getTimeoutMs() != null ? reqVO.getTimeoutMs() : (cfg != null ? cfg.defaultTimeoutMs() : null);
         if (timeoutMs == null || timeoutMs < 1000) {
             timeoutMs = 60_000L;
         }
 
-        String url = normalizeBaseUrl(properties.getBaseUrl()) + "/v3/responses";
+        String url = normalizeBaseUrl(cfg != null ? cfg.baseUrl() : null) + "/v3/responses";
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("model", model);
         body.put("input", buildInput(reqVO));

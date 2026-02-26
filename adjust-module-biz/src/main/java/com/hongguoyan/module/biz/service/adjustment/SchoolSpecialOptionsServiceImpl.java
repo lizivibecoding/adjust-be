@@ -22,7 +22,7 @@ import com.hongguoyan.module.biz.dal.mysql.schoolcollege.SchoolCollegeMapper;
 import com.hongguoyan.module.biz.dal.mysql.schooldirection.SchoolDirectionMapper;
 import com.hongguoyan.module.biz.dal.mysql.schoolmajor.SchoolMajorMapper;
 import com.hongguoyan.module.biz.dal.mysql.schoolscore.SchoolScoreMapper;
-import com.hongguoyan.module.biz.framework.config.AdjustProperties;
+import com.hongguoyan.module.biz.service.projectconfig.ProjectConfigService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -57,7 +57,7 @@ public class SchoolSpecialOptionsServiceImpl implements SchoolSpecialOptionsServ
     @Resource
     private MajorMapper majorMapper;
     @Resource
-    private AdjustProperties adjustProperties;
+    private ProjectConfigService projectConfigService;
     @Resource
     private ObjectMapper objectMapper;
 
@@ -93,7 +93,7 @@ public class SchoolSpecialOptionsServiceImpl implements SchoolSpecialOptionsServ
         if (schoolId == null) {
             throw exception(new ErrorCode(400, "schoolId is required"));
         }
-        Integer activeYear = adjustProperties.getActiveYear();
+        Integer activeYear = projectConfigService.getActiveYear();
         List<SchoolCollegeDO> list = schoolCollegeMapper.selectList(new LambdaQueryWrapper<SchoolCollegeDO>()
                 .select(SchoolCollegeDO::getId, SchoolCollegeDO::getName)
                 .eq(SchoolCollegeDO::getSchoolId, schoolId)
@@ -120,7 +120,7 @@ public class SchoolSpecialOptionsServiceImpl implements SchoolSpecialOptionsServ
         if (collegeId == null) {
             throw exception(new ErrorCode(400, "collegeId is required"));
         }
-        Integer activeYear = adjustProperties.getActiveYear();
+        Integer activeYear = projectConfigService.getActiveYear();
 
         List<SchoolMajorDO> majors = schoolMajorMapper.selectList(new LambdaQueryWrapper<SchoolMajorDO>()
                 .select(SchoolMajorDO::getMajorId, SchoolMajorDO::getCode, SchoolMajorDO::getName)
@@ -196,7 +196,7 @@ public class SchoolSpecialOptionsServiceImpl implements SchoolSpecialOptionsServ
         if (majorId == null) {
             throw exception(new ErrorCode(400, "majorId is required"));
         }
-        Integer activeYear = adjustProperties.getActiveYear();
+        Integer activeYear = projectConfigService.getActiveYear();
 
         LambdaQueryWrapper<SchoolDirectionDO> qw = new LambdaQueryWrapper<SchoolDirectionDO>()
                 .select(SchoolDirectionDO::getId, SchoolDirectionDO::getDirectionCode,

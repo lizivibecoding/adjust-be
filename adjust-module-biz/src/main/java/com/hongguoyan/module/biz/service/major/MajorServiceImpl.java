@@ -30,7 +30,7 @@ import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUti
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertList;
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.diffList;
 import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.*;
-import com.hongguoyan.module.biz.framework.config.AdjustProperties;
+import com.hongguoyan.module.biz.service.projectconfig.ProjectConfigService;
 
 /**
  * 专业 Service 实现类
@@ -44,7 +44,7 @@ public class MajorServiceImpl implements MajorService {
     @Resource
     private MajorMapper majorMapper;
     @Resource
-    private AdjustProperties adjustProperties;
+    private ProjectConfigService projectConfigService;
     @Resource
     private AdjustmentMapper adjustmentMapper;
     @Resource
@@ -102,15 +102,15 @@ public class MajorServiceImpl implements MajorService {
 
     @Override
     @Cacheable(cacheNames = CacheNames.MAJOR_LEVEL1_LIST,
-            key = "'y:' + @adjustProperties.activeYear",
+            key = "'y:' + @projectConfigService.activeYear",
             sync = true)
     public List<AppMajorLevel1RespVO> getMajorLevel1List() {
-        return majorMapper.selectLevel1List(adjustProperties.getActiveYear());
+        return majorMapper.selectLevel1List(projectConfigService.getActiveYear());
     }
 
     @Override
     @Cacheable(cacheNames = CacheNames.MAJOR_LIST,
-            key = "'y:' + @adjustProperties.activeYear"
+            key = "'y:' + @projectConfigService.activeYear"
                     + " + ':l:' + #level"
                     + " + ':p:' + (#parentCode == null ? '' : #parentCode)"
                     + " + ':d:' + (#degreeType == null ? '' : #degreeType)",
@@ -129,7 +129,7 @@ public class MajorServiceImpl implements MajorService {
         if ((level == 2 || level == 3) && degreeType != null && degreeType != 0) {
             degreeTypeFilter = degreeType;
         }
-        List<MajorDO> children = majorMapper.selectListByLevelAndParentCode(pc, level, degreeTypeFilter, adjustProperties.getActiveYear());
+        List<MajorDO> children = majorMapper.selectListByLevelAndParentCode(pc, level, degreeTypeFilter, projectConfigService.getActiveYear());
         if (children == null || children.isEmpty()) {
             return Collections.emptyList();
         }
@@ -181,7 +181,7 @@ public class MajorServiceImpl implements MajorService {
 
     @Override
     @Cacheable(cacheNames = CacheNames.MAJOR_TREE,
-            key = "'y:' + @adjustProperties.activeYear",
+            key = "'y:' + @projectConfigService.activeYear",
             sync = true)
     public List<AppMajorTreeNodeRespVO> getMajorTree() {
         // Only majors with code; sorted by code asc to keep stable tree order
@@ -190,7 +190,7 @@ public class MajorServiceImpl implements MajorService {
                 MajorDO::getDegreeType, MajorDO::getParentCode);
         qw.isNotNull(MajorDO::getCode);
         qw.ne(MajorDO::getCode, "");
-        qw.eq(MajorDO::getYear, adjustProperties.getActiveYear());
+        qw.eq(MajorDO::getYear, projectConfigService.getActiveYear());
         qw.eq(MajorDO::getDeleted, false);
         qw.orderByAsc(MajorDO::getCode);
         List<MajorDO> list = majorMapper.selectList(qw);
@@ -275,7 +275,7 @@ public class MajorServiceImpl implements MajorService {
         if (major == null) {
             throw exception(MAJOR_NOT_EXISTS);
         }
-        Integer activeYear = adjustProperties.getActiveYear();
+        Integer activeYear = projectConfigService.getActiveYear();
         if (major.getYear() == null || !major.getYear().equals(activeYear)) {
             throw exception(new ErrorCode(400, "仅允许修改有效学年数据"));
         }
@@ -286,16 +286,17 @@ public class MajorServiceImpl implements MajorService {
         update.setName(reqVO.getName().trim());
         majorMapper.updateById(update);
 
-        // 2) sync redundant major_name for activeYear only
+        // 2) sync redundant major_name for adjustYear only
         String newName = reqVO.getName().trim();
+        Integer adjustYear = projectConfigService.getAdjustYear();
         adjustmentMapper.update(null, new LambdaUpdateWrapper<AdjustmentDO>()
                 .set(AdjustmentDO::getMajorName, newName)
-                .eq(AdjustmentDO::getYear, activeYear)
+                .eq(AdjustmentDO::getYear, adjustYear)
                 .eq(AdjustmentDO::getMajorId, reqVO.getId()));
 
         adjustmentAdmitMapper.update(null, new LambdaUpdateWrapper<AdjustmentAdmitDO>()
                 .set(AdjustmentAdmitDO::getMajorName, newName)
-                .eq(AdjustmentAdmitDO::getYear, activeYear.shortValue())
+                .eq(AdjustmentAdmitDO::getYear, adjustYear.shortValue())
                 .eq(AdjustmentAdmitDO::getMajorId, reqVO.getId()));
     }
 

@@ -14,7 +14,7 @@ import com.hongguoyan.framework.common.pojo.PageParam;
 import com.hongguoyan.framework.common.util.object.BeanUtils;
 
 import com.hongguoyan.module.biz.dal.mysql.schoolcollege.SchoolCollegeMapper;
-import com.hongguoyan.module.biz.framework.config.AdjustProperties;
+import com.hongguoyan.module.biz.service.projectconfig.ProjectConfigService;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertList;
@@ -33,7 +33,7 @@ public class SchoolCollegeServiceImpl implements SchoolCollegeService {
     @Resource
     private SchoolCollegeMapper schoolCollegeMapper;
     @Resource
-    private AdjustProperties adjustProperties;
+    private ProjectConfigService projectConfigService;
 
     @Override
     public Long createSchoolCollege(AppSchoolCollegeSaveReqVO createReqVO) {
@@ -87,7 +87,7 @@ public class SchoolCollegeServiceImpl implements SchoolCollegeService {
 
     @Override
     public List<SchoolCollegeDO> getSchoolCollegeList(Long schoolId, Integer year) {
-        Integer queryYear = year != null ? year : adjustProperties.getActiveYear();
+        Integer queryYear = year != null ? year : projectConfigService.getActiveYear();
         return schoolCollegeMapper.selectListBySchoolIdAndYear(schoolId, queryYear);
     }
 

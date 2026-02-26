@@ -45,7 +45,7 @@ import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
 import com.hongguoyan.module.biz.cache.CacheNames;
 import com.hongguoyan.module.biz.cache.adjustment.AdjustmentDetailCache;
 import com.hongguoyan.module.biz.cache.adjustment.SchoolAdjustmentCache;
-import com.hongguoyan.module.biz.framework.config.AdjustProperties;
+import com.hongguoyan.module.biz.service.projectconfig.ProjectConfigService;
 import com.hongguoyan.module.biz.service.userprofile.UserProfileService;
 import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 import jakarta.annotation.Resource;
@@ -92,7 +92,7 @@ public class AdjustmentServiceImpl implements AdjustmentService {
     @Resource
     private ObjectMapper objectMapper;
     @Resource
-    private AdjustProperties adjustProperties;
+    private ProjectConfigService projectConfigService;
     @Resource
     private AdjustmentDetailCache adjustmentDetailCache;
     @Resource
@@ -378,7 +378,7 @@ public class AdjustmentServiceImpl implements AdjustmentService {
         int limit = 10;
         LinkedHashSet<String> suggestions = new LinkedHashSet<>();
         suggestions.addAll(schoolMapper.selectSuggestSchoolNames(keyword, limit));
-        Integer activeYear = adjustProperties.getActiveYear();
+        Integer activeYear = projectConfigService.getActiveYear();
         suggestions.addAll(majorMapper.selectSuggestMajorCodes(keyword, limit, activeYear));
         suggestions.addAll(majorMapper.selectSuggestMajorNames(keyword, limit, activeYear));
         List<String> result = new ArrayList<>();
@@ -420,7 +420,7 @@ public class AdjustmentServiceImpl implements AdjustmentService {
         level2MajorGroup.setName("一级学科");
         List<AppAdjustmentFilterConfigRespVO.Option> level2MajorOptions = new ArrayList<>();
         if (StrUtil.isNotBlank(majorCode)) {
-            List<MajorDO> level2List = majorMapper.selectListByLevelAndParentCode(majorCode, 2, null, adjustProperties.getActiveYear());
+            List<MajorDO> level2List = majorMapper.selectListByLevelAndParentCode(majorCode, 2, null, projectConfigService.getActiveYear());
             if (level2List != null && !level2List.isEmpty()) {
                 for (MajorDO item : level2List) {
                     if (item == null || StrUtil.isBlank(item.getCode()) || StrUtil.isBlank(item.getName())) {
@@ -637,11 +637,7 @@ public class AdjustmentServiceImpl implements AdjustmentService {
         if (years != null && !years.isEmpty() && years.get(0) != null) {
             return years.get(0);
         }
-        Integer activeYear = adjustProperties.getActiveYear();
-        if (activeYear != null) {
-            return activeYear;
-        }
-        return Year.now().getValue();
+        return projectConfigService.getAdjustYear();
     }
 
     @Override
