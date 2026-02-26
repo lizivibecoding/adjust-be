@@ -1,6 +1,7 @@
 package com.hongguoyan.module.biz.service.adjustment;
 
 import com.hongguoyan.framework.common.pojo.PageResult;
+import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentAdmitScoreUpdateReqVO;
 import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentAdmitPageReqVO;
 import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentAdmitPageRespVO;
 import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentPageReqVO;
@@ -27,6 +28,11 @@ public interface AdjustmentAdminService {
      * Get admit page for admin.
      */
     PageResult<AdjustmentAdmitPageRespVO> getAdmitPage(AdjustmentAdmitPageReqVO reqVO);
+
+    /**
+     * Update admit scores for admin.
+     */
+    void updateAdmitScore(AdjustmentAdmitScoreUpdateReqVO reqVO);
 
 }
 

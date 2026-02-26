@@ -6,9 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.framework.common.util.object.BeanUtils;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
+import com.hongguoyan.module.biz.cache.CacheEvictFacade;
 import com.hongguoyan.module.biz.cache.CacheNames;
 import com.hongguoyan.module.biz.cache.adjustment.AdjustmentDetailCache;
-import com.hongguoyan.module.biz.cache.adjustment.AdjustmentUpdateStatsCache;
 import com.hongguoyan.module.biz.cache.adjustment.SchoolAdjustmentCache;
 import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentUpsertByDirectionIdReqVO;
 import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentUpsertByNameReqVO;
@@ -91,7 +91,7 @@ public class AdjustmentServiceImpl implements AdjustmentService {
     @Resource
     private SchoolCollegeMapper schoolCollegeMapper;
     @Resource
-    private AdjustmentUpdateStatsCache adjustmentUpdateStatsCache;
+    private CacheEvictFacade cacheEvictFacade;
 
     private static final Pattern SPLIT_PATTERN = Pattern.compile("[\\n;,，；]+");
     /**
@@ -349,7 +349,7 @@ public class AdjustmentServiceImpl implements AdjustmentService {
 
         if (existing == null) {
             adjustmentMapper.insert(incoming);
-            evictAdjustmentCaches(incoming);
+            cacheEvictFacade.evictAfterAdjustmentChanged(incoming);
             return incoming.getId();
         }
 
@@ -358,7 +358,7 @@ public class AdjustmentServiceImpl implements AdjustmentService {
             return existing.getId();
         }
         adjustmentMapper.updateById(existing);
-        evictAdjustmentCaches(existing);
+        cacheEvictFacade.evictAfterAdjustmentChanged(existing);
         return existing.getId();
     }
 
@@ -539,14 +539,6 @@ public class AdjustmentServiceImpl implements AdjustmentService {
 
     private boolean isThirdPartyAdmin(String updater) {
         return updater != null && updater.startsWith("admin:");
-    }
-
-    private void evictAdjustmentCaches(AdjustmentDO row) {
-        if (row == null) {
-            return;
-        }
-        adjustmentDetailCache.evictDetailRows(row.getSchoolId(), row.getMajorId(), row.getCollegeId(), row.getYear(), row.getStudyMode());
-        adjustmentUpdateStatsCache.evictDefault();
     }
 
     @Override

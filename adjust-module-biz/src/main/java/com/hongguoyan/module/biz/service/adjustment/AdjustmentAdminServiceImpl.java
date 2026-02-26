@@ -3,13 +3,14 @@ package com.hongguoyan.module.biz.service.adjustment;
 import cn.hutool.core.util.StrUtil;
 import com.hongguoyan.framework.common.exception.ErrorCode;
 import com.hongguoyan.framework.common.pojo.PageResult;
+import com.hongguoyan.module.biz.cache.CacheEvictFacade;
 import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentAdmitPageReqVO;
 import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentAdmitPageRespVO;
+import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentAdmitScoreUpdateReqVO;
 import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentPageReqVO;
 import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentPageRespVO;
-import com.hongguoyan.module.biz.cache.adjustment.AdjustmentDetailCache;
-import com.hongguoyan.module.biz.cache.adjustment.AdjustmentUpdateStatsCache;
 import com.hongguoyan.module.biz.dal.dataobject.adjustment.AdjustmentDO;
+import com.hongguoyan.module.biz.dal.dataobject.adjustmentadmit.AdjustmentAdmitDO;
 import com.hongguoyan.module.biz.dal.dataobject.major.MajorDO;
 import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
 import com.hongguoyan.module.biz.dal.dataobject.schoolcollege.SchoolCollegeDO;
@@ -32,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
+import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.ADJUSTMENT_ADMIT_NOT_EXISTS;
 
 @Service
 @Validated
@@ -55,9 +57,7 @@ public class AdjustmentAdminServiceImpl implements AdjustmentAdminService {
     @Resource
     private ProjectConfigService projectConfigService;
     @Resource
-    private AdjustmentDetailCache adjustmentDetailCache;
-    @Resource
-    private AdjustmentUpdateStatsCache adjustmentUpdateStatsCache;
+    private CacheEvictFacade cacheEvictFacade;
 
     @Override
     public PageResult<AdjustmentPageRespVO> getAdjustmentPage(AdjustmentPageReqVO reqVO) {
@@ -110,6 +110,30 @@ public class AdjustmentAdminServiceImpl implements AdjustmentAdminService {
             list.add(item);
         }
         return new PageResult<>(list, pageResult.getTotal());
+    }
+
+    @Override
+    public void updateAdmitScore(AdjustmentAdmitScoreUpdateReqVO reqVO) {
+        AdjustmentAdmitDO existing = adjustmentAdmitMapper.selectById(reqVO.getId());
+        if (existing == null) {
+            throw exception(ADJUSTMENT_ADMIT_NOT_EXISTS);
+        }
+        AdjustmentAdmitDO update = new AdjustmentAdmitDO();
+        update.setId(reqVO.getId());
+        if (reqVO.getFirstScore() != null) {
+            update.setFirstScore(reqVO.getFirstScore());
+        }
+        if (reqVO.getRetestScore() != null) {
+            update.setRetestScore(reqVO.getRetestScore());
+        }
+        if (reqVO.getTotalScore() != null) {
+            update.setTotalScore(reqVO.getTotalScore());
+        }
+        adjustmentAdmitMapper.updateById(update);
+
+        Integer year = existing.getYear() != null ? existing.getYear().intValue() : null;
+        cacheEvictFacade.evictAdjustmentAdmitList(year, existing.getSchoolId(), existing.getCollegeId(),
+                existing.getMajorId(), existing.getStudyMode());
     }
 
     /**
