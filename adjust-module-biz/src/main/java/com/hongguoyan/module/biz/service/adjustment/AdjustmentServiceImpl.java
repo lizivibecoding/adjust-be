@@ -24,6 +24,7 @@ import com.hongguoyan.module.biz.dal.dataobject.schooldirection.SchoolDirectionD
 import com.hongguoyan.module.biz.dal.dataobject.useradjustment.UserAdjustmentDO;
 import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.AdjustmentMapper;
+import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.AdjustmentYearOptionRowDTO;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.BizMajorKeyDTO;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.BizMajorStudyKeyDTO;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.RecruitSnapshotRowDTO;
@@ -921,9 +922,26 @@ public class AdjustmentServiceImpl implements AdjustmentService {
     @Override
     public AppAdjustmentOptionsRespVO getAdjustmentOptions(AppAdjustmentOptionsReqVO reqVO) {
         AppAdjustmentOptionsRespVO respVO = new AppAdjustmentOptionsRespVO();
-        List<Integer> years = adjustmentMapper.selectOptionYears(reqVO.getSchoolId(), reqVO.getCollegeId(),
-                reqVO.getMajorId(), reqVO.getStudyMode());
-        respVO.setYearList(years != null ? years : Collections.emptyList());
+        List<AdjustmentYearOptionRowDTO> rows = adjustmentMapper.selectOptionYearOptions(
+                reqVO.getSchoolId(), reqVO.getCollegeId(), reqVO.getMajorId(), reqVO.getStudyMode());
+        if (rows == null || rows.isEmpty()) {
+            respVO.setOptions(Collections.emptyList());
+            return respVO;
+        }
+        final String officialText = "官方发布调剂";
+        final String thirdPartyText = "第三方发布调剂";
+        List<AppAdjustmentOptionsRespVO.Option> options = new ArrayList<>(rows.size());
+        for (AdjustmentYearOptionRowDTO row : rows) {
+            if (row == null || row.getYear() == null) {
+                continue;
+            }
+            AppAdjustmentOptionsRespVO.Option opt = new AppAdjustmentOptionsRespVO.Option();
+            opt.setYear(row.getYear());
+            Integer p = row.getMinPriority();
+            opt.setText(p != null && p == 3 ? thirdPartyText : officialText);
+            options.add(opt);
+        }
+        respVO.setOptions(options);
         return respVO;
     }
 
