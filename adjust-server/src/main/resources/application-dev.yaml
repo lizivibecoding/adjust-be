@@ -47,7 +47,7 @@ spring:
       primary: master
       datasource:
         master:
-          url: jdbc:mysql://rm-uf64101olpm7c18u8.mysql.rds.aliyuncs.com:3306/adjust_2?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true&rewriteBatchedStatements=true # MySQL Connector/J 8.X 连接的示例
+          url: jdbc:mysql://rm-uf64101olpm7c18u88o.mysql.rds.aliyuncs.com:3306/adjust_2?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true&rewriteBatchedStatements=true # MySQL Connector/J 8.X 连接的示例
           username: root
           password: Rv82&&-xDvfVRp
 
