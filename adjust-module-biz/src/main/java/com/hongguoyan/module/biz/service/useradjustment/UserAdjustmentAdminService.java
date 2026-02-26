@@ -15,6 +15,10 @@ public interface UserAdjustmentAdminService {
 
     PageResult<UserAdjustmentAdminPageRespVO> getApprovedPage(UserAdjustmentAdminPageReqVO reqVO);
 
+    /**
+     * @deprecated 发布无需审核
+     */
+    @Deprecated
     PageResult<UserAdjustmentAdminPageRespVO> getAuditPage(UserAdjustmentAdminPageReqVO reqVO);
 
     Long createByAdmin(Long adminUserId, UserAdjustmentAdminCreateReqVO reqVO);
@@ -25,8 +29,16 @@ public interface UserAdjustmentAdminService {
 
     void delete(Long adminUserId, Long id);
 
+    /**
+     * @deprecated 发布无需审核
+     */
+    @Deprecated
     void approve(Long adminUserId, UserAdjustmentAdminAuditReqVO reqVO);
 
+    /**
+     * @deprecated 发布无需审核
+     */
+    @Deprecated
     void reject(Long adminUserId, UserAdjustmentAdminAuditReqVO reqVO);
 }
 

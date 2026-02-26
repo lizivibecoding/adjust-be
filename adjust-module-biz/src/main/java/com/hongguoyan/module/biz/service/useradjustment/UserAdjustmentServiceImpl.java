@@ -83,11 +83,12 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
                 createReqVO.getContact(), null, createReqVO.getTitle(), createReqVO.getRemark());
         toCreate.setId(null);
         toCreate.setSourceType(sourceType);
-        toCreate.setAuditStatus(UserAdjustmentAuditStatusEnum.PENDING.getCode());
-        toCreate.setStatus(0);
+        toCreate.setAuditStatus(UserAdjustmentAuditStatusEnum.APPROVED.getCode());
+        toCreate.setStatus(1);
         toCreate.setPublishTime(LocalDateTime.now());
         toCreate.setViewCount(0);
         userAdjustmentMapper.insert(toCreate);
+        adjustmentService.syncFromUserAdjustment(toCreate);
         return toCreate.getId();
     }
 

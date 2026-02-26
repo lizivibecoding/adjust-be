@@ -47,6 +47,10 @@ public class UserAdjustmentController {
     @GetMapping("/audit-page")
     @Operation(summary = "发布审核列表（待审）") // 运营审核
     @PreAuthorize("@ss.hasPermission('biz:user-adjustment-audit:query')")
+    /**
+     * @deprecated 发布无需审核，菜单已隐藏
+     */
+    @Deprecated
     public CommonResult<PageResult<UserAdjustmentAdminPageRespVO>> getAuditPage(@Valid UserAdjustmentAdminPageReqVO reqVO) {
         return success(userAdjustmentAdminService.getAuditPage(reqVO));
     }
@@ -89,6 +93,10 @@ public class UserAdjustmentController {
     @PutMapping("/audit-approve")
     @Operation(summary = "发布审核通过")
     @PreAuthorize("@ss.hasPermission('biz:user-adjustment-audit:approve')")
+    /**
+     * @deprecated 发布无需审核，菜单已隐藏
+     */
+    @Deprecated
     public CommonResult<Boolean> auditApprove(@Valid @RequestBody UserAdjustmentAdminAuditReqVO reqVO) {
         Long adminUserId = SecurityFrameworkUtils.getLoginUserId();
         userAdjustmentAdminService.approve(adminUserId, reqVO);
@@ -98,6 +106,10 @@ public class UserAdjustmentController {
     @PutMapping("/audit-reject")
     @Operation(summary = "发布审核拒绝")
     @PreAuthorize("@ss.hasPermission('biz:user-adjustment-audit:reject')")
+    /**
+     * @deprecated 发布无需审核，菜单已隐藏
+     */
+    @Deprecated
     public CommonResult<Boolean> auditReject(@Valid @RequestBody UserAdjustmentAdminAuditReqVO reqVO) {
         Long adminUserId = SecurityFrameworkUtils.getLoginUserId();
         userAdjustmentAdminService.reject(adminUserId, reqVO);
