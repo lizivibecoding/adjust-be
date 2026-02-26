@@ -36,11 +36,10 @@ public class AppUserProfileController {
         UserProfileDO userProfile = userProfileService.getUserProfileByUserId(userId);
         AppUserProfileRespVO respVO = BeanUtils.toBean(userProfile, AppUserProfileRespVO.class);
         if (respVO != null) {
-            // TODO 临时：取消 editnum 限制（返回恒为可编辑），避免前端按 editnum disable；一志愿不可改逻辑不受影响
-//            int used = userProfile != null && userProfile.getEditNum() != null ? userProfile.getEditNum() : 0;
-//            int remaining = 1 - used;
-//            respVO.setEditNum(Math.max(0, remaining));
-            respVO.setEditNum(1);
+            // editNum 按 App 约定返回“剩余可修改次数”（仅针对除一志愿外信息）
+            int used = userProfile != null && userProfile.getEditNum() != null ? userProfile.getEditNum() : 0;
+            int remaining = 2 - used;
+            respVO.setEditNum(Math.max(0, remaining));
         }
         return success(respVO);
     }
