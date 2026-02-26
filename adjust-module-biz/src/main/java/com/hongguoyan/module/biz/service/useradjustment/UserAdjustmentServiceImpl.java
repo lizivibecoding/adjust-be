@@ -268,6 +268,7 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
         AppUserAdjustmentListRespVO vo = new AppUserAdjustmentListRespVO();
         vo.setId(item.getId());
         vo.setTitle(item.getTitle());
+        vo.setSourceType(item.getSourceType());
         vo.setSchoolName(item.getSchoolName());
         vo.setSchoolLogo(schoolLogoMap.get(item.getSchoolId()));
         vo.setMajorLevel1Name(majorLevel1NameMap.get(item.getMajorId()));

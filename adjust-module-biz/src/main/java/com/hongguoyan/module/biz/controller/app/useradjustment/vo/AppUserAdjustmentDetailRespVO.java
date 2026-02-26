@@ -15,6 +15,9 @@ public class AppUserAdjustmentDetailRespVO {
     @Schema(description = "调剂信息标题", requiredMode = Schema.RequiredMode.REQUIRED)
     private String title;
 
+    @Schema(description = "发布来源(1老师 2学长 3小道消息)")
+    private Integer sourceType;
+
     @Schema(description = "调剂年份")
     private Integer year;
 
