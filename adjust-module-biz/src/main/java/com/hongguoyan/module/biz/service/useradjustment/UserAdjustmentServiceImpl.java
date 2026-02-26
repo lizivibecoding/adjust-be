@@ -28,6 +28,8 @@ import com.hongguoyan.module.biz.dal.mysql.publisher.PublisherMapper;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.hongguoyan.module.biz.dal.mysql.useradjustmentapply.UserAdjustmentApplyMapper;
 import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
+import com.hongguoyan.module.biz.enums.useradjustment.UserAdjustmentAuditStatusEnum;
+import com.hongguoyan.module.biz.enums.useradjustment.UserAdjustmentSourceTypeEnum;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertList;
@@ -63,11 +65,22 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
 
     @Override
     public Long createUserAdjustment(Long userId, AppUserAdjustmentCreateReqVO createReqVO) {
-        validatePublisherApproved(userId);
+        PublisherDO publisher = validatePublisherApproved(userId);
+        Integer identityType = publisher != null ? publisher.getIdentityType() : null;
+        Integer sourceType;
+        if (identityType != null && identityType.equals(1)) {
+            sourceType = UserAdjustmentSourceTypeEnum.TEACHER.getCode();
+        } else if (identityType != null && identityType.equals(2)) {
+            sourceType = UserAdjustmentSourceTypeEnum.SENIOR.getCode();
+        } else {
+            throw exception(PUBLISHER_IDENTITY_TYPE_INVALID);
+        }
         UserAdjustmentDO toCreate = buildToSave(userId, null, createReqVO.getDirectionId(),
                 createReqVO.getYear(), createReqVO.getAdjustCount(), createReqVO.getAdjustLeft(),
                 createReqVO.getContact(), createReqVO.getTitle(), createReqVO.getRemark());
         toCreate.setId(null);
+        toCreate.setSourceType(sourceType);
+        toCreate.setAuditStatus(UserAdjustmentAuditStatusEnum.APPROVED.getCode());
         toCreate.setStatus(1);
         toCreate.setPublishTime(LocalDateTime.now());
         toCreate.setViewCount(0);
@@ -90,6 +103,11 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
         toUpdate.setPublishTime(existing.getPublishTime());
         toUpdate.setViewCount(existing.getViewCount());
         toUpdate.setStatus(existing.getStatus());
+        toUpdate.setSourceType(existing.getSourceType());
+        toUpdate.setAuditStatus(existing.getAuditStatus());
+        toUpdate.setAuditUserId(existing.getAuditUserId());
+        toUpdate.setAuditTime(existing.getAuditTime());
+        toUpdate.setAuditReason(existing.getAuditReason());
         userAdjustmentMapper.updateById(toUpdate);
     }
 
@@ -181,12 +199,13 @@ public class UserAdjustmentServiceImpl implements UserAdjustmentService {
         return userAdjustment;
     }
 
-    private void validatePublisherApproved(Long userId) {
+    private PublisherDO validatePublisherApproved(Long userId) {
         PublisherDO publisher = publisherMapper.selectOne(new LambdaQueryWrapperX<PublisherDO>()
                 .eq(PublisherDO::getUserId, userId));
         if (publisher == null || publisher.getStatus() == null || publisher.getStatus() != 1) {
             throw exception(PUBLISHER_NOT_APPROVED);
         }
+        return publisher;
     }
 
     private UserAdjustmentDO buildToSave(Long userId,

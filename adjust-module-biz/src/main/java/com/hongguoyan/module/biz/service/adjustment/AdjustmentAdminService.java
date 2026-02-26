@@ -3,7 +3,6 @@ package com.hongguoyan.module.biz.service.adjustment;
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentAdmitPageReqVO;
 import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentAdmitPageRespVO;
-import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentCreateReqVO;
 import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentPageReqVO;
 import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentPageRespVO;
 
@@ -28,11 +27,6 @@ public interface AdjustmentAdminService {
      * Get admit page for admin.
      */
     PageResult<AdjustmentAdmitPageRespVO> getAdmitPage(AdjustmentAdmitPageReqVO reqVO);
-
-    /**
-     * 新增调剂（只传方向ID，其余回填）
-     */
-    Long createAdjustment(AdjustmentCreateReqVO reqVO);
 
 }
 

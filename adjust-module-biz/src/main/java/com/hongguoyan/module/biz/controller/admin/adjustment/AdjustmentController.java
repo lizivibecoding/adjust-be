@@ -4,7 +4,6 @@ import com.hongguoyan.framework.common.pojo.CommonResult;
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentAdmitPageReqVO;
 import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentAdmitPageRespVO;
-import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentCreateReqVO;
 import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentPageReqVO;
 import com.hongguoyan.module.biz.controller.admin.adjustment.vo.AdjustmentPageRespVO;
 import com.hongguoyan.module.biz.service.adjustment.AdjustmentAdminService;
@@ -15,9 +14,7 @@ import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
@@ -51,13 +48,6 @@ public class AdjustmentController {
     @PreAuthorize("@ss.hasPermission('biz:adjustment:query')")
     public CommonResult<PageResult<AdjustmentAdmitPageRespVO>> getAdjustmentAdmitPage(@Valid AdjustmentAdmitPageReqVO reqVO) {
         return success(adjustmentAdminService.getAdmitPage(reqVO));
-    }
-
-    @PostMapping("/create")
-    @Operation(summary = "新增调剂（管理后台）") // 只传方向ID，其余字段按 activeYear 回填
-    @PreAuthorize("@ss.hasPermission('biz:adjustment:create')")
-    public CommonResult<Long> createAdjustment(@Valid @RequestBody AdjustmentCreateReqVO reqVO) {
-        return success(adjustmentAdminService.createAdjustment(reqVO));
     }
 
 }

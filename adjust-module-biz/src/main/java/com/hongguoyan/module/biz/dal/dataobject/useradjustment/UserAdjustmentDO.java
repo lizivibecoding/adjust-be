@@ -33,6 +33,26 @@ public class UserAdjustmentDO extends BaseDO {
      */
     private Long userId;
     /**
+     * 发布来源(1老师 2学长 3小道消息)
+     */
+    private Integer sourceType;
+    /**
+     * 审核状态(0待审 1通过 2拒绝)
+     */
+    private Integer auditStatus;
+    /**
+     * 审核人(后台账号ID)
+     */
+    private Long auditUserId;
+    /**
+     * 审核时间
+     */
+    private LocalDateTime auditTime;
+    /**
+     * 审核原因/拒绝原因
+     */
+    private String auditReason;
+    /**
      * 调剂信息标题
      */
     private String title;

@@ -7,6 +7,7 @@ import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.hongguoyan.framework.mybatis.core.mapper.BaseMapperX;
 import com.hongguoyan.module.biz.dal.dataobject.useradjustment.UserAdjustmentDO;
+import com.hongguoyan.module.biz.enums.useradjustment.UserAdjustmentAuditStatusEnum;
 import org.apache.ibatis.annotations.Mapper;
 import com.hongguoyan.module.biz.controller.app.useradjustment.vo.*;
 
@@ -51,7 +52,8 @@ public interface UserAdjustmentMapper extends BaseMapperX<UserAdjustmentDO> {
      */
     default PageResult<UserAdjustmentDO> selectPublicPage(AppUserAdjustmentPublicPageReqVO reqVO) {
         LambdaQueryWrapperX<UserAdjustmentDO> query = new LambdaQueryWrapperX<UserAdjustmentDO>()
-                .eq(UserAdjustmentDO::getStatus, 1);
+                .eq(UserAdjustmentDO::getStatus, 1)
+                .eq(UserAdjustmentDO::getAuditStatus, UserAdjustmentAuditStatusEnum.APPROVED.getCode());
         String keyword = reqVO != null ? reqVO.getKeyword() : null;
         if (StrUtil.isNotBlank(keyword)) {
             String kw = keyword.trim();
