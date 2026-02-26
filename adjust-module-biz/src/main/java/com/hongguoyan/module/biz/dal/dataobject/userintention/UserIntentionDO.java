@@ -52,6 +52,10 @@ public class UserIntentionDO extends BaseDO {
      */
     private String majorIds;
     /**
+     * 可调剂公共课组合选项（A/B/C/D），JSON 存储
+     */
+    private String subjectChoices;
+    /**
      * 意向学习方式: 0-不限 1-全日制 2-非全日制
      */
     private Integer studyMode;

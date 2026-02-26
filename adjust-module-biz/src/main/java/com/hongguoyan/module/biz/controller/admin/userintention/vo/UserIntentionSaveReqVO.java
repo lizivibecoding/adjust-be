@@ -28,6 +28,9 @@ public class UserIntentionSaveReqVO {
     @Schema(description = "意向专业ID列表")
     private List<Long> majorIds;
 
+    @Schema(description = "可调剂公共课组合选项（多选）：A/B/C/D")
+    private List<String> subjectChoices;
+
     @Schema(description = "意向学习方式")
     private Integer studyMode;
 

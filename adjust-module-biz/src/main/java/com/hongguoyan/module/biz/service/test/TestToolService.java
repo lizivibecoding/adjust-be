@@ -32,16 +32,19 @@ import com.hongguoyan.module.biz.dal.mysql.viporder.VipOrderMapper;
 import com.hongguoyan.module.biz.dal.mysql.vipplan.VipPlanMapper;
 import com.hongguoyan.module.biz.dal.mysql.vipsubscription.VipSubscriptionMapper;
 import com.hongguoyan.module.biz.dal.mysql.vipsubscriptionlog.VipSubscriptionLogMapper;
+import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 import com.hongguoyan.module.biz.dal.mysql.publisher.PublisherMapper;
 import com.hongguoyan.module.biz.dal.mysql.publisherauditlog.PublisherAuditLogMapper;
 import jakarta.annotation.Resource;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import java.util.Locale;
 import java.time.LocalDateTime;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
+import cn.hutool.core.util.IdUtil;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.VIP_PLAN_DISABLED;
@@ -104,6 +107,8 @@ public class TestToolService {
     private VipOrderMapper vipOrderMapper;
     @Resource
     private VipPlanMapper vipPlanMapper;
+    @Resource
+    private VipBenefitService vipBenefitService;
 
     /**
      * Reset user to a "new user" state for integration testing.
@@ -175,6 +180,7 @@ public class TestToolService {
         if (code.isEmpty()) {
             throw exception(new ErrorCode(400, "planCode is required"));
         }
+        code = code.toUpperCase(Locale.ROOT);
 
         VipPlanDO plan = vipPlanMapper.selectOne(new LambdaQueryWrapperX<VipPlanDO>()
                 .eq(VipPlanDO::getPlanCode, code));
@@ -230,12 +236,17 @@ public class TestToolService {
         log.setAction(action);
         log.setSource(VIP_SUBSCRIPTION_LOG_SOURCE_ADMIN);
         log.setRefType(VIP_SUBSCRIPTION_LOG_REF_TYPE_ADMIN);
-        log.setRefId("TEST");
+        // ref_id 参与幂等唯一键：保持可筛选前缀，同时避免同用户同动作重复调用撞唯一键
+        String refId = "TEST-" + IdUtil.getSnowflakeNextIdStr();
+        log.setRefId(refId);
         log.setBeforeEndTime(beforeEndTime);
         log.setAfterEndTime(afterEndTime);
         log.setGrantDays(grantDays);
         log.setRemark("测试接口开通/续期");
         vipSubscriptionLogMapper.insert(log);
+
+        // 补齐叠加类配额发放（major_category_open / user_report），与支付/券码链路一致
+        vipBenefitService.grantAdditiveQuotaByPlan(userId, code, "TEST", refId);
 
         return afterEndTime;
     }

@@ -81,6 +81,7 @@ public class UserIntentionController {
         resp.setExcludeProvinceCodes(JSONUtil.toList(bean.getExcludeProvinceCodes(), String.class));
         resp.setSchoolLevels(JSONUtil.toList(bean.getSchoolLevel(), String.class));
         resp.setMajorIds(JSONUtil.toList(bean.getMajorIds(), Long.class));
+        resp.setSubjectChoices(JSONUtil.toList(bean.getSubjectChoices(), String.class));
         return resp;
     }
 

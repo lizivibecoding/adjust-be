@@ -36,6 +36,12 @@ public class AppUserIntentionRespVO {
     @ExcelProperty("意向调剂专业/一级学科ID列表")
     private List<Long> majorIds;
 
+    @Schema(description = "是否需要填写可调剂公共课组合：四门科目且科目2/3包含204或302")
+    private Boolean needSubjectChoices;
+
+    @Schema(description = "可调剂公共课组合选项（多选）：A/B/C/D")
+    private List<String> subjectChoices;
+
     @Schema(description = "意向学习方式: 0-不限 1-全日制 2-非全日制", requiredMode = Schema.RequiredMode.REQUIRED, example = "0")
     @ExcelProperty("意向学习方式: 0-不限 1-全日制 2-非全日制")
     private Integer studyMode;

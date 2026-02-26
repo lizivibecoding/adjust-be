@@ -50,5 +50,8 @@ public class AppUserIntentionSaveReqVO {
     @NotNull(message = "是否接受跨考: 0-否 1-是不能为空")
     private Boolean isAcceptCrossExam;
 
+    @Schema(description = "可调剂公共课组合选项（多选）：A/B/C/D")
+    private List<String> subjectChoices;
+
 }
 

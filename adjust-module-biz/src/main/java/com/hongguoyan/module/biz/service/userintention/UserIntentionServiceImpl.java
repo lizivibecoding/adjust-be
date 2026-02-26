@@ -12,6 +12,9 @@ import com.hongguoyan.module.biz.controller.app.userintention.vo.AppUserIntentio
 import com.hongguoyan.module.biz.controller.app.userintention.vo.AppUserIntentionSaveReqVO;
 import com.hongguoyan.module.biz.dal.dataobject.userintention.UserIntentionDO;
 import com.hongguoyan.module.biz.dal.mysql.userintention.UserIntentionMapper;
+import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
+import com.hongguoyan.module.biz.enums.adjustment.SubjectChoiceEnum;
+import com.hongguoyan.module.biz.service.userprofile.UserProfileService;
 import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 import jakarta.annotation.Resource;
 import java.util.ArrayList;
@@ -39,6 +42,8 @@ public class UserIntentionServiceImpl implements UserIntentionService {
     private UserIntentionMapper userIntentionMapper;
     @Resource
     private VipBenefitService vipBenefitService;
+    @Resource
+    private UserProfileService userProfileService;
 
     @Override
     public Long createUserIntention(UserIntentionSaveReqVO createReqVO) {
@@ -47,6 +52,7 @@ public class UserIntentionServiceImpl implements UserIntentionService {
         userIntention.setExcludeProvinceCodes(toJsonOrNullString(createReqVO.getExcludeProvinceCodes()));
         userIntention.setSchoolLevel(toJsonOrNullString(createReqVO.getSchoolLevels()));
         userIntention.setMajorIds(toJsonOrNullLong(createReqVO.getMajorIds()));
+        userIntention.setSubjectChoices(toJsonOrNullSubjectChoices(createReqVO.getSubjectChoices()));
         userIntentionMapper.insert(userIntention);
         return userIntention.getId();
     }
@@ -59,6 +65,7 @@ public class UserIntentionServiceImpl implements UserIntentionService {
         updateObj.setExcludeProvinceCodes(toJsonOrNullString(updateReqVO.getExcludeProvinceCodes()));
         updateObj.setSchoolLevel(toJsonOrNullString(updateReqVO.getSchoolLevels()));
         updateObj.setMajorIds(toJsonOrNullLong(updateReqVO.getMajorIds()));
+        updateObj.setSubjectChoices(toJsonOrNullSubjectChoices(updateReqVO.getSubjectChoices()));
         userIntentionMapper.updateById(updateObj);
     }
 
@@ -95,24 +102,35 @@ public class UserIntentionServiceImpl implements UserIntentionService {
     public AppUserIntentionRespVO getMyUserIntention(Long userId) {
         vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_INTENTION);
         UserIntentionDO userIntention = getUserIntentionByUserId(userId);
-        if (userIntention == null) {
-            return null;
-        }
+        boolean needSubjectChoices = isNeedSubjectChoices(userId);
         AppUserIntentionRespVO respVO = new AppUserIntentionRespVO();
-        respVO.setId(userIntention.getId());
-        respVO.setUserId(userIntention.getUserId());
-        respVO.setProvinceCodes(parseJsonStringList(userIntention.getProvinceCodes()));
-        respVO.setExcludeProvinceCodes(parseJsonStringList(userIntention.getExcludeProvinceCodes()));
-        respVO.setSchoolLevels(parseJsonStringList(userIntention.getSchoolLevel()));
-        respVO.setMajorIds(parseJsonLongList(userIntention.getMajorIds()));
-        respVO.setStudyMode(userIntention.getStudyMode());
-        respVO.setDegreeType(userIntention.getDegreeType());
-        respVO.setIsSpecialPlan(userIntention.getIsSpecialPlan());
-        respVO.setIsAcceptResearchInst(userIntention.getIsAcceptResearchInst());
-        respVO.setIsAcceptCrossMajor(userIntention.getIsAcceptCrossMajor());
-        respVO.setIsAcceptCrossExam(userIntention.getIsAcceptCrossExam());
-        respVO.setAdjustPriority(userIntention.getAdjustPriority());
-        respVO.setCreateTime(userIntention.getCreateTime());
+        respVO.setNeedSubjectChoices(needSubjectChoices);
+        if (userIntention != null) {
+            respVO.setId(userIntention.getId());
+            respVO.setUserId(userIntention.getUserId());
+            respVO.setProvinceCodes(parseJsonStringList(userIntention.getProvinceCodes()));
+            respVO.setExcludeProvinceCodes(parseJsonStringList(userIntention.getExcludeProvinceCodes()));
+            respVO.setSchoolLevels(parseJsonStringList(userIntention.getSchoolLevel()));
+            respVO.setMajorIds(parseJsonLongList(userIntention.getMajorIds()));
+            respVO.setSubjectChoices(parseJsonStringList(userIntention.getSubjectChoices()));
+            respVO.setStudyMode(userIntention.getStudyMode());
+            respVO.setDegreeType(userIntention.getDegreeType());
+            respVO.setIsSpecialPlan(userIntention.getIsSpecialPlan());
+            respVO.setIsAcceptResearchInst(userIntention.getIsAcceptResearchInst());
+            respVO.setIsAcceptCrossMajor(userIntention.getIsAcceptCrossMajor());
+            respVO.setIsAcceptCrossExam(userIntention.getIsAcceptCrossExam());
+            respVO.setAdjustPriority(userIntention.getAdjustPriority());
+            respVO.setCreateTime(userIntention.getCreateTime());
+        } else {
+            // 无意向记录时也返回状态字段，便于前端决定是否展示 subjectChoices
+            respVO.setId(null);
+            respVO.setUserId(userId);
+            respVO.setProvinceCodes(Collections.emptyList());
+            respVO.setExcludeProvinceCodes(Collections.emptyList());
+            respVO.setSchoolLevels(Collections.emptyList());
+            respVO.setMajorIds(Collections.emptyList());
+            respVO.setSubjectChoices(Collections.emptyList());
+        }
         return respVO;
     }
 
@@ -134,6 +152,7 @@ public class UserIntentionServiceImpl implements UserIntentionService {
         toSave.setIsAcceptCrossMajor(reqVO.getIsAcceptCrossMajor());
         toSave.setIsAcceptCrossExam(reqVO.getIsAcceptCrossExam());
 //        toSave.setAdjustPriority(reqVO.getAdjustPriority());
+        toSave.setSubjectChoices(toJsonOrNullSubjectChoicesByProfile(userId, reqVO.getSubjectChoices()));
 
         if (existing == null) {
             toSave.setId(null);
@@ -144,6 +163,67 @@ public class UserIntentionServiceImpl implements UserIntentionService {
         toSave.setId(existing.getId());
         userIntentionMapper.updateById(toSave);
         return existing.getId();
+    }
+
+    private boolean isNeedSubjectChoices(Long userId) {
+        if (userId == null) {
+            return false;
+        }
+        UserProfileDO profile = userProfileService.getUserProfileByUserId(userId);
+        if (profile == null) {
+            return false;
+        }
+        // 四门科目：1~4 均有 code
+        boolean isFour = StrUtil.isNotBlank(profile.getSubjectCode1())
+                && StrUtil.isNotBlank(profile.getSubjectCode2())
+                && StrUtil.isNotBlank(profile.getSubjectCode3())
+                && StrUtil.isNotBlank(profile.getSubjectCode4());
+        if (!isFour) {
+            return false;
+        }
+        String s2 = StrUtil.blankToDefault(profile.getSubjectCode2(), "").trim();
+        String s3 = StrUtil.blankToDefault(profile.getSubjectCode3(), "").trim();
+        // 科目二/三包含 204 或 302
+        return "204".equals(s2) || "302".equals(s2) || "204".equals(s3) || "302".equals(s3);
+    }
+
+    private String toJsonOrNullSubjectChoices(List<String> list) {
+        if (list == null) {
+            return null;
+        }
+        List<String> cleaned = new ArrayList<>(list.size());
+        Set<String> dedup = new HashSet<>();
+        for (String item : list) {
+            if (item == null) {
+                continue;
+            }
+            String s = item.trim().toUpperCase();
+            if (s.isEmpty()) {
+                continue;
+            }
+            if (!SubjectChoiceEnum.isValidOption(s)) {
+                throw exception(new ErrorCode(400, "非法公共课组合选项: " + item));
+            }
+            if (dedup.add(s)) {
+                cleaned.add(s);
+            }
+        }
+        if (cleaned.isEmpty()) {
+            return null;
+        }
+        return JSONUtil.toJsonStr(cleaned);
+    }
+
+    private String toJsonOrNullSubjectChoicesByProfile(Long userId, List<String> list) {
+        if (list == null) {
+            return null;
+        }
+        boolean need = isNeedSubjectChoices(userId);
+        // 未命中时不允许提交该字段，避免脏数据
+        if (!need && !list.isEmpty()) {
+            throw exception(new ErrorCode(400, "当前不需要填写公共课组合"));
+        }
+        return toJsonOrNullSubjectChoices(list);
     }
 
     private String toJsonOrNullLong(List<Long> list) {
