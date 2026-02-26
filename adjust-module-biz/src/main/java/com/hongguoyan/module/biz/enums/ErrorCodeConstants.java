@@ -51,6 +51,15 @@ public interface ErrorCodeConstants {
     ErrorCode USER_PROFILE_EDIT_EXCEEDED = new ErrorCode(67, "除一志愿外信息仅允许修改一次");
     ErrorCode USER_PROFILE_SUBJECT_SCORE12_EXCEEDED_100 = new ErrorCode(75, "科目一/科目二分数不能超过 100");
     ErrorCode USER_PROFILE_SUBJECT_SCORE34_EXCEEDED_300 = new ErrorCode(76, "科目三/科目四分数不能超过 300");
+    ErrorCode USER_PROFILE_SUBJECT_SCORE1_EXCEEDED_200 = new ErrorCode(84, "科目一分数不能超过 200");
+    ErrorCode USER_PROFILE_SUBJECT_SCORE3_EXCEEDED_150 = new ErrorCode(85, "科目三分数不能超过 150");
+    ErrorCode USER_PROFILE_SUBJECT_SCORE4_EXCEEDED_150 = new ErrorCode(86, "科目四分数不能超过 150");
+    ErrorCode USER_PROFILE_SCORE_TOTAL_EXCEEDED_500 = new ErrorCode(87, "初试总分不能超过 500");
+    ErrorCode USER_PROFILE_SCORE_TOTAL_EXCEEDED_300 = new ErrorCode(88, "初试总分不能超过 300");
+    ErrorCode USER_PROFILE_SUBJECT_SCORE_NEGATIVE = new ErrorCode(89, "科目分数不能为负数");
+    ErrorCode USER_PROFILE_SCORE_TOTAL_NEGATIVE = new ErrorCode(90, "初试总分不能为负数");
+    ErrorCode USER_PROFILE_SUBJECT_SCORE3_NOT_ALLOWED = new ErrorCode(91, "该考试类型不包含科目三，请勿填写科目三分数");
+    ErrorCode USER_PROFILE_SUBJECT_SCORE4_NOT_ALLOWED = new ErrorCode(92, "该考试类型不包含科目四，请勿填写科目四分数");
 
     // ========== Doubao / Ark Responses ==========
     ErrorCode DOUBAO_CONFIG_MISSING = new ErrorCode(42, "AI 配置缺失");

@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
@@ -113,16 +114,22 @@ public class UserProfileServiceImpl implements UserProfileService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long saveUserProfileByUserId(Long userId, AppUserProfileSaveReqVO reqVO) {
-        validateSubjectScores(reqVO);
         UserProfileDO existing = getUserProfileByUserId(userId);
+        boolean shouldUpdateFirstChoice = existing == null || existing.getTargetDirectionId() == null;
+        Long effectiveDirectionId = shouldUpdateFirstChoice ? reqVO.getTargetDirectionId() : existing.getTargetDirectionId();
+        SchoolDirectionDO direction = effectiveDirectionId != null ? schoolDirectionMapper.selectById(effectiveDirectionId) : null;
+        int subjectCount = resolveExamSubjectCount(direction, existing, reqVO);
+        validateSubjectScores(reqVO, subjectCount);
+        validateScoreTotal(reqVO, subjectCount);
+
         UserProfileDO toSave = buildBaseToSave(userId, reqVO);
         // 已有一志愿则不再更新（避免客户端传错方向导致保存失败）
-        boolean shouldUpdateFirstChoice = existing == null || existing.getTargetDirectionId() == null;
         if (shouldUpdateFirstChoice) {
-            fillFirstChoiceFromDirection(toSave, reqVO.getTargetDirectionId());
+            fillFirstChoiceFromDirection(toSave, direction, effectiveDirectionId);
         } else {
             copyFirstChoiceFromExisting(toSave, existing);
         }
+        normalizeSubjectScoresBySubjectCount(toSave, subjectCount);
 
         if (existing == null) {
             toSave.setId(null);
@@ -165,20 +172,176 @@ public class UserProfileServiceImpl implements UserProfileService {
         return existing.getId();
     }
 
-    private void validateSubjectScores(AppUserProfileSaveReqVO reqVO) {
+    private void validateSubjectScores(AppUserProfileSaveReqVO reqVO, int subjectCount) {
         if (reqVO == null) {
             return;
         }
-        // 科目一/二 上限 100
-        if ((reqVO.getSubjectScore1() != null && reqVO.getSubjectScore1().compareTo(new java.math.BigDecimal("100")) > 0)
-                || (reqVO.getSubjectScore2() != null && reqVO.getSubjectScore2().compareTo(new java.math.BigDecimal("100")) > 0)) {
+        BigDecimal s1 = reqVO.getSubjectScore1();
+        BigDecimal s2 = reqVO.getSubjectScore2();
+        BigDecimal s3 = reqVO.getSubjectScore3();
+        BigDecimal s4 = reqVO.getSubjectScore4();
+
+        // 不允许负数
+        if (isNegative(s1) || isNegative(s2) || isNegative(s3) || isNegative(s4)) {
+            throw exception(USER_PROFILE_SUBJECT_SCORE_NEGATIVE);
+        }
+
+        // 2/3 门：不应填写不存在的科目（兼容旧客户端传 0）
+        if (subjectCount <= 3 && s4 != null && s4.compareTo(BigDecimal.ZERO) != 0) {
+            throw exception(USER_PROFILE_SUBJECT_SCORE4_NOT_ALLOWED);
+        }
+        if (subjectCount <= 2) {
+            if (s3 != null && s3.compareTo(BigDecimal.ZERO) != 0) {
+                throw exception(USER_PROFILE_SUBJECT_SCORE3_NOT_ALLOWED);
+            }
+            if (s4 != null && s4.compareTo(BigDecimal.ZERO) != 0) {
+                throw exception(USER_PROFILE_SUBJECT_SCORE4_NOT_ALLOWED);
+            }
+        }
+
+        // 按“考几门”决定每科满分
+        if (subjectCount == 2) {
+            // 科目1 上限 200；科目2 上限 100
+            if (s1 != null && s1.compareTo(BigDecimal.valueOf(200)) > 0) {
+                throw exception(USER_PROFILE_SUBJECT_SCORE1_EXCEEDED_200);
+            }
+            if (s2 != null && s2.compareTo(BigDecimal.valueOf(100)) > 0) {
+                throw exception(USER_PROFILE_SUBJECT_SCORE12_EXCEEDED_100);
+            }
+            return;
+        }
+        if (subjectCount == 3) {
+            // 科目1/2 上限 100；科目3 上限 300
+            if ((s1 != null && s1.compareTo(BigDecimal.valueOf(100)) > 0)
+                    || (s2 != null && s2.compareTo(BigDecimal.valueOf(100)) > 0)) {
+                throw exception(USER_PROFILE_SUBJECT_SCORE12_EXCEEDED_100);
+            }
+            if (s3 != null && s3.compareTo(BigDecimal.valueOf(300)) > 0) {
+                throw exception(USER_PROFILE_SUBJECT_SCORE34_EXCEEDED_300);
+            }
+            return;
+        }
+        // 默认按 4 门处理：科目1/2=100，科目3/4=150
+        if ((s1 != null && s1.compareTo(BigDecimal.valueOf(100)) > 0)
+                || (s2 != null && s2.compareTo(BigDecimal.valueOf(100)) > 0)) {
             throw exception(USER_PROFILE_SUBJECT_SCORE12_EXCEEDED_100);
         }
-        // 科目三/四 上限 300
-        if ((reqVO.getSubjectScore3() != null && reqVO.getSubjectScore3().compareTo(new java.math.BigDecimal("300")) > 0)
-                || (reqVO.getSubjectScore4() != null && reqVO.getSubjectScore4().compareTo(new java.math.BigDecimal("300")) > 0)) {
-            throw exception(USER_PROFILE_SUBJECT_SCORE34_EXCEEDED_300);
+        if (s3 != null && s3.compareTo(BigDecimal.valueOf(150)) > 0) {
+            throw exception(USER_PROFILE_SUBJECT_SCORE3_EXCEEDED_150);
         }
+        if (s4 != null && s4.compareTo(BigDecimal.valueOf(150)) > 0) {
+            throw exception(USER_PROFILE_SUBJECT_SCORE4_EXCEEDED_150);
+        }
+    }
+
+    private void validateScoreTotal(AppUserProfileSaveReqVO reqVO, int subjectCount) {
+        if (reqVO == null) {
+            return;
+        }
+        BigDecimal total = reqVO.getScoreTotal();
+        if (total == null) {
+            return;
+        }
+        if (isNegative(total)) {
+            throw exception(USER_PROFILE_SCORE_TOTAL_NEGATIVE);
+        }
+        int maxTotal = subjectCount == 2 ? 300 : 500;
+        if (total.compareTo(BigDecimal.valueOf(maxTotal)) > 0) {
+            throw exception(subjectCount == 2 ? USER_PROFILE_SCORE_TOTAL_EXCEEDED_300 : USER_PROFILE_SCORE_TOTAL_EXCEEDED_500);
+        }
+    }
+
+    private boolean isNegative(BigDecimal v) {
+        return v != null && v.compareTo(BigDecimal.ZERO) < 0;
+    }
+
+    /**
+     * 规范化无效科目分数，避免旧客户端把不存在的科目落库为 0。
+     */
+    private void normalizeSubjectScoresBySubjectCount(UserProfileDO toSave, int subjectCount) {
+        if (toSave == null) {
+            return;
+        }
+        if (subjectCount <= 2) {
+            toSave.setSubjectScore3(null);
+            toSave.setSubjectScore4(null);
+        } else if (subjectCount == 3) {
+            toSave.setSubjectScore4(null);
+        }
+    }
+
+    private int resolveExamSubjectCount(SchoolDirectionDO direction, UserProfileDO existing, AppUserProfileSaveReqVO reqVO) {
+        int count = countFromDirectionSubjects(direction != null ? direction.getSubjects() : null);
+        if (count >= 2) {
+            return count;
+        }
+        count = countFromExistingProfile(existing);
+        if (count >= 2) {
+            return count;
+        }
+        count = countFromReqScores(reqVO);
+        if (count >= 2) {
+            return count;
+        }
+        // 兜底按 4 门处理（兼容历史脏数据/配置缺失）
+        return 4;
+    }
+
+    private int countFromExistingProfile(UserProfileDO existing) {
+        if (existing == null) {
+            return 0;
+        }
+        int c = 0;
+        if (StrUtil.isNotBlank(existing.getSubjectCode1()) || StrUtil.isNotBlank(existing.getSubjectName1())) c++;
+        if (StrUtil.isNotBlank(existing.getSubjectCode2()) || StrUtil.isNotBlank(existing.getSubjectName2())) c++;
+        if (StrUtil.isNotBlank(existing.getSubjectCode3()) || StrUtil.isNotBlank(existing.getSubjectName3())) c++;
+        if (StrUtil.isNotBlank(existing.getSubjectCode4()) || StrUtil.isNotBlank(existing.getSubjectName4())) c++;
+        return c;
+    }
+
+    private int countFromReqScores(AppUserProfileSaveReqVO reqVO) {
+        if (reqVO == null) {
+            return 0;
+        }
+        int c = 0;
+        if (isPositive(reqVO.getSubjectScore1())) c++;
+        if (isPositive(reqVO.getSubjectScore2())) c++;
+        if (isPositive(reqVO.getSubjectScore3())) c++;
+        if (isPositive(reqVO.getSubjectScore4())) c++;
+        return c;
+    }
+
+    private boolean isPositive(BigDecimal v) {
+        return v != null && v.compareTo(BigDecimal.ZERO) > 0;
+    }
+
+    private int countFromDirectionSubjects(String subjectsJson) {
+        if (StrUtil.isBlank(subjectsJson)) {
+            return 0;
+        }
+        try {
+            JSONObject obj = JSONUtil.parseObj(subjectsJson);
+            int c = 0;
+            if (hasValidSubjectItem(obj.getJSONArray("s1"))) c++;
+            if (hasValidSubjectItem(obj.getJSONArray("s2"))) c++;
+            if (hasValidSubjectItem(obj.getJSONArray("s3"))) c++;
+            if (hasValidSubjectItem(obj.getJSONArray("s4"))) c++;
+            return c;
+        } catch (Exception ignore) {
+            return 0;
+        }
+    }
+
+    private boolean hasValidSubjectItem(JSONArray arr) {
+        if (arr == null || arr.isEmpty()) {
+            return false;
+        }
+        Object first = arr.get(0);
+        if (!(first instanceof JSONObject)) {
+            return false;
+        }
+        JSONObject item = (JSONObject) first;
+        return StrUtil.isNotBlank(item.getStr("code")) || StrUtil.isNotBlank(item.getStr("name"));
     }
 
     /**
@@ -308,9 +471,8 @@ public class UserProfileServiceImpl implements UserProfileService {
         return toSave;
     }
 
-    private void fillFirstChoiceFromDirection(UserProfileDO toSave, Long targetDirectionId) {
+    private void fillFirstChoiceFromDirection(UserProfileDO toSave, SchoolDirectionDO direction, Long targetDirectionId) {
         // target direction (id -> school/college/major + snapshots)
-        SchoolDirectionDO direction = schoolDirectionMapper.selectById(targetDirectionId);
         if (direction == null) {
             throw exception(new ErrorCode(400, "targetDirectionId not exists: " + targetDirectionId));
         }
