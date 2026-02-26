@@ -9,12 +9,14 @@ import com.hongguoyan.module.biz.controller.app.adjustmentadmit.vo.AppAdjustment
 import com.hongguoyan.module.biz.controller.app.adjustmentadmit.vo.AppAdjustmentAdmitPageReqVO;
 import com.hongguoyan.module.biz.controller.app.adjustmentadmit.vo.AppAdjustmentAdmitSaveReqVO;
 import com.hongguoyan.module.biz.dal.dataobject.adjustmentadmit.AdjustmentAdmitDO;
+import com.hongguoyan.module.biz.dal.dataobject.nationalscore.NationalScoreDO;
 import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
 import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
 import com.hongguoyan.module.biz.dal.mysql.adjustmentadmit.AdjustmentAdmitMapper;
 import com.hongguoyan.module.biz.dal.mysql.adjustmentadmit.dto.SameScoreLevelStatDTO;
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
 import com.hongguoyan.module.biz.cache.adjustmentadmit.AdjustmentAdmitCache;
+import com.hongguoyan.module.biz.service.recommend.NationalLineEligibilityService;
 import com.hongguoyan.module.biz.service.userprofile.UserProfileService;
 import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 import jakarta.annotation.Resource;
@@ -42,6 +44,8 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
     private AdjustmentAdmitMapper adjustmentAdmitMapper;
     @Resource
     private SchoolMapper schoolMapper;
+    @Resource
+    private NationalLineEligibilityService nationalLineEligibilityService;
     @Resource
     private UserProfileService userProfileService;
     @Resource
@@ -110,6 +114,7 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
         vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_VIEW_ANALYSIS);
         LambdaQueryWrapperX<AdjustmentAdmitDO> wrapper = new LambdaQueryWrapperX<>();
         wrapper.select(AdjustmentAdmitDO::getFirstSchoolId,
+                AdjustmentAdmitDO::getMajorCode,
                 AdjustmentAdmitDO::getFirstScore);
         wrapper.eq(AdjustmentAdmitDO::getSchoolId, reqVO.getSchoolId())
                 .eq(AdjustmentAdmitDO::getCollegeId, reqVO.getCollegeId())
@@ -118,10 +123,10 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
                 .eq(AdjustmentAdmitDO::getStudyMode, reqVO.getStudyMode());
         // TODO: 先忽略
         // wrapper.eqIfPresent(AdjustmentAdmitDO::getDirectionId, reqVO.getDirectionId());
-        List<AdjustmentAdmitDO> list = adjustmentAdmitMapper.selectList(wrapper);
+        List<AdjustmentAdmitDO> rawList = adjustmentAdmitMapper.selectList(wrapper);
 
         AppAdjustmentAnalysisRespVO respVO = new AppAdjustmentAnalysisRespVO();
-        if (list == null || list.isEmpty()) {
+        if (rawList == null || rawList.isEmpty()) {
             respVO.setSection(Collections.emptyList());
             respVO.setLevel(Collections.emptyList());
             respVO.setDetail(null);
@@ -129,6 +134,27 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
         }
 
         Long schoolId = reqVO.getSchoolId();
+        List<NationalScoreDO> nationalScores = nationalLineEligibilityService
+                .getNationalScoresWithFallback(reqVO.getYear() != null ? reqVO.getYear().intValue() : null);
+        Map<Long, String> firstSchoolAreaMap = resolveFirstSchoolAreaMap(rawList);
+
+        // filter abnormal (below national line) samples from statistics
+        List<AdjustmentAdmitDO> list = new ArrayList<>(rawList.size());
+        for (AdjustmentAdmitDO item : rawList) {
+            if (item == null) {
+                continue;
+            }
+            if (isBelowNationalLine(item, nationalScores, firstSchoolAreaMap)) {
+                continue;
+            }
+            list.add(item);
+        }
+        if (list.isEmpty()) {
+            respVO.setSection(Collections.emptyList());
+            respVO.setLevel(Collections.emptyList());
+            respVO.setDetail(null);
+            return respVO;
+        }
 
         // split first-choice vs adjust
         List<BigDecimal> firstChoiceScores = new ArrayList<>();
@@ -174,6 +200,60 @@ public class AdjustmentAdmitServiceImpl implements AdjustmentAdmitService {
         respVO.setLevel(buildLevel(adjustFirstSchoolIds));
 
         return respVO;
+    }
+
+    private Map<Long, String> resolveFirstSchoolAreaMap(List<AdjustmentAdmitDO> list) {
+        if (list == null || list.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<Long> ids = list.stream()
+                .map(AdjustmentAdmitDO::getFirstSchoolId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        if (ids.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<SchoolDO> schools = schoolMapper.selectBatchIds(ids);
+        if (schools == null || schools.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Map<Long, String> map = new HashMap<>(schools.size());
+        for (SchoolDO s : schools) {
+            if (s == null || s.getId() == null) {
+                continue;
+            }
+            map.put(s.getId(), s.getProvinceArea());
+        }
+        return map;
+    }
+
+    private boolean isBelowNationalLine(AdjustmentAdmitDO item,
+                                        List<NationalScoreDO> nationalScores,
+                                        Map<Long, String> firstSchoolAreaMap) {
+        if (item == null || item.getFirstScore() == null) {
+            return false;
+        }
+        if (nationalScores == null || nationalScores.isEmpty()) {
+            return false;
+        }
+        String majorCode = item.getMajorCode();
+        if (majorCode == null || majorCode.trim().isEmpty()) {
+            return false;
+        }
+        String area = null;
+        if (item.getFirstSchoolId() != null && firstSchoolAreaMap != null) {
+            area = firstSchoolAreaMap.get(item.getFirstSchoolId());
+        }
+        area = area != null ? area.trim() : "";
+        if (area.isEmpty()) {
+            area = "A";
+        }
+        NationalScoreDO line = nationalLineEligibilityService.findMatchedNationalLine(nationalScores, area, majorCode.trim());
+        if (line == null || line.getTotal() == null) {
+            return false;
+        }
+        return item.getFirstScore().intValue() < line.getTotal().intValue();
     }
 
     @Override

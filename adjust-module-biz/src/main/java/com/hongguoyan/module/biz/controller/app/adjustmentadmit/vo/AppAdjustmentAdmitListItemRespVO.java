@@ -23,5 +23,11 @@ public class AppAdjustmentAdmitListItemRespVO {
 
     @Schema(description = "总成绩")
     private BigDecimal totalScore;
+
+    @Schema(description = "与国家线总分差值（初试总分-国家线总分）")
+    private BigDecimal diffToNationalLine;
+
+    @Schema(description = "是否异常低分（低于国家线）", example = "false")
+    private Boolean abnormal;
 }
 
