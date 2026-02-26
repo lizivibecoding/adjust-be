@@ -367,14 +367,16 @@
                     WHEN a.create_time &gt;= CURDATE()
                      AND a.create_time &lt; DATE_ADD(CURDATE(), INTERVAL 1 DAY)
                     THEN 1 ELSE 0 END) AS todayUpdateCount,
-            COUNT(DISTINCT CASE
-                    WHEN a.create_time &gt;= CURDATE()
-                     AND a.create_time &lt; DATE_ADD(CURDATE(), INTERVAL 1 DAY)
-                    THEN a.school_id ELSE NULL END) AS todayUpdateSchoolCount,
-            COUNT(*) AS totalCount,
-            COUNT(DISTINCT a.school_id) AS totalSchoolCount
+            SUM(CASE
+                    WHEN YEAR(a.create_time) = YEAR(CURDATE())
+                    THEN 1 ELSE 0 END) AS thisYearUpdateCount,
+            SUM(CASE
+                    WHEN YEAR(a.create_time) = YEAR(CURDATE()) - 1
+                    THEN 1 ELSE 0 END) AS lastYearUpdateCount,
+            SUM(CASE
+                    WHEN YEAR(a.create_time) &lt;= YEAR(CURDATE()) - 1
+                    THEN 1 ELSE 0 END) AS historyUpdateCount
         FROM biz_adjustment a
-        WHERE a.year = #{year}
     </select>
 
     <select id="selectSchoolAdjustmentPage"

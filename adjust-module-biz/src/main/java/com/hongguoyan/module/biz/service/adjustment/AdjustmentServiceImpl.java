@@ -1030,9 +1030,9 @@ public class AdjustmentServiceImpl implements AdjustmentService {
             respVO = new AppAdjustmentUpdateStatsRespVO();
             respVO.setYear(statYear);
             respVO.setTodayUpdateCount(0L);
-            respVO.setTodayUpdateSchoolCount(0L);
-            respVO.setTotalCount(0L);
-            respVO.setTotalSchoolCount(0L);
+            respVO.setThisYearUpdateCount(0L);
+            respVO.setLastYearUpdateCount(0L);
+            respVO.setHistoryUpdateCount(0L);
         }
         return respVO;
     }

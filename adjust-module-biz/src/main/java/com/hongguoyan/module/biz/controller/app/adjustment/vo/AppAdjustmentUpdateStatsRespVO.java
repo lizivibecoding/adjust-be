@@ -18,14 +18,14 @@ public class AppAdjustmentUpdateStatsRespVO {
     @Schema(description = "今日更新数据量", example = "123")
     private Long todayUpdateCount;
 
-    @Schema(description = "今日更新院校数", example = "45")
-    private Long todayUpdateSchoolCount;
+    @Schema(description = "今年更新数据量(自然年)", example = "123")
+    private Long thisYearUpdateCount;
 
-    @Schema(description = "累计数据量", example = "26266")
-    private Long totalCount;
+    @Schema(description = "去年更新数据量(自然年)", example = "123")
+    private Long lastYearUpdateCount;
 
-    @Schema(description = "累计院校数", example = "791")
-    private Long totalSchoolCount;
+    @Schema(description = "历史更新数据量(包含去年及更早，自然年)", example = "123")
+    private Long historyUpdateCount;
 
 }
 
