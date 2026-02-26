@@ -67,33 +67,10 @@ public class VipOrderServiceImpl implements VipOrderService {
 
     @Override
     public PageResult<VipOrderRespVO> getVipOrderPage(VipOrderPageReqVO pageReqVO) {
-        applyKeywordFilter(pageReqVO);
         PageResult<VipOrderDO> pageResult = vipOrderMapper.selectPage(pageReqVO);
         PageResult<VipOrderRespVO> result = BeanUtils.toBean(pageResult, VipOrderRespVO.class);
         fillUserInfo(result.getList());
         return result;
-    }
-
-    private void applyKeywordFilter(VipOrderPageReqVO pageReqVO) {
-        if (pageReqVO == null || StrUtil.isBlank(pageReqVO.getKeyword())) {
-            return;
-        }
-        String keyword = pageReqVO.getKeyword().trim();
-        if (keyword.isEmpty()) {
-            return;
-        }
-        Set<Long> userIds = new LinkedHashSet<>();
-        MemberUserRespDTO userByMobile = memberUserApi.getUserByMobile(keyword);
-        if (userByMobile != null) {
-            userIds.add(userByMobile.getId());
-        }
-        List<MemberUserRespDTO> usersByNickname = memberUserApi.getUserListByNickname(keyword);
-        if (usersByNickname != null) {
-            usersByNickname.forEach(item -> userIds.add(item.getId()));
-        }
-        if (!userIds.isEmpty()) {
-            pageReqVO.setUserIds(new ArrayList<>(userIds));
-        }
     }
 
     private void fillUserInfo(List<VipOrderRespVO> list) {

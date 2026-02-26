@@ -13,7 +13,7 @@ import static com.hongguoyan.framework.common.util.date.DateUtils.FORMAT_YEAR_MO
 @Data
 public class VipOrderPageReqVO extends PageParam {
 
-    @Schema(description = "关键词（订单号/用户ID/昵称/手机号）")
+    @Schema(description = "订单关键词（业务订单号/支付订单号）")
     private String keyword;
 
     @Schema(description = "订单号")

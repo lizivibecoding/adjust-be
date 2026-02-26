@@ -24,7 +24,6 @@ public interface VipOrderMapper extends BaseMapperX<VipOrderDO> {
         LambdaQueryWrapperX<VipOrderDO> wrapper = new LambdaQueryWrapperX<VipOrderDO>()
                 .eqIfPresent(VipOrderDO::getOrderNo, reqVO.getOrderNo())
                 .eqIfPresent(VipOrderDO::getUserId, reqVO.getUserId())
-                .inIfPresent(VipOrderDO::getUserId, reqVO.getUserIds())
                 .eqIfPresent(VipOrderDO::getPlanCode, reqVO.getPlanCode())
                 .eqIfPresent(VipOrderDO::getAmount, reqVO.getAmount())
                 .eqIfPresent(VipOrderDO::getStatus, reqVO.getStatus())
@@ -45,13 +44,10 @@ public interface VipOrderMapper extends BaseMapperX<VipOrderDO> {
                 qw.eq(VipOrderDO::getOrderNo, keyword);
                 if (keyword.matches("\\d+")) {
                     try {
-                        qw.or().eq(VipOrderDO::getUserId, Long.valueOf(keyword));
+                        qw.or().eq(VipOrderDO::getPayOrderId, Long.valueOf(keyword));
                     } catch (Exception ignore) {
                         // ignore
                     }
-                }
-                if (reqVO.getUserIds() != null && !reqVO.getUserIds().isEmpty()) {
-                    qw.or().in(VipOrderDO::getUserId, reqVO.getUserIds());
                 }
             });
         }
