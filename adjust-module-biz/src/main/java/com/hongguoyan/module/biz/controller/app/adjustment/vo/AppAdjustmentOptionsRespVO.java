@@ -9,8 +9,19 @@ import java.util.List;
 @Data
 public class AppAdjustmentOptionsRespVO {
 
-    @Schema(description = "年份列表")
-    private List<Integer> yearList;
+    @Schema(description = "选项列表（按年份倒序）")
+    private List<Option> options;
+
+    @Data
+    public static class Option {
+
+        @Schema(description = "年份", example = "2025")
+        private Integer year;
+
+        @Schema(description = "展示文案", example = "官方发布调剂")
+        private String text;
+
+    }
 
 }
 

@@ -332,6 +332,24 @@
         ORDER BY a.year DESC
     </select>
 
+    <select id="selectOptionYearOptions"
+            resultType="com.hongguoyan.module.biz.dal.mysql.adjustment.dto.AdjustmentYearOptionRowDTO">
+        SELECT
+            a.year AS year,
+            MIN(CASE
+                    WHEN a.source_type = 1 THEN 1
+                    WHEN a.source_type = 2 THEN 2
+                    ELSE 3
+                END) AS minPriority
+        FROM biz_adjustment a
+        WHERE a.school_id = #{schoolId}
+          AND a.major_id = #{majorId}
+          AND a.college_id = #{collegeId}
+          AND a.study_mode = #{studyMode}
+        GROUP BY a.year
+        ORDER BY a.year DESC
+    </select>
+
     <select id="selectOptionColleges"
             resultType="com.hongguoyan.module.biz.controller.app.adjustment.vo.AppAdjustmentCollegeOptionRespVO">
         SELECT DISTINCT

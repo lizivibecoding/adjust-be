@@ -15,6 +15,7 @@ import org.apache.ibatis.annotations.Update;
 import com.hongguoyan.module.biz.controller.app.adjustment.vo.*;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.BizMajorKeyDTO;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.BizMajorStudyKeyDTO;
+import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.AdjustmentYearOptionRowDTO;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.dto.RecruitSnapshotRowDTO;
 import com.hongguoyan.module.biz.controller.app.school.vo.AppSchoolAdjustmentPageReqVO;
 import com.hongguoyan.module.biz.controller.app.school.vo.AppSchoolAdjustmentRespVO;
@@ -120,6 +121,14 @@ public interface AdjustmentMapper extends BaseMapperX<AdjustmentDO> {
                                     @Param("collegeId") Long collegeId,
                                     @Param("majorId") Long majorId,
                                     @Param("studyMode") Integer studyMode);
+
+    /**
+     * 调剂详情切换选项：按年份聚合来源类型。
+     */
+    List<AdjustmentYearOptionRowDTO> selectOptionYearOptions(@Param("schoolId") Long schoolId,
+                                                             @Param("collegeId") Long collegeId,
+                                                             @Param("majorId") Long majorId,
+                                                             @Param("studyMode") Integer studyMode);
 
     List<AppAdjustmentCollegeOptionRespVO> selectOptionColleges(@Param("schoolId") Long schoolId,
                                                                 @Param("majorId") Long majorId);
