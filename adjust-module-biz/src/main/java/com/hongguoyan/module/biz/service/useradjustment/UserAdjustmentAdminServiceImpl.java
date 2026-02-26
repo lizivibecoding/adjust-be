@@ -12,14 +12,12 @@ import com.hongguoyan.module.biz.controller.admin.useradjustment.vo.UserAdjustme
 import com.hongguoyan.module.biz.controller.admin.useradjustment.vo.UserAdjustmentAdminPageRespVO;
 import com.hongguoyan.module.biz.controller.admin.useradjustment.vo.UserAdjustmentAdminRespVO;
 import com.hongguoyan.module.biz.controller.admin.useradjustment.vo.UserAdjustmentAdminUpdateReqVO;
-import com.hongguoyan.module.biz.dal.dataobject.adjustment.AdjustmentDO;
 import com.hongguoyan.module.biz.dal.dataobject.major.MajorDO;
 import com.hongguoyan.module.biz.dal.dataobject.publisher.PublisherDO;
 import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
 import com.hongguoyan.module.biz.dal.dataobject.schoolcollege.SchoolCollegeDO;
 import com.hongguoyan.module.biz.dal.dataobject.schooldirection.SchoolDirectionDO;
 import com.hongguoyan.module.biz.dal.dataobject.useradjustment.UserAdjustmentDO;
-import com.hongguoyan.module.biz.dal.mysql.adjustment.AdjustmentMapper;
 import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
 import com.hongguoyan.module.biz.dal.mysql.publisher.PublisherMapper;
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
@@ -59,8 +57,6 @@ public class UserAdjustmentAdminServiceImpl implements UserAdjustmentAdminServic
     private ProjectConfigService projectConfigService;
     @Resource
     private AdjustmentService adjustmentService;
-    @Resource
-    private AdjustmentMapper adjustmentMapper;
 
     @Override
     public PageResult<UserAdjustmentAdminPageRespVO> getApprovedPage(UserAdjustmentAdminPageReqVO reqVO) {
@@ -173,23 +169,6 @@ public class UserAdjustmentAdminServiceImpl implements UserAdjustmentAdminServic
     public void delete(Long adminUserId, Long id) {
         UserAdjustmentDO existing = validateExists(id);
         userAdjustmentMapper.deleteById(id);
-        // best-effort: delete corresponding adjustment record when it's third-party(sourceType=3)
-        if (existing.getYear() == null || existing.getSchoolId() == null || existing.getMajorId() == null) {
-            return;
-        }
-        Long collegeId = existing.getCollegeId() != null ? existing.getCollegeId() : 0L;
-        Long directionId = existing.getDirectionId() != null ? existing.getDirectionId() : 0L;
-        Integer studyMode = existing.getStudyMode() != null ? existing.getStudyMode() : 1;
-        AdjustmentDO adj = adjustmentMapper.selectOne(new LambdaQueryWrapperX<AdjustmentDO>()
-                .eq(AdjustmentDO::getYear, existing.getYear())
-                .eq(AdjustmentDO::getSchoolId, existing.getSchoolId())
-                .eq(AdjustmentDO::getCollegeId, collegeId)
-                .eq(AdjustmentDO::getMajorId, existing.getMajorId())
-                .eq(AdjustmentDO::getStudyMode, studyMode)
-                .eq(AdjustmentDO::getDirectionId, directionId));
-        if (adj != null && adj.getSourceType() != null && adj.getSourceType() == 3) {
-            adjustmentMapper.deleteById(adj.getId());
-        }
     }
 
     @Override
