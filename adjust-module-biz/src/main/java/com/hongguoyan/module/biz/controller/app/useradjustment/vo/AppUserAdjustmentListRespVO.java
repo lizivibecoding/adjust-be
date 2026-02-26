@@ -18,6 +18,9 @@ public class AppUserAdjustmentListRespVO {
     @Schema(description = "发布来源(1老师 2学长 3小道消息)")
     private Integer sourceType;
 
+    @Schema(description = "审核状态(0待审 1通过 2拒绝)")
+    private Integer auditStatus;
+
     @Schema(description = "学校名称")
     private String schoolName;
 
