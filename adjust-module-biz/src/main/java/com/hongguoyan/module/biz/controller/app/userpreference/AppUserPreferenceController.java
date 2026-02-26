@@ -66,6 +66,15 @@ public class AppUserPreferenceController {
         return success(true);
     }
 
+    @PostMapping("/remove")
+    @Operation(summary = "删除单条志愿")
+    @Parameter(name = "id", description = "志愿条目ID", required = true)
+    public CommonResult<Boolean> removeUserPreference(@RequestParam("id") @NotNull Long id) {
+        Long userId = SecurityFrameworkUtils.getLoginUserId();
+        userPreferenceService.remove(userId, id);
+        return success(true);
+    }
+
     @GetMapping("/export")
     @Operation(summary = "导出已选志愿")
     public CommonResult<String> exportMyPreferences(@Valid AppUserPreferenceExportReqVO reqVO) {

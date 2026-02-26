@@ -131,6 +131,16 @@ public class UserPreferenceServiceImpl implements UserPreferenceService {
                 .eq(UserPreferenceDO::getPreferenceNo, preferenceNo));
     }
 
+    @Override
+    public void remove(Long userId, Long id) {
+        vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_PREFERENCE);
+        UserPreferenceDO pref = userPreferenceMapper.selectById(id);
+        if (pref == null || pref.getUserId() == null || !pref.getUserId().equals(userId)) {
+            throw exception(USER_PREFERENCE_NOT_EXISTS);
+        }
+        userPreferenceMapper.deleteById(id);
+    }
+
     @Resource
     private SchoolDirectionMapper schoolDirectionMapper;
 

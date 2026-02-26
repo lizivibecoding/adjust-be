@@ -32,4 +32,12 @@ public interface UserPreferenceService {
      */
     void clear(Long userId, Integer preferenceNo);
 
+    /**
+     * 删除单条志愿
+     *
+     * @param userId 登录用户
+     * @param id 志愿条目ID
+     */
+    void remove(Long userId, Long id);
+
 }
