@@ -1,14 +1,12 @@
 package com.hongguoyan.module.biz.service.recommend;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.dfa.SensitiveUtil;
 import cn.hutool.json.JSONUtil;
+import com.baomidou.lock.annotation.Lock4j;
 import com.google.common.collect.Lists;
 import com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil;
 import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
-import com.hongguoyan.module.biz.dal.dataobject.adjustment.AdjustmentDO;
 import com.hongguoyan.module.biz.dal.dataobject.adjustmentadmit.AdjustmentAdmitDO;
 import com.hongguoyan.module.biz.dal.dataobject.area.AreaDO;
 import com.hongguoyan.module.biz.dal.dataobject.major.MajorDO;
@@ -16,7 +14,6 @@ import com.hongguoyan.module.biz.dal.dataobject.recommend.UserRecommendSchoolDO;
 import com.hongguoyan.module.biz.dal.dataobject.usercustomreport.UserCustomReportDO;
 import com.hongguoyan.module.biz.dal.dataobject.userintention.UserIntentionDO;
 import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
-import com.hongguoyan.module.biz.dal.mysql.adjustment.AdjustmentMapper;
 import com.hongguoyan.module.biz.dal.mysql.adjustmentadmit.AdjustmentAdmitMapper;
 import com.hongguoyan.module.biz.dal.mysql.area.AreaMapper;
 import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
@@ -25,8 +22,12 @@ import com.hongguoyan.module.biz.dal.mysql.usercustomreport.UserCustomReportMapp
 import com.hongguoyan.module.biz.dal.mysql.userintention.UserIntentionMapper;
 import com.hongguoyan.module.biz.dal.mysql.userprofile.UserProfileMapper;
 import com.hongguoyan.module.biz.enums.ErrorCodeConstants;
+import com.hongguoyan.module.biz.framework.job.config.BizJobConfiguration;
 import com.hongguoyan.module.biz.service.pdf.PdfRenderSupport;
 import com.hongguoyan.module.biz.service.projectconfig.ProjectConfigService;
+import com.hongguoyan.module.biz.service.usercustomreport.UserCustomReportService;
+import com.hongguoyan.module.infra.service.file.FileService;
+import com.hongguoyan.module.infra.service.file.bo.FileCreateRespBO;
 import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.font.PdfFont;
@@ -42,6 +43,11 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+import org.springframework.context.ApplicationContext;
+
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -50,8 +56,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
 /**
  * 推荐报告 PDF 生成 Service 实现类
@@ -72,15 +76,20 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
     @Resource
     private AdjustmentAdmitMapper adjustmentAdmitMapper;
     @Resource
-    private AdjustmentMapper adjustmentMapper;
-    @Resource
     private MajorMapper majorMapper;
     @Resource
     private AreaMapper areaMapper;
     @Resource
     private ProjectConfigService projectConfigService;
+    @Resource
+    private FileService fileService;
+    @Resource
+    private UserCustomReportService userCustomReportService;
+    @Resource
+    private ApplicationContext applicationContext;
 
     @Override
+    @Lock4j(keys = {"#userId", "#reportId"}, expire = 60000, acquireTimeout = 1000)
     public byte[] generateReportPdf(Long userId, Long reportId) {
         // 1. 获取报告数据
         UserCustomReportDO report = userCustomReportMapper.selectByUserIdAndId(userId, reportId);
@@ -122,7 +131,7 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
             } catch (Exception e) {
                 log.warn("注册水印处理器失败，继续生成无水印版本", e);
             }
-            
+
             // 设置中文字体（字体字节缓存复用，避免每次重复读取）
             PdfFont font = PdfRenderSupport.createReportFont();
             document.setFont(font);
@@ -206,7 +215,7 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
             addSectionTitle(document, "三、 调剂意向");
             if (userIntention != null) {
                 Table intentTable = new Table(UnitValue.createPercentArray(new float[]{1, 4})).useAllAvailableWidth();
-                
+
                 // 意向地区 (Codes -> Names)
                 String provinceNames = getProvinceNames(userIntention.getProvinceCodes());
                 addCell(intentTable, "意向地区", true);
@@ -257,13 +266,13 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
             addScoreRow(scoreTable, "目标层次", report.getDimTargetSchoolLevelScore(), report.getAnalysisTargetSchoolLevel());
             addScoreRow(scoreTable, "专业竞争", report.getDimMajorCompetitivenessScore(), report.getAnalysisMajorCompetitiveness());
             addScoreRow(scoreTable, "软实力", report.getDimSoftSkillsScore(), report.getAnalysisSoftSkills());
-            
+
             document.add(scoreTable);
             document.add(new Paragraph("\n"));
 
             // --- 4. 推荐方案 ---
             addSectionTitle(document, "五、 调剂推荐方案");
-            
+
             Map<Integer, List<UserRecommendSchoolDO>> grouped = recommendations.stream()
                     .collect(Collectors.groupingBy(r -> r.getCategory() != null ? r.getCategory() : 3));
 
@@ -275,6 +284,31 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
         } catch (Exception e) {
             log.error("生成 PDF 失败", e);
             throw ServiceExceptionUtil.exception(ErrorCodeConstants.PDF_GENERATE_ERROR);
+        }
+    }
+
+    @Override
+    @Async(BizJobConfiguration.RECOMMEND_PDF_THREAD_POOL_TASK_EXECUTOR)
+    public void generateReportPdfAsync(Long userId, Long reportId) {
+        try {
+            UserCustomReportDO report = userCustomReportMapper.selectByUserIdAndId(userId, reportId);
+            if (report == null) {
+                return;
+            }
+            // 已有可用 PDF，直接标记完成
+            if (StrUtil.isNotBlank(report.getReportPdfUrl())) {
+                userCustomReportService.updateGenerateStatus(reportId, 3);
+                return;
+            }
+            // 通过代理调用，确保 @Lock4j 在 generateReportPdf 上生效（避免 self-invocation 失效）
+            byte[] pdfBytes = applicationContext.getBean(RecommendPdfService.class).generateReportPdf(userId, reportId);
+            String fileName = (report.getReportName() != null ? report.getReportName() : "report") + ".pdf";
+            FileCreateRespBO fileWithPath = fileService.createFileWithPath(pdfBytes, fileName, "user-report/" + userId, "application/pdf");
+            userCustomReportService.updateReportPdfUrl(userId, reportId, fileWithPath.getPath());
+            userCustomReportService.updateGenerateStatus(reportId, 3);
+        } catch (Exception e) {
+            log.error("异步生成 PDF 失败, userId={}, reportId={}", userId, reportId, e);
+            userCustomReportService.updateGenerateStatus(reportId, 1);
         }
     }
 
@@ -315,7 +349,7 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
         // 使用 Map 存储分组后的数据，key 为复合键
         // 这里为了简单，直接用拼接字符串作为 key
         Map<String, List<UserRecommendSchoolDO>> groupedRecs = list.stream()
-                .collect(Collectors.groupingBy(r -> buildGroupKey(r.getSchoolId(),r.getCollegeId(),r.getMajorId(),r.getStudyMode())));
+                .collect(Collectors.groupingBy(r -> buildGroupKey(r.getSchoolId(), r.getCollegeId(), r.getMajorId(), r.getStudyMode())));
         // 按维度整体预取录取名单，循环内仅做 map 读取
         java.util.Set<Long> schoolIds = list.stream()
                 .map(UserRecommendSchoolDO::getSchoolId)
@@ -348,12 +382,12 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
 
             // 标题行：学校 | 学院 | 专业 | 学习方式
             String studyModeStr = getStudyModeName(first.getStudyMode());
-            String titleLine = String.format("%s | %s | %s | %s", 
-                    sanitizeForPdf(first.getSchoolName()), 
-                    sanitizeForPdf(StrUtil.blankToDefault(first.getCollegeName(), "未分院")), 
+            String titleLine = String.format("%s | %s | %s | %s",
+                    sanitizeForPdf(first.getSchoolName()),
+                    sanitizeForPdf(StrUtil.blankToDefault(first.getCollegeName(), "未分院")),
                     sanitizeForPdf(first.getMajorName()),
                     studyModeStr);
-            
+
             Paragraph pTitle = new Paragraph(titleLine).setBold().setFontSize(11);
             card.add(pTitle);
 
@@ -382,10 +416,10 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
             AdmitStats stats = queryAdmitStats(admitList);
             if (stats != null) {
                 card.add(new Paragraph("温馨提示：调剂复试时专业课可能不计入总分，请合理评估录取分数、录取名单")
-                    .setFontSize(9)
-                    .setFontColor(ColorConstants.RED)
-                    .setMarginTop(4)
-                    .setMarginBottom(4));
+                        .setFontSize(9)
+                        .setFontColor(ColorConstants.RED)
+                        .setMarginTop(4)
+                        .setMarginBottom(4));
                 Table statTable = new Table(UnitValue.createPercentArray(new float[]{1, 1, 1, 1})).useAllAvailableWidth().setMarginTop(5);
                 statTable.addHeaderCell(new Cell().add(new Paragraph("最低分").setFontSize(9)));
                 statTable.addHeaderCell(new Cell().add(new Paragraph("最高分").setFontSize(9)));
@@ -400,7 +434,7 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
             }
 
             if (CollUtil.isNotEmpty(admitList)) {
-                card.add(new Paragraph(targetYearInt+"年录取名单:").setFontSize(10).setBold().setMarginTop(5));
+                card.add(new Paragraph(targetYearInt + "年录取名单:").setFontSize(10).setBold().setMarginTop(5));
                 Table listTable = new Table(UnitValue.createPercentArray(new float[]{2, 1, 3})).useAllAvailableWidth();
                 listTable.setFontSize(9);
                 listTable.addHeaderCell("姓名");
@@ -415,7 +449,7 @@ public class RecommendPdfServiceImpl implements RecommendPdfService {
             } else {
                 card.add(new Paragraph("暂无往年录取数据").setFontSize(9).setFontColor(ColorConstants.GRAY).setMarginTop(5));
             }
-            
+
             doc.add(card);
         }
     }

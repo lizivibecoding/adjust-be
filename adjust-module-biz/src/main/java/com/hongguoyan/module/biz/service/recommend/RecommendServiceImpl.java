@@ -7,7 +7,6 @@ import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.B
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.REF_TYPE_CUSTOM_REPORT;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
@@ -457,13 +456,13 @@ public class RecommendServiceImpl implements RecommendService {
     }
 
     @Override
-    public boolean generateRecommend(Long userId, Long reportId) {
+    public void generateRecommend(Long userId, Long reportId) {
         // 1. 获取用户信息
         UserProfileDO userProfile = userProfileMapper.selectOne(new LambdaQueryWrapper<UserProfileDO>()
                 .eq(UserProfileDO::getUserId, userId));
         if (userProfile == null) {
             log.warn("用户画像不存在，无法推荐: userId={}", userId);
-            return false;
+            return;
         }
         // 获取用户意向信息
         UserIntentionDO userIntention = userIntentionMapper.selectOne(new LambdaQueryWrapper<UserIntentionDO>()
@@ -791,7 +790,6 @@ public class RecommendServiceImpl implements RecommendService {
             }
             userRecommendSchoolMapper.insertBatch(limitedRecommendations);
         }
-        return true;
     }
 
     @Override

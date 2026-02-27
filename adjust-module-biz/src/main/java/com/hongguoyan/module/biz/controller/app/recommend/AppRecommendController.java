@@ -5,6 +5,7 @@ import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.B
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_USER_REPORT;
 
 import cn.hutool.core.util.StrUtil;
+import com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil;
 import com.hongguoyan.framework.common.pojo.CommonResult;
 import com.hongguoyan.framework.common.pojo.PageResult;
 import com.hongguoyan.framework.common.util.object.BeanUtils;
@@ -43,7 +44,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/biz/recommend")
 @Validated
 public class AppRecommendController {
-
     @Resource
     private RecommendService recommendService;
     @Resource
@@ -66,7 +66,7 @@ public class AppRecommendController {
 
     @PostMapping("/generate")
     @Operation(summary = "生成调剂推荐与报告")
-    @RateLimiter(count = 1,timeUnit = TimeUnit.MINUTES,message = "操作太频繁了，服务器处理中，请稍候再试！",keyResolver = UserRateLimiterKeyResolver.class)
+    @RateLimiter(count = 2,timeUnit = TimeUnit.MINUTES,message = "操作太频繁了，服务器处理中，请稍候再试！",keyResolver = UserRateLimiterKeyResolver.class)
     public CommonResult<Long> generateRecommend() {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
         // 1. 同步创建空报告（generateStatus=0 生成中），立即返回报告ID
@@ -111,7 +111,6 @@ public class AppRecommendController {
         return success(true);
     }
 
-
     @GetMapping("/my/report/export-pdf")
     @Operation(summary = "导出报告 PDF")
     @RateLimiter(count = 3,timeUnit = TimeUnit.MINUTES,message = "操作太频繁了，服务器处理中，请稍候再试！",keyResolver = UserRateLimiterKeyResolver.class)
@@ -119,17 +118,42 @@ public class AppRecommendController {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
         // 校验权限
         vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_REPORT);
-        // 1. 检查是否已有生成好的 PDF URL
         UserCustomReportDO report = userCustomReportService.getByUserIdAndId(userId, reportId);
-
-        // 2. 实时生成 PDF
+        if (report == null) {
+            throw ServiceExceptionUtil.invalidParamException("报告不存在");
+        }
+        // 1) 先复用已生成结果，避免重复渲染
+        if (StrUtil.isNotBlank(report.getReportPdfUrl())) {
+            return success(report.getReportPdfUrl());
+        }
+        // 使用声明式锁（@Lock4j）控制同 userId+reportId 并发生成
         byte[] pdfBytes = recommendPdfService.generateReportPdf(userId, reportId);
-        // 3. 上传 OSS
-        String fileName = (report != null ? report.getReportName() : "report") + ".pdf";
+        String fileName = (report.getReportName() != null ? report.getReportName() : "report") + ".pdf";
         FileCreateRespBO fileWithPath = fileService.createFileWithPath(pdfBytes, fileName, "user-report/" + userId, "application/pdf");
-        // 4. 回写 URL 到 UserCustomReportDO
         userCustomReportService.updateReportPdfUrl(userId, reportId, fileWithPath.getPath());
         return success(fileWithPath.getPath());
+    }
+
+    @GetMapping("/my/report/export-pdf/v1")
+    @Operation(summary = "导出报告 PDF（异步提交）")
+    @RateLimiter(count = 3,timeUnit = TimeUnit.MINUTES,message = "操作太频繁了，服务器处理中，请稍候再试！",keyResolver = UserRateLimiterKeyResolver.class)
+    public CommonResult<String> exportReportPdfV1(@RequestParam("reportId") Long reportId) {
+        Long userId = SecurityFrameworkUtils.getLoginUserId();
+        vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_REPORT);
+        UserCustomReportDO report = userCustomReportService.getByUserIdAndId(userId, reportId);
+        if (report == null) {
+            throw ServiceExceptionUtil.invalidParamException("报告不存在");
+        }
+        // 已有 PDF 直接返回（兼容旧体验）
+        if (StrUtil.isNotBlank(report.getReportPdfUrl())) {
+            userCustomReportService.updateGenerateStatus(reportId, 3);
+            return success(report.getReportPdfUrl());
+        }
+        // 2: PDF 生成中
+        userCustomReportService.updateGenerateStatus(reportId, 2);
+        recommendPdfService.generateReportPdfAsync(userId, reportId);
+        // 异步提交后立即返回，前端可通过报告详情轮询 generateStatus + reportPdfUrl
+        return success("");
     }
 
 

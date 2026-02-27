@@ -23,10 +23,10 @@ public interface RecommendService {
 
     /**
      * 生成用户推荐院校专业和 AI 报告
+     *
      * @param userId 用户ID
-     * @return b
      */
-    boolean generateRecommend(Long userId,Long reportId);
+    void generateRecommend(Long userId, Long reportId);
 
     /**
      * Generate user's assessment report (5 dimensions) and persist to biz_user_custom_report.

@@ -32,5 +32,8 @@ public class AppUserCustomReportListItemRespVO {
     @ExcelProperty("创建时间")
     private LocalDateTime createTime;
 
+    @Schema(description = "PDF文件地址")
+    private String reportPdfUrl;
+
 }
 

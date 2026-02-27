@@ -16,4 +16,12 @@ public interface RecommendPdfService {
      */
     byte[] generateReportPdf(Long userId, Long reportId);
 
+    /**
+     * 异步生成并上传调剂报告 PDF
+     *
+     * @param userId 用户ID
+     * @param reportId 报告ID
+     */
+    void generateReportPdfAsync(Long userId, Long reportId);
+
 }
