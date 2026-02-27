@@ -3,7 +3,6 @@ package com.hongguoyan.module.biz.controller.app.publisher.vo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 import java.util.List;
@@ -21,8 +20,7 @@ public class AppPublisherSubmitReqVO {
     private String realName;
 
     @Schema(description = "手机号", requiredMode = Schema.RequiredMode.REQUIRED, example = "13800138000")
-    @NotEmpty(message = "手机号不能为空")
-    @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确")
+//    @NotEmpty(message = "手机号不能为空")
     private String mobile;
 
     @Schema(description = "证明材料(上传后返回的文件URL列表)", requiredMode = Schema.RequiredMode.REQUIRED)
