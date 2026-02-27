@@ -113,6 +113,72 @@ class UserProfileServiceImplScoreValidationTest extends BaseMockitoUnitTest {
     }
 
     @Test
+    void testGraduateAverageScoreExceeded100() {
+        mockNoExistingProfile();
+        AppUserProfileSaveReqVO reqVO = baseReq(1L);
+        reqVO.setGraduateAverageScore(new BigDecimal("100.01"));
+
+        assertServiceException(() -> userProfileService.saveUserProfileByUserId(1L, reqVO),
+                USER_PROFILE_GRADUATE_AVERAGE_SCORE_EXCEEDED_100);
+        log.info("[OK] 本科平均分超过100：命中 {}", USER_PROFILE_GRADUATE_AVERAGE_SCORE_EXCEEDED_100.getMsg());
+    }
+
+    @Test
+    void testGraduateAverageScoreNegative() {
+        mockNoExistingProfile();
+        AppUserProfileSaveReqVO reqVO = baseReq(1L);
+        reqVO.setGraduateAverageScore(new BigDecimal("-0.01"));
+
+        assertServiceException(() -> userProfileService.saveUserProfileByUserId(1L, reqVO),
+                USER_PROFILE_GRADUATE_AVERAGE_SCORE_NEGATIVE);
+        log.info("[OK] 本科平均分为负数：命中 {}", USER_PROFILE_GRADUATE_AVERAGE_SCORE_NEGATIVE.getMsg());
+    }
+
+    @Test
+    void testCet4ScoreBelow425() {
+        mockNoExistingProfile();
+        AppUserProfileSaveReqVO reqVO = baseReq(1L);
+        reqVO.setCet4Score(424);
+
+        assertServiceException(() -> userProfileService.saveUserProfileByUserId(1L, reqVO),
+                USER_PROFILE_CET4_SCORE_OUT_OF_RANGE);
+        log.info("[OK] 英语四级低于425：命中 {}", USER_PROFILE_CET4_SCORE_OUT_OF_RANGE.getMsg());
+    }
+
+    @Test
+    void testCet4ScoreAbove710() {
+        mockNoExistingProfile();
+        AppUserProfileSaveReqVO reqVO = baseReq(1L);
+        reqVO.setCet4Score(711);
+
+        assertServiceException(() -> userProfileService.saveUserProfileByUserId(1L, reqVO),
+                USER_PROFILE_CET4_SCORE_OUT_OF_RANGE);
+        log.info("[OK] 英语四级高于710：命中 {}", USER_PROFILE_CET4_SCORE_OUT_OF_RANGE.getMsg());
+    }
+
+    @Test
+    void testCet6ScoreBelow425() {
+        mockNoExistingProfile();
+        AppUserProfileSaveReqVO reqVO = baseReq(1L);
+        reqVO.setCet6Score(424);
+
+        assertServiceException(() -> userProfileService.saveUserProfileByUserId(1L, reqVO),
+                USER_PROFILE_CET6_SCORE_OUT_OF_RANGE);
+        log.info("[OK] 英语六级低于425：命中 {}", USER_PROFILE_CET6_SCORE_OUT_OF_RANGE.getMsg());
+    }
+
+    @Test
+    void testCet6ScoreAbove710() {
+        mockNoExistingProfile();
+        AppUserProfileSaveReqVO reqVO = baseReq(1L);
+        reqVO.setCet6Score(711);
+
+        assertServiceException(() -> userProfileService.saveUserProfileByUserId(1L, reqVO),
+                USER_PROFILE_CET6_SCORE_OUT_OF_RANGE);
+        log.info("[OK] 英语六级高于710：命中 {}", USER_PROFILE_CET6_SCORE_OUT_OF_RANGE.getMsg());
+    }
+
+    @Test
     void test2Subjects_scoreTotalExceeded300() {
         mockNoExistingProfile();
         when(schoolDirectionMapper.selectById(4L)).thenReturn(mockDirection2Subjects(4L, 10001L));
@@ -210,6 +276,9 @@ class UserProfileServiceImplScoreValidationTest extends BaseMockitoUnitTest {
         mockSaveDependencies();
 
         AppUserProfileSaveReqVO reqVO = baseReq(4L);
+        reqVO.setGraduateAverageScore(new BigDecimal("100"));
+        reqVO.setCet4Score(425);
+        reqVO.setCet6Score(710);
         reqVO.setSubjectScore3(BigDecimal.ZERO); // 兼容旧端传 0：不应报错
         reqVO.setSubjectScore1(new BigDecimal("199"));
         reqVO.setSubjectScore2(new BigDecimal("99"));

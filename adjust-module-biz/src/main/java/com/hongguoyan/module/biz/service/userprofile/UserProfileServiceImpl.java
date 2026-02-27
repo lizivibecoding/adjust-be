@@ -121,6 +121,8 @@ public class UserProfileServiceImpl implements UserProfileService {
         int subjectCount = resolveExamSubjectCount(direction, existing, reqVO);
         validateSubjectScores(reqVO, subjectCount);
         validateScoreTotal(reqVO, subjectCount);
+        validateGraduateAverageScore(reqVO);
+        validateCetScores(reqVO);
 
         UserProfileDO toSave = buildBaseToSave(userId, reqVO);
         // 已有一志愿则不再更新（避免客户端传错方向导致保存失败）
@@ -248,6 +250,36 @@ public class UserProfileServiceImpl implements UserProfileService {
         int maxTotal = subjectCount == 2 ? 300 : 500;
         if (total.compareTo(BigDecimal.valueOf(maxTotal)) > 0) {
             throw exception(subjectCount == 2 ? USER_PROFILE_SCORE_TOTAL_EXCEEDED_300 : USER_PROFILE_SCORE_TOTAL_EXCEEDED_500);
+        }
+    }
+
+    private void validateGraduateAverageScore(AppUserProfileSaveReqVO reqVO) {
+        if (reqVO == null) {
+            return;
+        }
+        BigDecimal v = reqVO.getGraduateAverageScore();
+        if (v == null) {
+            return;
+        }
+        if (isNegative(v)) {
+            throw exception(USER_PROFILE_GRADUATE_AVERAGE_SCORE_NEGATIVE);
+        }
+        if (v.compareTo(BigDecimal.valueOf(100)) > 0) {
+            throw exception(USER_PROFILE_GRADUATE_AVERAGE_SCORE_EXCEEDED_100);
+        }
+    }
+
+    private void validateCetScores(AppUserProfileSaveReqVO reqVO) {
+        if (reqVO == null) {
+            return;
+        }
+        Integer cet4 = reqVO.getCet4Score();
+        if (cet4 != null && (cet4 < 425 || cet4 > 710)) {
+            throw exception(USER_PROFILE_CET4_SCORE_OUT_OF_RANGE);
+        }
+        Integer cet6 = reqVO.getCet6Score();
+        if (cet6 != null && (cet6 < 425 || cet6 > 710)) {
+            throw exception(USER_PROFILE_CET6_SCORE_OUT_OF_RANGE);
         }
     }
 

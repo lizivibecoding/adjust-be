@@ -60,6 +60,10 @@ public interface ErrorCodeConstants {
     ErrorCode USER_PROFILE_SCORE_TOTAL_NEGATIVE = new ErrorCode(90, "初试总分不能为负数");
     ErrorCode USER_PROFILE_SUBJECT_SCORE3_NOT_ALLOWED = new ErrorCode(91, "该考试类型不包含科目三，请勿填写科目三分数");
     ErrorCode USER_PROFILE_SUBJECT_SCORE4_NOT_ALLOWED = new ErrorCode(92, "该考试类型不包含科目四，请勿填写科目四分数");
+    ErrorCode USER_PROFILE_GRADUATE_AVERAGE_SCORE_NEGATIVE = new ErrorCode(112, "本科平均分不能为负数");
+    ErrorCode USER_PROFILE_GRADUATE_AVERAGE_SCORE_EXCEEDED_100 = new ErrorCode(113, "本科平均分不能超过 100");
+    ErrorCode USER_PROFILE_CET4_SCORE_OUT_OF_RANGE = new ErrorCode(114, "英语四级分数需在 425~710 之间");
+    ErrorCode USER_PROFILE_CET6_SCORE_OUT_OF_RANGE = new ErrorCode(115, "英语六级分数需在 425~710 之间");
 
     // ========== Doubao / Ark Responses ==========
     ErrorCode DOUBAO_CONFIG_MISSING = new ErrorCode(42, "AI 配置缺失");
