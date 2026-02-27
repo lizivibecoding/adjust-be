@@ -386,13 +386,13 @@
                      AND a.create_time &lt; DATE_ADD(CURDATE(), INTERVAL 1 DAY)
                     THEN 1 ELSE 0 END) AS todayUpdateCount,
             SUM(CASE
-                    WHEN YEAR(a.create_time) = YEAR(CURDATE())
+                    WHEN `year` = YEAR(CURDATE())
                     THEN 1 ELSE 0 END) AS thisYearUpdateCount,
             SUM(CASE
-                    WHEN YEAR(a.create_time) = YEAR(CURDATE()) - 1
+                    WHEN `year` = YEAR(CURDATE()) - 1
                     THEN 1 ELSE 0 END) AS lastYearUpdateCount,
             SUM(CASE
-                    WHEN YEAR(a.create_time) &lt;= YEAR(CURDATE()) - 1
+                    WHEN `year` &lt;= YEAR(CURDATE()) - 1
                     THEN 1 ELSE 0 END) AS historyUpdateCount
         FROM biz_adjustment a
     </select>

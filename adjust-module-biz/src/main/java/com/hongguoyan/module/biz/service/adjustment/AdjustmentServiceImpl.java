@@ -1048,10 +1048,10 @@ public class AdjustmentServiceImpl implements AdjustmentService {
     }
 
     private Integer resolveStatsYear() {
-        List<Integer> years = adjustmentMapper.selectYearList();
-        if (years != null && !years.isEmpty() && years.get(0) != null) {
-            return years.get(0);
-        }
+//        List<Integer> years = adjustmentMapper.selectYearList();
+//        if (years != null && !years.isEmpty() && years.get(0) != null) {
+//            return years.get(0);
+//        }
         return projectConfigService.getAdjustYear();
     }
 
