@@ -1045,6 +1045,7 @@ public class AdjustmentServiceImpl implements AdjustmentService {
             respVO.setHistoryUpdateCount(0L);
         }
         // TODO 临时口径：history 先写死 21w，待接入真实统计后移除
+        respVO.setLastYearUpdateCount(respVO.getLastYearUpdateCount()+10000);
         respVO.setHistoryUpdateCount(212_665L);
         return respVO;
     }
