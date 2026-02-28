@@ -471,27 +471,12 @@ public class RecommendServiceImpl implements RecommendService {
         if (Objects.isNull(userIntention)) {
             throw ServiceExceptionUtil.exception(ErrorCodeConstants.INTENT_NO_FOUND);
         }
-
         // 预加载基础数据
         List<SchoolDO> allSchools = schoolMapper.selectList();
         Map<Long, SchoolDO> schoolMap = allSchools.stream()
                 .collect(Collectors.toMap(SchoolDO::getId, Function.identity()));
-
         Integer currentYear = projectConfigService.getAdjustYear();
-        NationalLineContext nationalLineContext = nationalLineEligibilityService
-                .resolveContextOrThrow(userProfile, currentYear, schoolMap);
-
-        // --- Step 1: 硬性过滤 - 判断学生是否过国家线 (基于一志愿) ---
-        boolean qualified = nationalLineEligibilityService.checkQualified(userProfile, nationalLineContext.getMatchedLine());
-
-        if (!qualified) {
-            log.info("用户未过一志愿区域({})国家线，无法推荐: userId={}",
-                    nationalLineContext.getFirstChoiceArea(), userId);
-            throw ServiceExceptionUtil.exception(ErrorCodeConstants.USER_NOT_QUALIFIED);
-        }
-
         // 4. 加载并过滤学校
-
         // 预加载软科排名 (用于协同过滤)
         List<SchoolRankDO> allRanks = schoolRankMapper.selectList(new LambdaQueryWrapper<SchoolRankDO>()
                 .orderByAsc(SchoolRankDO::getYear));
@@ -527,7 +512,7 @@ public class RecommendServiceImpl implements RecommendService {
             schoolMajorScoreMap.computeIfAbsent(score.getSchoolId(), k -> new ArrayList<>())
                     .add(score);
         }
-
+        NationalLineContext nationalLineContext = nationalLineEligibilityService.resolveContextOrThrow(userId, currentYear);
         // 获取匹配的国家线
         NationalScoreDO matchedLine = nationalLineContext.getMatchedLine();
         double nationalLineTotal = matchedLine.getTotal().doubleValue();
@@ -796,19 +781,6 @@ public class RecommendServiceImpl implements RecommendService {
     @Async
     public void generateAssessmentReport(Long userId, Long reportId) {
         try {
-            // 0) Quick quota check (no consume yet). Consume after success to avoid charging on failure.
-            vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_REPORT);
-            VipResolvedBenefit quota = vipBenefitService.resolveBenefit(userId, BENEFIT_KEY_USER_REPORT);
-            if (quota.getBenefitType() != null && quota.getBenefitType() != BENEFIT_TYPE_QUOTA) {
-                // unexpected config type, let downstream throw consistent error
-            } else {
-                Integer v = quota.getBenefitValue();
-                int used = quota.getUsedCount() != null ? quota.getUsedCount() : 0;
-                if (v != null && v != -1 && used >= v) {
-                    throw ServiceExceptionUtil.exception(VIP_BENEFIT_QUOTA_EXCEEDED);
-                }
-            }
-
             // 1. Load user profile + intention
             UserProfileDO userProfile = userProfileMapper.selectOne(new LambdaQueryWrapper<UserProfileDO>()
                     .eq(UserProfileDO::getUserId, userId));
@@ -848,10 +820,9 @@ public class RecommendServiceImpl implements RecommendService {
                     .collect(Collectors.toMap(SchoolDO::getId, Function.identity(), (a, b) -> a));
 
             NationalLineContext nationalLineContext = nationalLineEligibilityService
-                    .resolveContextOrThrow(userProfile, currentYear, schoolMap);
+                    .resolveContextOrThrow(userId, currentYear);
             String firstChoiceArea = nationalLineContext.getFirstChoiceArea();
-            NationalScoreDO matchedLine = nationalLineContext.getMatchedLine();
-
+            NationalScoreDO matchedLine = nationalLineContext.getMatchedLineA() != null ? nationalLineContext.getMatchedLineA() : nationalLineContext.getMatchedLineB();
 
             // Intention majors
             List<Long> intentionMajorIds = parseJsonLongList(userIntention != null ? userIntention.getMajorIds() : null);
@@ -907,13 +878,11 @@ public class RecommendServiceImpl implements RecommendService {
                 toUpdate.setAnalysisSoftSkills(aiReport.getAnalysisSoftSkills());
             }
             toUpdate.setGenerateStatus(1); // 1-已完成
-
             userCustomReportMapper.updateById(toUpdate);
-
+            generateRecommend(userId, reportId);
             // 5. Consume quota after success
             vipBenefitService.consumeQuotaOrThrow(userId, BENEFIT_KEY_USER_REPORT, 1,
-                    REF_TYPE_CUSTOM_REPORT, String.valueOf(reportId), null);
-            generateRecommend(userId, reportId);
+                REF_TYPE_CUSTOM_REPORT, String.valueOf(reportId), null);
         } catch (Exception e) {
             log.error("异步生成报告失败: userId={}, reportId={}", userId, reportId, e);
             // 生成失败也标记为已完成，避免前端一直等待（可根据业务需要调整为"失败"状态）

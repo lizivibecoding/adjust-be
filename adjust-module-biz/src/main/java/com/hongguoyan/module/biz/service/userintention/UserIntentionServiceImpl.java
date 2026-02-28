@@ -181,10 +181,9 @@ public class UserIntentionServiceImpl implements UserIntentionService {
         if (!isFour) {
             return false;
         }
-        String s2 = StrUtil.blankToDefault(profile.getSubjectCode2(), "").trim();
         String s3 = StrUtil.blankToDefault(profile.getSubjectCode3(), "").trim();
-        // 科目二/三包含 204 或 302
-        return "204".equals(s2) || "302".equals(s2) || "204".equals(s3) || "302".equals(s3);
+        // 科目三包含 302
+        return "302".equals(s3);
     }
 
     private String toJsonOrNullSubjectChoices(List<String> list) {

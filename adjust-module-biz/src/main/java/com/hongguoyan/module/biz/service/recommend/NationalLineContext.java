@@ -23,10 +23,18 @@ public class NationalLineContext {
      */
     private String firstChoiceArea;
 
+
+    private NationalScoreDO matchedLine;
+
+
+
     /**
      * 命中的国家线记录。
      */
-    private NationalScoreDO matchedLine;
+    private NationalScoreDO matchedLineA;
+
+
+    private NationalScoreDO matchedLineB;
 
     /**
      * 命中年份的国家线列表（便于上层复用）。

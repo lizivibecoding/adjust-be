@@ -1,10 +1,13 @@
 package com.hongguoyan.module.biz.service.usercustomreport;
 
-import cn.hutool.core.date.DateUtil;
+import com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil;
 import com.hongguoyan.module.biz.service.projectconfig.ProjectConfigService;
+import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
+import com.hongguoyan.module.biz.service.vipbenefit.model.VipResolvedBenefit;
 import com.hongguoyan.module.member.api.user.MemberUserApi;
 import com.hongguoyan.module.member.api.user.dto.MemberUserRespDTO;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertSet;
 import cn.hutool.core.collection.CollUtil;
@@ -30,6 +33,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
+import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.VIP_BENEFIT_QUOTA_EXCEEDED;
+import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_USER_REPORT;
+import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_TYPE_QUOTA;
 
 /**
  * 用户AI调剂定制报告 Service 实现类
@@ -51,6 +57,9 @@ public class UserCustomReportServiceImpl implements UserCustomReportService {
 
     @Resource
     private ProjectConfigService projectConfigService;
+
+    @Resource
+    private VipBenefitService vipBenefitService;
 
     @Override
     public UserCustomReportDO getLatestByUserId(Long userId) {
@@ -117,19 +126,8 @@ public class UserCustomReportServiceImpl implements UserCustomReportService {
     }
 
     private void validateUserQualifiedForReport(Long userId) {
-        UserProfileDO userProfile = userProfileMapper.selectOne(new LambdaQueryWrapper<UserProfileDO>()
-            .eq(UserProfileDO::getUserId, userId));
-        if (userProfile == null) {
-            throw exception(ErrorCodeConstants.USER_PROFILE_NOT_EXISTS);
-        }
-        if (userProfile.getScoreTotal() == null) {
-            throw exception(ErrorCodeConstants.CANDIDATE_SCORE_TOTAL_NOT_EXISTS);
-        }
-        NationalLineContext nationalLineContext = nationalLineEligibilityService
-            .resolveContextOrThrow(userProfile, projectConfigService.getAdjustYear(), null);
-        if (!nationalLineEligibilityService.checkQualified(userProfile, nationalLineContext.getMatchedLine())) {
-            throw exception(ErrorCodeConstants.USER_NOT_QUALIFIED);
-        }
+        nationalLineEligibilityService
+            .resolveContextOrThrow(userId, projectConfigService.getAdjustYear());
     }
 
     @Override

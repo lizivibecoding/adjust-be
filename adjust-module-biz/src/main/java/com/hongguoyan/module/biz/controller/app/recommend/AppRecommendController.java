@@ -1,8 +1,10 @@
 package com.hongguoyan.module.biz.controller.app.recommend;
 
 import static com.hongguoyan.framework.common.pojo.CommonResult.success;
+import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.VIP_BENEFIT_QUOTA_EXCEEDED;
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_SCHOOL_RECOMMEND;
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_USER_REPORT;
+import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_TYPE_QUOTA;
 
 import cn.hutool.core.util.StrUtil;
 import com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil;
@@ -22,6 +24,7 @@ import com.hongguoyan.module.biz.service.recommend.RecommendPdfService;
 import com.hongguoyan.module.biz.service.recommend.RecommendService;
 import com.hongguoyan.module.biz.service.usercustomreport.UserCustomReportService;
 import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
+import com.hongguoyan.module.biz.service.vipbenefit.model.VipResolvedBenefit;
 import com.hongguoyan.module.infra.service.file.FileService;
 import com.hongguoyan.module.infra.service.file.bo.FileCreateRespBO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -69,6 +72,18 @@ public class AppRecommendController {
     @RateLimiter(count = 2,timeUnit = TimeUnit.MINUTES,message = "操作太频繁了，服务器处理中，请稍候再试！",keyResolver = UserRateLimiterKeyResolver.class)
     public CommonResult<Long> generateRecommend() {
         Long userId = SecurityFrameworkUtils.getLoginUserId();
+        // 0) Quick quota check (no consume yet). Consume after success to avoid charging on failure.
+        vipBenefitService.checkEnabledOrThrow(userId, BENEFIT_KEY_USER_REPORT);
+        VipResolvedBenefit quota = vipBenefitService.resolveBenefit(userId, BENEFIT_KEY_USER_REPORT);
+        if (quota.getBenefitType() != null && quota.getBenefitType() != BENEFIT_TYPE_QUOTA) {
+            throw ServiceExceptionUtil.exception(VIP_BENEFIT_QUOTA_EXCEEDED);
+        } else {
+            Integer v = quota.getBenefitValue();
+            int used = quota.getUsedCount() != null ? quota.getUsedCount() : 0;
+            if (v != null && v != -1 && used >= v) {
+                throw ServiceExceptionUtil.exception(VIP_BENEFIT_QUOTA_EXCEEDED);
+            }
+        }
         // 1. 同步创建空报告（generateStatus=0 生成中），立即返回报告ID
         Long reportId = userCustomReportService.createNewVersionByUserId(userId);
         // 2. 异步触发报告生成（AI + 推荐），完成后自动更新 generateStatus=1
@@ -155,9 +170,4 @@ public class AppRecommendController {
         // 异步提交后立即返回，前端可通过报告详情轮询 generateStatus + reportPdfUrl
         return success("");
     }
-
-
-
-
-
 }

@@ -1,22 +1,27 @@
 package com.hongguoyan.module.biz.service.recommend;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.hongguoyan.module.biz.dal.dataobject.nationalscore.NationalScoreDO;
 import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
+import com.hongguoyan.module.biz.dal.dataobject.userintention.UserIntentionDO;
 import com.hongguoyan.module.biz.dal.dataobject.userprofile.UserProfileDO;
 import com.hongguoyan.module.biz.dal.mysql.nationalscore.NationalScoreMapper;
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
+import com.hongguoyan.module.biz.dal.mysql.userintention.UserIntentionMapper;
+import com.hongguoyan.module.biz.dal.mysql.userprofile.UserProfileMapper;
 import com.hongguoyan.module.biz.enums.ErrorCodeConstants;
 import com.hongguoyan.module.biz.service.projectconfig.ProjectConfigService;
 import jakarta.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.Comparator;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +30,7 @@ import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUti
 @Service
 public class NationalLineEligibilityServiceImpl implements NationalLineEligibilityService {
 
+
     @Resource
     private NationalScoreMapper nationalScoreMapper;
     @Resource
@@ -32,8 +38,15 @@ public class NationalLineEligibilityServiceImpl implements NationalLineEligibili
     @Resource
     private ProjectConfigService projectConfigService;
 
+    @Resource
+    private UserProfileMapper userProfileMapper;
+    @Resource
+    private UserIntentionMapper userIntentionMapper;
+
     @Override
-    public NationalLineContext resolveContextOrThrow(UserProfileDO userProfile, Integer preferredYear, Map<Long, SchoolDO> schoolMap) {
+    public NationalLineContext resolveContextOrThrow(Long userId, Integer preferredYear) {
+
+        UserProfileDO userProfile = userProfileMapper.selectOne(new LambdaQueryWrapperX<UserProfileDO>().eq(UserProfileDO::getUserId, userId));
         if (userProfile == null) {
             throw exception(ErrorCodeConstants.USER_PROFILE_NOT_EXISTS);
         }
@@ -48,16 +61,28 @@ public class NationalLineEligibilityServiceImpl implements NationalLineEligibili
             nationalScores = nationalScoreMapper.selectList(new LambdaQueryWrapper<NationalScoreDO>()
                 .eq(NationalScoreDO::getYear, year));
         }
-
-        String firstChoiceArea = resolveFirstChoiceArea(userProfile, schoolMap);
-        NationalScoreDO matchedLine = findMatchedNationalLine(nationalScores, firstChoiceArea, userProfile.getTargetMajorCode());
-        if (matchedLine == null) {
-            throw exception(ErrorCodeConstants.NATIONAL_SCORE_NOT_EXISTS);
+        String firstChoiceArea = resolveFirstChoiceArea(userProfile);
+        NationalScoreDO matchedNationalLineForTarget = findMatchedNationalLine(nationalScores, firstChoiceArea, userProfile.getTargetMajorCode());
+        NationalScoreDO matchedNationalLineA = null;
+        NationalScoreDO matchedNationalLineB = null;
+        Set<String> intentionAreas = resolveIntentionAreas(userId);
+        for (String area : intentionAreas) {
+            NationalScoreDO matchedLine = findMatchedNationalLine(nationalScores, area, userProfile.getTargetMajorCode());
+            if ("A".equals(area)){
+                matchedNationalLineA = matchedLine;
+            }else {
+                matchedNationalLineB = matchedLine;
+            }
+            if (!checkQualified(userProfile, matchedLine)) {
+                throw exception(ErrorCodeConstants.NATIONAL_SCORE_NOT_EXISTS);
+            }
         }
         return NationalLineContext.builder()
             .nationalScoreYear(year)
             .firstChoiceArea(firstChoiceArea)
-            .matchedLine(matchedLine)
+            .matchedLine(matchedNationalLineForTarget)
+            .matchedLineA(matchedNationalLineA)
+            .matchedLineB(matchedNationalLineB)
             .nationalScores(nationalScores)
             .build();
     }
@@ -116,19 +141,40 @@ public class NationalLineEligibilityServiceImpl implements NationalLineEligibili
             .eq(NationalScoreDO::getYear, year - 1));
     }
 
-    private String resolveFirstChoiceArea(UserProfileDO userProfile, Map<Long, SchoolDO> schoolMap) {
+    private String resolveFirstChoiceArea(UserProfileDO userProfile) {
         String firstChoiceArea = "A";
         if (userProfile.getTargetSchoolId() == null) {
             return firstChoiceArea;
         }
-        SchoolDO firstChoiceSchool = schoolMap != null ? schoolMap.get(userProfile.getTargetSchoolId()) : null;
-        if (firstChoiceSchool == null) {
-            firstChoiceSchool = schoolMapper.selectById(userProfile.getTargetSchoolId());
-        }
+        SchoolDO firstChoiceSchool = schoolMapper.selectById(userProfile.getTargetSchoolId());
         if (firstChoiceSchool != null && StrUtil.isNotBlank(firstChoiceSchool.getProvinceArea())) {
             return firstChoiceSchool.getProvinceArea();
         }
         return firstChoiceArea;
+    }
+
+    private Set<String> resolveIntentionAreas(Long userId) {
+        Set<String> areas = new HashSet<>();
+        UserIntentionDO userIntention = userIntentionMapper.selectOne(new LambdaQueryWrapper<UserIntentionDO>()
+            .eq(UserIntentionDO::getUserId, userId));
+
+        if (userIntention != null && StrUtil.isNotBlank(userIntention.getProvinceCodes())) {
+            List<String> provinceCodes = JSONUtil.toList(userIntention.getProvinceCodes(), String.class);
+            if (CollUtil.isNotEmpty(provinceCodes)) {
+                List<Object> areaObjs = schoolMapper.selectObjs(new LambdaQueryWrapper<SchoolDO>()
+                    .select(SchoolDO::getProvinceArea)
+                    .in(SchoolDO::getProvinceCode, provinceCodes)
+                    .groupBy(SchoolDO::getProvinceArea));
+
+                if (CollUtil.isNotEmpty(areaObjs)) {
+                    areas.addAll(areaObjs.stream()
+                        .map(Object::toString)
+                        .filter(StrUtil::isNotBlank)
+                        .collect(Collectors.toSet()));
+                }
+            }
+        }
+        return areas;
     }
 
     @Override
@@ -162,7 +208,6 @@ public class NationalLineEligibilityServiceImpl implements NationalLineEligibili
         if (score == null || baseLine == null) {
             return false;
         }
-        return score >=  baseLine.intValue();
+        return score >= baseLine.intValue();
     }
 }
-
