@@ -1,6 +1,8 @@
 package com.hongguoyan.module.member.service.auth;
 
 import cn.hutool.core.lang.Assert;
+import com.baomidou.lock.LockInfo;
+import com.baomidou.lock.LockTemplate;
 import com.hongguoyan.framework.common.enums.CommonStatusEnum;
 import com.hongguoyan.framework.common.enums.TerminalEnum;
 import com.hongguoyan.framework.common.enums.UserTypeEnum;
@@ -59,6 +61,8 @@ public class MemberAuthServiceImpl implements MemberAuthService {
     private SocialClientApi socialClientApi;
     @Resource
     private OAuth2TokenCommonApi oauth2TokenApi;
+    @Resource
+    private LockTemplate lockTemplate;
 
     @Override
     public AppAuthLoginRespVO login(AppAuthLoginReqVO reqVO) {
@@ -120,9 +124,26 @@ public class MemberAuthServiceImpl implements MemberAuthService {
             user = userService.getUser(socialUser.getUserId());
         // 情况二：未绑定，注册用户 + 绑定用户
         } else {
-            user = userService.createUser(socialUser.getNickname(), socialUser.getAvatar(), getClientIP(), getTerminal());
-            socialUserApi.bindSocialUser(new SocialUserBindReqDTO(user.getId(), getUserType().getValue(),
-                    reqVO.getType(), reqVO.getCode(), reqVO.getState()));
+            // 加锁防止并发重复创建 member user（同一 openid 两个请求同时走到这里）
+            String lockKey = "social:login:member:" + reqVO.getType() + ":" + socialUser.getOpenid();
+            LockInfo lockInfo = lockTemplate.lock(lockKey, 10_000L, 5_000L);
+            if (lockInfo == null) {
+                throw exception(AUTH_SOCIAL_USER_NOT_FOUND);
+            }
+            try {
+                // 锁内双重检查：可能前一个请求已经完成了绑定
+                SocialUserRespDTO freshSocialUser = socialUserApi.getSocialUserByCode(
+                        getUserType().getValue(), reqVO.getType(), reqVO.getCode(), reqVO.getState());
+                if (freshSocialUser != null && freshSocialUser.getUserId() != null) {
+                    user = userService.getUser(freshSocialUser.getUserId());
+                } else {
+                    user = userService.createUser(socialUser.getNickname(), socialUser.getAvatar(), getClientIP(), getTerminal());
+                    socialUserApi.bindSocialUser(new SocialUserBindReqDTO(user.getId(), getUserType().getValue(),
+                            reqVO.getType(), reqVO.getCode(), reqVO.getState()));
+                }
+            } finally {
+                lockTemplate.releaseLock(lockInfo);
+            }
         }
         if (user == null) {
             throw exception(USER_NOT_EXISTS);

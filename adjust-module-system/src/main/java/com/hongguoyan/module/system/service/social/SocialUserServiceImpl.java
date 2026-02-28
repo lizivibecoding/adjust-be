@@ -4,6 +4,8 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.lock.LockInfo;
+import com.baomidou.lock.LockTemplate;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.hongguoyan.framework.common.exception.ServiceException;
 import com.hongguoyan.framework.common.pojo.PageResult;
@@ -47,6 +49,8 @@ public class SocialUserServiceImpl implements SocialUserService {
     private SocialUserBindMapper socialUserBindMapper;
     @Resource
     private SocialUserMapper socialUserMapper;
+    @Resource
+    private LockTemplate lockTemplate;
 
     @Resource
     private SocialClientService socialClientService;
@@ -147,24 +151,34 @@ public class SocialUserServiceImpl implements SocialUserService {
         AuthUser authUser = socialClientService.getAuthUser(socialType, userType, code, state);
         Assert.notNull(authUser, "三方用户不能为空");
 
-        // 保存到 DB 中
-        socialUser = socialUserMapper.selectByTypeAndOpenid(socialType, authUser.getUuid());
-        if (socialUser == null) {
-            socialUser = new SocialUserDO();
+        // 对同一 openid 加锁，防止并发请求在 system_social_user 中插入重复行
+        String lockKey = "social:auth:" + socialType + ":" + authUser.getUuid();
+        LockInfo lockInfo = lockTemplate.lock(lockKey, 10_0000L, 5_0000L);
+        if (lockInfo == null) {
+            throw new ServiceException(0, "社交登录请求过于频繁，请稍后重试");
         }
-        // 仅在「本次拿到 unionId」且「DB 尚未存 unionId」时进行补齐，避免影响既有业务逻辑
-        String unionId = getUnionId(authUser);
-        if (StrUtil.isNotBlank(unionId) && StrUtil.isBlank(socialUser.getUnionId())) {
-            socialUser.setUnionId(unionId);
-        }
-        socialUser.setType(socialType).setCode(code).setState(state) // 需要保存 code + state 字段，保证后续可查询
-                .setOpenid(authUser.getUuid()).setToken(authUser.getToken().getAccessToken()).setRawTokenInfo((toJsonString(authUser.getToken())))
-                .setNickname(authUser.getNickname()).setAvatar(authUser.getAvatar()).setRawUserInfo(toJsonString(authUser.getRawUserInfo()));
-        if (socialUser.getId() == null) {
-            socialUserMapper.insert(socialUser);
-        } else {
-            socialUser.clean(); // 避免 updateTime 不更新：https://gitee.com/adjustcode/adjust-boot-mini/issues/ID7FUL
-            socialUserMapper.updateById(socialUser);
+        try {
+            // 保存到 DB 中
+            socialUser = socialUserMapper.selectByTypeAndOpenid(socialType, authUser.getUuid());
+            if (socialUser == null) {
+                socialUser = new SocialUserDO();
+            }
+            // 仅在「本次拿到 unionId」且「DB 尚未存 unionId」时进行补齐，避免影响既有业务逻辑
+            String unionId = getUnionId(authUser);
+            if (StrUtil.isNotBlank(unionId) && StrUtil.isBlank(socialUser.getUnionId())) {
+                socialUser.setUnionId(unionId);
+            }
+            socialUser.setType(socialType).setCode(code).setState(state) // 需要保存 code + state 字段，保证后续可查询
+                    .setOpenid(authUser.getUuid()).setToken(authUser.getToken().getAccessToken()).setRawTokenInfo((toJsonString(authUser.getToken())))
+                    .setNickname(authUser.getNickname()).setAvatar(authUser.getAvatar()).setRawUserInfo(toJsonString(authUser.getRawUserInfo()));
+            if (socialUser.getId() == null) {
+                socialUserMapper.insert(socialUser);
+            } else {
+                socialUser.clean(); // 避免 updateTime 不更新：https://gitee.com/adjustcode/adjust-boot-mini/issues/ID7FUL
+                socialUserMapper.updateById(socialUser);
+            }
+        } finally {
+            lockTemplate.releaseLock(lockInfo);
         }
         return socialUser;
     }

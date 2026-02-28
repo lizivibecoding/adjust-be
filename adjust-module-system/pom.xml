@@ -27,6 +27,10 @@
         <!-- 业务组件 -->
         <dependency>
             <groupId>com.hongguoyan</groupId>
+            <artifactId>adjust-spring-boot-starter-protection</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.hongguoyan</groupId>
             <artifactId>adjust-spring-boot-starter-biz-data-permission</artifactId>
         </dependency>
         <dependency>
