@@ -153,7 +153,7 @@ public class SocialUserServiceImpl implements SocialUserService {
 
         // 对同一 openid 加锁，防止并发请求在 system_social_user 中插入重复行
         String lockKey = "social:auth:" + socialType + ":" + authUser.getUuid();
-        LockInfo lockInfo = lockTemplate.lock(lockKey, 10_0000L, 5_0000L);
+        LockInfo lockInfo = lockTemplate.lock(lockKey, 30_000L, 5_0000L);
         if (lockInfo == null) {
             throw new ServiceException(0, "社交登录请求过于频繁，请稍后重试");
         }

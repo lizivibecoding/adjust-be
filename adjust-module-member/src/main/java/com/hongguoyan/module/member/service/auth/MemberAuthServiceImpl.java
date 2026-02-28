@@ -126,7 +126,7 @@ public class MemberAuthServiceImpl implements MemberAuthService {
         } else {
             // 加锁防止并发重复创建 member user（同一 openid 两个请求同时走到这里）
             String lockKey = "social:login:member:" + reqVO.getType() + ":" + socialUser.getOpenid();
-            LockInfo lockInfo = lockTemplate.lock(lockKey, 10_000L, 5_000L);
+            LockInfo lockInfo = lockTemplate.lock(lockKey, 30_000L, 5_000L);
             if (lockInfo == null) {
                 throw exception(AUTH_SOCIAL_USER_NOT_FOUND);
             }
