@@ -100,12 +100,6 @@ public class AdjustmentServiceImpl implements AdjustmentService {
      */
     private static final String DEFAULT_MAJOR_CATEGORY_CODE = "01";
 
-    private static final int HEAT_MAX = 98;
-    /**
-     * Exponential saturation factor (tau). Smaller => faster to reach cap.
-     */
-    private static final double HEAT_TAU = 50D;
-
     /**
      * Preview limit for users with no opened major categories.
      */
@@ -114,18 +108,14 @@ public class AdjustmentServiceImpl implements AdjustmentService {
     private static final String HINT_CURRENT_YEAR_HAS_QUOTA = "今年有调剂名额";
     private static final String HINT_ADJUST_CHANCE_HIGH = "以往年分析今年调剂概率大";
 
+    /**
+     * 直接返回原始热度累计分，不封顶
+     */
     private static int calcHeat(Long hotScore) {
-        long score = hotScore != null ? hotScore : 0L;
-        if (score <= 0) {
+        if (hotScore == null || hotScore <= 0) {
             return 0;
         }
-        // heat = floor(HEAT_MAX * (1 - exp(-score / tau)))
-        double heat = HEAT_MAX * (1D - Math.exp(-score / HEAT_TAU));
-        int value = (int) Math.floor(heat);
-        if (value < 0) {
-            return 0;
-        }
-        return Math.min(HEAT_MAX, value);
+        return (int) Math.min(hotScore, Integer.MAX_VALUE);
     }
 
     @Override
