@@ -24,7 +24,7 @@ public class AreaServiceImpl implements AreaService {
     private AreaMapper areaMapper;
 
     @Override
-    @Cacheable(cacheNames = CacheNames.AREA_LIST, key = "'all'", sync = true)
+    @Cacheable(cacheNames = CacheNames.AREA_LIST, key = "'all'")
     public List<AppAreaRespVO> getAreaList() {
         List<AreaDO> list = areaMapper.selectAllOrderByAreaAndCode();
         if (list == null || list.isEmpty()) {

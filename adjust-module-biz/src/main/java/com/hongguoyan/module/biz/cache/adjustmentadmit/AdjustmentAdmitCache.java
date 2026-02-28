@@ -42,8 +42,7 @@ public class AdjustmentAdmitCache {
     @Cacheable(cacheNames = CacheNames.ADJUSTMENT_ADMIT_LIST,
             key = "'year:' + #reqVO.year"
                     + " + ':school:' + #reqVO.schoolId + ':college:' + #reqVO.collegeId + ':major:' + #reqVO.majorId"
-                    + " + ':study:' + #reqVO.studyMode",
-            sync = true)
+                    + " + ':study:' + #reqVO.studyMode")
     public List<AppAdjustmentAdmitListItemRespVO> getAdmitList(AppAdjustmentAdmitListReqVO reqVO) {
         if (reqVO == null) {
             return Collections.emptyList();

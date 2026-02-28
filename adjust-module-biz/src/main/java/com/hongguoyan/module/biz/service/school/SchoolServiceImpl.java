@@ -1,34 +1,28 @@
 package com.hongguoyan.module.biz.service.school;
 
-import cn.hutool.core.collection.CollUtil;
-import org.springframework.stereotype.Service;
-import jakarta.annotation.Resource;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.*;
-import com.hongguoyan.module.biz.controller.app.school.vo.*;
-import com.hongguoyan.module.biz.controller.admin.school.vo.SchoolPageReqVO;
+import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.hongguoyan.framework.common.pojo.PageResult;
+import com.hongguoyan.framework.common.util.object.BeanUtils;
+import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
+import com.hongguoyan.module.biz.cache.CacheNames;
 import com.hongguoyan.module.biz.controller.admin.school.vo.SchoolDetailRespVO;
+import com.hongguoyan.module.biz.controller.admin.school.vo.SchoolPageReqVO;
 import com.hongguoyan.module.biz.controller.admin.school.vo.SchoolRespVO;
 import com.hongguoyan.module.biz.controller.admin.school.vo.SchoolUpdateReqVO;
+import com.hongguoyan.module.biz.controller.app.school.vo.*;
 import com.hongguoyan.module.biz.dal.dataobject.school.SchoolDO;
-import com.hongguoyan.module.biz.cache.CacheNames;
-import com.hongguoyan.framework.common.pojo.PageResult;
-import com.hongguoyan.framework.common.pojo.PageParam;
-import com.hongguoyan.framework.common.util.object.BeanUtils;
-
 import com.hongguoyan.module.biz.dal.mysql.school.SchoolMapper;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import cn.hutool.core.util.StrUtil;
-import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
 import com.hongguoyan.module.infra.api.file.FileApi;
+import jakarta.annotation.Resource;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
+
+import java.util.*;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
-import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertList;
-import static com.hongguoyan.framework.common.util.collection.CollectionUtils.diffList;
-import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.*;
+import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.SCHOOL_NOT_EXISTS;
 
 /**
  * 院校 Service 实现类
@@ -90,7 +84,7 @@ public class SchoolServiceImpl implements SchoolService {
     }
 
     @Override
-    @Cacheable(cacheNames = CacheNames.SCHOOL_OVERVIEW, key = "'id:' + #schoolId", sync = true)
+    @Cacheable(cacheNames = CacheNames.SCHOOL_OVERVIEW, key = "'id:' + #schoolId")
     public AppSchoolOverviewRespVO getSchoolOverview(Long schoolId) {
         SchoolDO school = schoolMapper.selectById(schoolId);
         if (school == null) {
@@ -158,7 +152,7 @@ public class SchoolServiceImpl implements SchoolService {
     }
 
     @Override
-    @Cacheable(cacheNames = CacheNames.SCHOOL_SIMPLE_ALL, key = "'all'", sync = true)
+    @Cacheable(cacheNames = CacheNames.SCHOOL_SIMPLE_ALL, key = "'all'")
     public List<AppSchoolSimpleOptionRespVO> getSchoolSimpleAll() {
         List<SchoolDO> list = schoolMapper.selectList(new LambdaQueryWrapper<SchoolDO>()
                 .select(SchoolDO::getId, SchoolDO::getSchoolName)
@@ -181,7 +175,7 @@ public class SchoolServiceImpl implements SchoolService {
     }
 
     @Override
-    @Cacheable(cacheNames = CacheNames.SCHOOL_TREE, key = "'all'", sync = true)
+    @Cacheable(cacheNames = CacheNames.SCHOOL_TREE, key = "'all'")
     public List<AppSchoolTreeAreaRespVO> getSchoolTree() {
         LambdaQueryWrapperX<SchoolDO> qw = new LambdaQueryWrapperX<>();
         qw.select(SchoolDO::getId, SchoolDO::getSchoolName, SchoolDO::getProvinceArea,

@@ -22,8 +22,7 @@ public class SchoolAdjustmentCache {
 
     @Cacheable(cacheNames = CacheNames.SCHOOL_ADJUSTMENT_PAGE,
             key = "'school:' + #reqVO.schoolId + ':y:' + #reqVO.beginYear + '-' + #reqVO.endYear"
-                    + " + ':pn:' + #reqVO.pageNo + ':ps:' + #reqVO.pageSize",
-            sync = true)
+                    + " + ':pn:' + #reqVO.pageNo + ':ps:' + #reqVO.pageSize")
     public PageResult<AppSchoolAdjustmentRespVO> getSchoolAdjustmentPage(AppSchoolAdjustmentPageReqVO reqVO) {
         return adjustmentMapper.selectSchoolAdjustmentPage(reqVO);
     }

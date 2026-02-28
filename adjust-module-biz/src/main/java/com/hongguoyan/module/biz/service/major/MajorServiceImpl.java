@@ -1,36 +1,31 @@
 package com.hongguoyan.module.biz.service.major;
 
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
-import org.springframework.stereotype.Service;
-import jakarta.annotation.Resource;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.*;
-import com.hongguoyan.module.biz.controller.app.major.vo.*;
-import com.hongguoyan.module.biz.dal.dataobject.major.MajorDO;
-import com.hongguoyan.framework.common.pojo.PageResult;
-import com.hongguoyan.framework.common.pojo.PageParam;
-import com.hongguoyan.framework.common.util.object.BeanUtils;
-
-import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
-import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
-import com.hongguoyan.framework.common.exception.ErrorCode;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.hongguoyan.framework.common.exception.ErrorCode;
+import com.hongguoyan.framework.common.pojo.PageResult;
+import com.hongguoyan.framework.common.util.object.BeanUtils;
+import com.hongguoyan.framework.mybatis.core.query.LambdaQueryWrapperX;
+import com.hongguoyan.module.biz.cache.CacheNames;
 import com.hongguoyan.module.biz.controller.admin.major.vo.MajorUpdateNameReqVO;
+import com.hongguoyan.module.biz.controller.app.major.vo.*;
 import com.hongguoyan.module.biz.dal.dataobject.adjustment.AdjustmentDO;
 import com.hongguoyan.module.biz.dal.dataobject.adjustmentadmit.AdjustmentAdmitDO;
+import com.hongguoyan.module.biz.dal.dataobject.major.MajorDO;
 import com.hongguoyan.module.biz.dal.mysql.adjustment.AdjustmentMapper;
 import com.hongguoyan.module.biz.dal.mysql.adjustmentadmit.AdjustmentAdmitMapper;
-import com.hongguoyan.module.biz.cache.CacheNames;
+import com.hongguoyan.module.biz.dal.mysql.major.MajorMapper;
+import com.hongguoyan.module.biz.service.projectconfig.ProjectConfigService;
+import jakarta.annotation.Resource;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
+
+import java.util.*;
 
 import static com.hongguoyan.framework.common.exception.util.ServiceExceptionUtil.exception;
-import static com.hongguoyan.framework.common.util.collection.CollectionUtils.convertList;
-import static com.hongguoyan.framework.common.util.collection.CollectionUtils.diffList;
-import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.*;
-import com.hongguoyan.module.biz.service.projectconfig.ProjectConfigService;
+import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.MAJOR_NOT_EXISTS;
 
 /**
  * 专业 Service 实现类
@@ -102,8 +97,7 @@ public class MajorServiceImpl implements MajorService {
 
     @Override
     @Cacheable(cacheNames = CacheNames.MAJOR_LEVEL1_LIST,
-            key = "'y:' + @projectConfigService.activeYear",
-            sync = true)
+            key = "'y:' + @projectConfigService.activeYear")
     public List<AppMajorLevel1RespVO> getMajorLevel1List() {
         return majorMapper.selectLevel1List(projectConfigService.getActiveYear());
     }
@@ -113,8 +107,7 @@ public class MajorServiceImpl implements MajorService {
             key = "'y:' + @projectConfigService.activeYear"
                     + " + ':l:' + #level"
                     + " + ':p:' + (#parentCode == null ? '' : #parentCode)"
-                    + " + ':d:' + (#degreeType == null ? '' : #degreeType)",
-            sync = true)
+                    + " + ':d:' + (#degreeType == null ? '' : #degreeType)")
     public List<AppMajorChildRespVO> getMajorList(String parentCode, Integer level, Integer degreeType) {
         if (level == null || level < 1 || level > 3) {
             throw exception(new ErrorCode(400, "level must be 1, 2 or 3"));
@@ -181,8 +174,7 @@ public class MajorServiceImpl implements MajorService {
 
     @Override
     @Cacheable(cacheNames = CacheNames.MAJOR_TREE,
-            key = "'y:' + @projectConfigService.activeYear",
-            sync = true)
+            key = "'y:' + @projectConfigService.activeYear")
     public List<AppMajorTreeNodeRespVO> getMajorTree() {
         // Only majors with code; sorted by code asc to keep stable tree order
         LambdaQueryWrapperX<MajorDO> qw = new LambdaQueryWrapperX<>();

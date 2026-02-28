@@ -25,8 +25,7 @@ public class AdjustmentDetailCache {
     @Cacheable(cacheNames = CacheNames.ADJUSTMENT_DETAIL_ROWS,
             key = "'year:' + #year"
                     + " + ':school:' + #schoolId + ':college:' + #collegeId + ':major:' + #majorId"
-                    + " + ':study:' + #studyMode",
-            sync = true)
+                    + " + ':study:' + #studyMode")
     public List<AdjustmentDO> listDetailRows(Long schoolId, Long majorId, Long collegeId, Integer year, Integer studyMode) {
         if (schoolId == null || majorId == null || collegeId == null || year == null || studyMode == null) {
             return Collections.emptyList();

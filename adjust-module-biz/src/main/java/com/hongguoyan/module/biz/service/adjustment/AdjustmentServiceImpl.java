@@ -1032,7 +1032,7 @@ public class AdjustmentServiceImpl implements AdjustmentService {
     }
 
     @Override
-    @Cacheable(cacheNames = CacheNames.ADJUSTMENT_UPDATE_STATS, key = "'default'", sync = true)
+    @Cacheable(cacheNames = CacheNames.ADJUSTMENT_UPDATE_STATS, key = "'default'")
     public AppAdjustmentUpdateStatsRespVO getAdjustmentUpdateStats() {
         Integer statYear = resolveStatsYear();
         AppAdjustmentUpdateStatsRespVO respVO = adjustmentMapper.selectUpdateStats(statYear);
@@ -1064,8 +1064,7 @@ public class AdjustmentServiceImpl implements AdjustmentService {
                     + " + ':p:' + (#reqVO.provinceCode == null ? '' : #reqVO.provinceCode)"
                     + " + ':sl:' + (#reqVO.schoolLevel == null ? '' : #reqVO.schoolLevel)"
                     + " + ':sm:' + (#reqVO.studyMode == null ? '' : #reqVO.studyMode)"
-                    + " + ':pn:' + #reqVO.pageNo + ':ps:' + #reqVO.pageSize",
-            sync = true)
+                    + " + ':pn:' + #reqVO.pageNo + ':ps:' + #reqVO.pageSize")
     public PageResult<AppAdjustmentSearchRespVO> getHotRankingPage(@Valid AppAdjustmentHotRankingReqVO reqVO) {
         PageResult<AppAdjustmentSearchRespVO> pageResult = adjustmentMapper.selectHotRankingPage(reqVO);
         List<AppAdjustmentSearchRespVO> list = pageResult.getList();
