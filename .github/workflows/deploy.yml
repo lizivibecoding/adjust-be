@@ -166,3 +166,54 @@ jobs:
               -p 48080:48080 \
               adjust-server:${{ github.sha }}
             docker image prune -af --filter "label=app=adjust-server" --filter "until=168h" || true
+
+  deploy_app3:
+    runs-on: ubuntu-latest
+    needs: build
+    # dev 只部署第一台机器，prod 部署三台
+    if: (github.event_name == 'push' && github.ref_name == 'prod') || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'prod')
+    environment: ${{ github.event.inputs.environment || (github.ref_name == 'prod' && 'prod' || 'dev') }}
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: adjust-server-deploy
+
+      - name: Upload jar
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ vars.DEPLOY_HOST_3 }}
+          username: ${{ vars.DEPLOY_USER }}
+          password: ${{ secrets.DEPLOY_PASSWORD_3 }}
+          source: "adjust-server.jar"
+          target: ${{ vars.DEPLOY_PATH_3 != '' && vars.DEPLOY_PATH_3 || vars.DEPLOY_PATH }}
+
+      - name: Upload Dockerfile
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ vars.DEPLOY_HOST_3 }}
+          username: ${{ vars.DEPLOY_USER }}
+          password: ${{ secrets.DEPLOY_PASSWORD_3 }}
+          source: "Dockerfile.adjust-server"
+          target: ${{ vars.DEPLOY_PATH_3 != '' && vars.DEPLOY_PATH_3 || vars.DEPLOY_PATH }}
+
+      - name: Restart app3
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ vars.DEPLOY_HOST_3 }}
+          username: ${{ vars.DEPLOY_USER }}
+          password: ${{ secrets.DEPLOY_PASSWORD_3 }}
+          script: |
+            set -e
+            cd ${{ vars.DEPLOY_PATH_3 != '' && vars.DEPLOY_PATH_3 || vars.DEPLOY_PATH }}
+            mkdir -p logs
+            docker rm -f adjust-server || true
+            docker build -f Dockerfile.adjust-server -t adjust-server:${{ github.sha }} --label app=adjust-server .
+            docker run -d --name adjust-server \
+              --restart unless-stopped \
+              -e SPRING_PROFILES_ACTIVE=${{ vars.SPRING_PROFILE }} \
+              -e JAVA_OPTS="-Xms12g -Xmx12g" \
+              -v ${{ (vars.DEPLOY_PATH_3 != '' && vars.DEPLOY_PATH_3 || vars.DEPLOY_PATH) }}/logs:/app/logs \
+              -p 48080:48080 \
+              adjust-server:${{ github.sha }}
+            docker image prune -af --filter "label=app=adjust-server" --filter "until=168h" || true

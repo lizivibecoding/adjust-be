@@ -40,8 +40,8 @@ spring:
     dynamic: # 多数据源配置
       druid: # Druid 【连接池】相关的全局配置
         initial-size: 1 # 初始连接数
-        min-idle: 1 # 最小连接池数量
-        max-active: 300 # 最大连接池数量
+        min-idle: 300 # 最小连接池数量
+        max-active: 2000 # 最大连接池数量
         max-wait: 60000 # 配置获取连接等待超时的时间，单位：毫秒（1 分钟）
         time-between-eviction-runs-millis: 60000 # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位：毫秒（1 分钟）
         min-evictable-idle-time-millis: 600000 # 配置一个连接在池中最小生存的时间，单位：毫秒（10 分钟）
@@ -209,7 +209,7 @@ adjust:
     refund-notify-url: https://adjust.hongguoyan.com/admin-api/pay/notify/refund # 支付渠道的【退款】回调地址
     transfer-notify-url: https://adjust.hongguoyan.com/admin-api/pay/notify/transfer # 支付渠道的【转账】回调地址
   access-log: # 访问日志的配置项
-    enable: true
+    enable: false
   demo: false # 关闭演示模式
   wxa-code:
     env-version: release # 小程序版本: 正式版为 "release"；体验版为 "trial"；开发版为 "develop"
