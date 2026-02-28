@@ -55,7 +55,7 @@ public class NationalLineEligibilityServiceImpl implements NationalLineEligibili
         }
         int year = preferredYear != null ? preferredYear : projectConfigService.getAdjustYear();
         List<NationalScoreDO> nationalScores = nationalScoreMapper.selectList(new LambdaQueryWrapper<NationalScoreDO>()
-            .eq(NationalScoreDO::getYear, year));
+            .eq(NationalScoreDO::getYear, year).eq(NationalScoreDO::getScoreType, 1));
         if (CollUtil.isEmpty(nationalScores)) {
             year = year - 1;
             nationalScores = nationalScoreMapper.selectList(new LambdaQueryWrapper<NationalScoreDO>()
@@ -68,13 +68,13 @@ public class NationalLineEligibilityServiceImpl implements NationalLineEligibili
         Set<String> intentionAreas = resolveIntentionAreas(userId);
         for (String area : intentionAreas) {
             NationalScoreDO matchedLine = findMatchedNationalLine(nationalScores, area, userProfile.getTargetMajorCode());
-            if ("A".equals(area)){
+            if ("A".equals(area)) {
                 matchedNationalLineA = matchedLine;
-            }else {
+            } else {
                 matchedNationalLineB = matchedLine;
             }
             if (!checkQualified(userProfile, matchedLine)) {
-                throw exception(ErrorCodeConstants.NATIONAL_SCORE_NOT_EXISTS);
+                throw exception(ErrorCodeConstants.USER_NOT_QUALIFIED, area);
             }
         }
         return NationalLineContext.builder()

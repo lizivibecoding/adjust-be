@@ -59,4 +59,17 @@ public interface SchoolScoreService {
      */
     PageResult<SchoolScoreDO> getSchoolScorePage(SchoolScorePageReqVO pageReqVO);
 
+    /**
+     * 获得指定年份的自划线列表（全量缓存）
+     *
+     * @param year 年份
+     * @return 自划线列表
+     */
+    List<SchoolScoreDO> getSchoolScoreList(Integer year);
+
+    /**
+     * 清除自划线缓存
+     */
+    void invalidateSchoolScoreListCache();
+
 }

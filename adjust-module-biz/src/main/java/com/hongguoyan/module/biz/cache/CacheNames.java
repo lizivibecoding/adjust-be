@@ -27,7 +27,5 @@ public interface CacheNames {
     String ADJUSTMENT_ADMIT_LIST = "biz:adjustment:admit-list";
 
     String UNDERGRADUATE_MAJOR_LIST = "biz:undergraduate-major:list";
-
-    String SCHOOL_RANK_LIST = "biz:school-rank:list";
 }
 

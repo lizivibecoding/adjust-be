@@ -1,5 +1,9 @@
 package com.hongguoyan.module.biz.service.school;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
+import java.time.Duration;
+import jakarta.annotation.PostConstruct;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.hongguoyan.framework.common.pojo.PageResult;
@@ -38,12 +42,20 @@ public class SchoolServiceImpl implements SchoolService {
     @Resource
     private FileApi fileApi;
 
+    private LoadingCache<String, List<SchoolDO>> schoolListCache;
+
+    @PostConstruct
+    public void init() {
+        schoolListCache = Caffeine.newBuilder()
+                .refreshAfterWrite(Duration.ofDays(1))
+                .build(key -> schoolMapper.selectList());
+    }
+
     @Override
     public Long createSchool(AppSchoolSaveReqVO createReqVO) {
         // 插入
         SchoolDO school = BeanUtils.toBean(createReqVO, SchoolDO.class);
         schoolMapper.insert(school);
-
         // 返回
         return school.getId();
     }
@@ -238,6 +250,16 @@ public class SchoolServiceImpl implements SchoolService {
             result.add(areaNode);
         }
         return result;
+    }
+
+    @Override
+    public List<SchoolDO> getSchoolList() {
+        return schoolListCache.get("all");
+    }
+
+    @Override
+    public void invalidateSchoolListCache() {
+        schoolListCache.invalidateAll();
     }
 
     private static String normalizeArea(String provinceArea) {

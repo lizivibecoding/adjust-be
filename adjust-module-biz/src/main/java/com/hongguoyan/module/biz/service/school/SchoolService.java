@@ -108,4 +108,16 @@ public interface SchoolService {
      */
     List<AppSchoolTreeAreaRespVO> getSchoolTree();
 
+    /**
+     * 获得所有学校列表（全量缓存）
+     *
+     * @return 学校列表
+     */
+    List<SchoolDO> getSchoolList();
+
+    /**
+     * 清除学校列表缓存
+     */
+    void invalidateSchoolListCache();
+
 }

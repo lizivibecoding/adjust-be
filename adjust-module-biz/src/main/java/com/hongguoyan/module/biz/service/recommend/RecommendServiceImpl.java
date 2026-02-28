@@ -1,9 +1,7 @@
 package com.hongguoyan.module.biz.service.recommend;
 
-import static com.hongguoyan.module.biz.enums.ErrorCodeConstants.VIP_BENEFIT_QUOTA_EXCEEDED;
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_MAJOR_CATEGORY_OPEN;
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_KEY_USER_REPORT;
-import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.BENEFIT_TYPE_QUOTA;
 import static com.hongguoyan.module.biz.service.vipbenefit.VipBenefitConstants.REF_TYPE_CUSTOM_REPORT;
 
 import cn.hutool.core.collection.CollUtil;
@@ -44,17 +42,18 @@ import com.hongguoyan.module.biz.dal.mysql.usercustomreport.UserCustomReportMapp
 import com.hongguoyan.module.biz.dal.mysql.userintention.UserIntentionMapper;
 import com.hongguoyan.module.biz.dal.mysql.userpreference.UserPreferenceMapper;
 import com.hongguoyan.module.biz.dal.mysql.userprofile.UserProfileMapper;
-import com.hongguoyan.module.biz.enums.adjustment.SubjectChoiceEnum;
 import com.hongguoyan.module.biz.enums.ErrorCodeConstants;
+import com.hongguoyan.module.biz.enums.adjustment.SubjectChoiceEnum;
 import com.hongguoyan.module.biz.service.ai.AiTextService;
 import com.hongguoyan.module.biz.service.ai.dto.AiTextRequest;
 import com.hongguoyan.module.biz.service.ai.dto.AiTextResult;
 import com.hongguoyan.module.biz.service.projectconfig.ProjectConfigService;
+import com.hongguoyan.module.biz.service.school.SchoolService;
+import com.hongguoyan.module.biz.service.schoolrank.SchoolRankService;
+import com.hongguoyan.module.biz.service.schoolscore.SchoolScoreService;
 import com.hongguoyan.module.biz.service.usercustomreport.UserCustomReportService;
 import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
-import com.hongguoyan.module.biz.service.vipbenefit.model.VipResolvedBenefit;
 import jakarta.annotation.Resource;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -68,7 +67,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -92,8 +90,6 @@ public class RecommendServiceImpl implements RecommendService {
     private SchoolMapper schoolMapper;
     @Resource
     private MajorMapper majorMapper;
-    @Resource
-    private SchoolScoreMapper schoolScoreMapper;
     @Resource
     private AdjustmentMapper adjustmentMapper;
     @Resource
@@ -120,6 +116,12 @@ public class RecommendServiceImpl implements RecommendService {
     private UserPreferenceMapper userPreferenceMapper;
     @Resource
     private ProjectConfigService projectConfigService;
+    @Resource
+    private SchoolService schoolService;
+    @Resource
+    private SchoolRankService schoolRankService;
+    @Resource
+    private SchoolScoreService schoolScoreService;
 
     @Override
     public PageResult<AppRecommendSchoolRespVO> recommendSchools(Long userId, AppRecommendSchoolListReqVO reqVO) {
@@ -472,15 +474,13 @@ public class RecommendServiceImpl implements RecommendService {
             throw ServiceExceptionUtil.exception(ErrorCodeConstants.INTENT_NO_FOUND);
         }
         // 预加载基础数据
-        List<SchoolDO> allSchools = schoolMapper.selectList();
+        List<SchoolDO> allSchools = schoolService.getSchoolList();
         Map<Long, SchoolDO> schoolMap = allSchools.stream()
                 .collect(Collectors.toMap(SchoolDO::getId, Function.identity()));
         Integer currentYear = projectConfigService.getAdjustYear();
         // 4. 加载并过滤学校
         // 预加载软科排名 (用于协同过滤)
-        List<SchoolRankDO> allRanks = schoolRankMapper.selectList(new LambdaQueryWrapper<SchoolRankDO>()
-                .orderByAsc(SchoolRankDO::getYear));
-
+        List<SchoolRankDO> allRanks = schoolRankService.getSchoolRankList();
         Map<Long, Double> schoolRankIdMap = new HashMap<>();
         Map<Long, Double> schoolRankSchoolIdMap = new HashMap<>();
         for (SchoolRankDO rank : allRanks) {
@@ -499,12 +499,10 @@ public class RecommendServiceImpl implements RecommendService {
 
         // 预加载所有学校分数线 (自划线)：优先当前年，无则回退到上一年
         Integer schoolScoreYear = currentYear;
-        List<SchoolScoreDO> allSchoolScores = schoolScoreMapper.selectList(new LambdaQueryWrapper<SchoolScoreDO>()
-                .eq(SchoolScoreDO::getYear, schoolScoreYear));
+        List<SchoolScoreDO> allSchoolScores = schoolScoreService.getSchoolScoreList(schoolScoreYear);
         if (CollUtil.isEmpty(allSchoolScores)) {
             schoolScoreYear = schoolScoreYear - 1;
-            allSchoolScores = schoolScoreMapper.selectList(new LambdaQueryWrapper<SchoolScoreDO>()
-                    .eq(SchoolScoreDO::getYear, schoolScoreYear));
+            allSchoolScores = schoolScoreService.getSchoolScoreList(schoolScoreYear);
         }
         // Map<SchoolId, List<SchoolScoreDO>> 记录具体分数线 (用于精筛)
         Map<Long, List<SchoolScoreDO>> schoolMajorScoreMap = new HashMap<>();
@@ -534,7 +532,6 @@ public class RecommendServiceImpl implements RecommendService {
 
         for (SchoolDO school : allSchools) {
             Long schoolId = school.getId();
-
             // 4.1 自划线粗筛 (School Level)
             // 必须满足该校对用户一志愿专业的自划线要求（总分 + 单科）
             List<SchoolScoreDO> majorScores = schoolMajorScoreMap.get(schoolId);

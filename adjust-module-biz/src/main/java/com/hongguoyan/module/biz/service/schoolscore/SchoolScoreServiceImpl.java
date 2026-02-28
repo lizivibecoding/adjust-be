@@ -1,5 +1,11 @@
 package com.hongguoyan.module.biz.service.schoolscore;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
+import java.time.Duration;
+import jakarta.annotation.PostConstruct;
+import org.springframework.cache.annotation.Cacheable;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import cn.hutool.core.collection.CollUtil;
 import org.springframework.stereotype.Service;
 import jakarta.annotation.Resource;
@@ -31,6 +37,16 @@ public class SchoolScoreServiceImpl implements SchoolScoreService {
 
     @Resource
     private SchoolScoreMapper schoolScoreMapper;
+
+    private LoadingCache<Integer, List<SchoolScoreDO>> schoolScoreListCache;
+
+    @PostConstruct
+    public void init() {
+        schoolScoreListCache = Caffeine.newBuilder()
+                .refreshAfterWrite(Duration.ofDays(1))
+                .build(year -> schoolScoreMapper.selectList(new LambdaQueryWrapper<SchoolScoreDO>()
+                        .eq(SchoolScoreDO::getYear, year)));
+    }
 
     @Override
     public Long createSchoolScore(SchoolScoreSaveReqVO createReqVO) {
@@ -80,6 +96,16 @@ public class SchoolScoreServiceImpl implements SchoolScoreService {
     @Override
     public PageResult<SchoolScoreDO> getSchoolScorePage(SchoolScorePageReqVO pageReqVO) {
         return schoolScoreMapper.selectPage(pageReqVO);
+    }
+
+    @Override
+    public List<SchoolScoreDO> getSchoolScoreList(Integer year) {
+        return schoolScoreListCache.get(year);
+    }
+
+    @Override
+    public void invalidateSchoolScoreListCache() {
+        schoolScoreListCache.invalidateAll();
     }
 
 }

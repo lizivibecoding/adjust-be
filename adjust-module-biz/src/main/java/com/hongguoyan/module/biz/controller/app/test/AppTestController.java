@@ -71,5 +71,14 @@ public class AppTestController {
         testToolService.approvePublisher(userId);
         return success(true);
     }
+
+    @PostMapping("/cache/clear")
+    @Operation(summary = "清除本地缓存")
+    @PermitAll
+    public CommonResult<Boolean> clearCache() {
+        validateOperatorIsAdmin();
+        testToolService.clearLocalCaches();
+        return success(true);
+    }
 }
 

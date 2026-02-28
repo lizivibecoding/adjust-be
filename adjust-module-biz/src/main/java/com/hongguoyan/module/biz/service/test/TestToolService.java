@@ -35,6 +35,9 @@ import com.hongguoyan.module.biz.dal.mysql.vipsubscriptionlog.VipSubscriptionLog
 import com.hongguoyan.module.biz.service.vipbenefit.VipBenefitService;
 import com.hongguoyan.module.biz.dal.mysql.publisher.PublisherMapper;
 import com.hongguoyan.module.biz.dal.mysql.publisherauditlog.PublisherAuditLogMapper;
+import com.hongguoyan.module.biz.service.school.SchoolService;
+import com.hongguoyan.module.biz.service.schoolrank.SchoolRankService;
+import com.hongguoyan.module.biz.service.schoolscore.SchoolScoreService;
 import jakarta.annotation.Resource;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -109,6 +112,21 @@ public class TestToolService {
     private VipPlanMapper vipPlanMapper;
     @Resource
     private VipBenefitService vipBenefitService;
+    @Resource
+    private SchoolService schoolService;
+    @Resource
+    private SchoolRankService schoolRankService;
+    @Resource
+    private SchoolScoreService schoolScoreService;
+
+    /**
+     * Clear all local caches (School, SchoolRank, SchoolScore)
+     */
+    public void clearLocalCaches() {
+        schoolService.invalidateSchoolListCache();
+        schoolRankService.invalidateSchoolRankListCache();
+        schoolScoreService.invalidateSchoolScoreListCache();
+    }
 
     /**
      * Reset user to a "new user" state for integration testing.

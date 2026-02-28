@@ -67,4 +67,16 @@ public interface SchoolRankService {
      */
     List<AppSchoolRankSimpleRespVO> getSchoolRankSimpleList(String schoolName);
 
+    /**
+     * 获得所有软科排名列表（全量缓存）
+     *
+     * @return 软科排名列表
+     */
+    List<SchoolRankDO> getSchoolRankList();
+
+    /**
+     * 清除软科排名缓存
+     */
+    void invalidateSchoolRankListCache();
+
 }

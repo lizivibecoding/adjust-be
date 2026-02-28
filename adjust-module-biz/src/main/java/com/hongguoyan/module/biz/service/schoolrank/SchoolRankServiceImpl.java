@@ -1,5 +1,11 @@
 package com.hongguoyan.module.biz.service.schoolrank;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
+import java.time.Duration;
+import jakarta.annotation.PostConstruct;
+import org.springframework.cache.annotation.Cacheable;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.stereotype.Service;
 import jakarta.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
@@ -28,6 +34,16 @@ public class SchoolRankServiceImpl implements SchoolRankService {
 
     @Resource
     private SchoolRankMapper schoolRankMapper;
+
+    private LoadingCache<String, List<SchoolRankDO>> schoolRankListCache;
+
+    @PostConstruct
+    public void init() {
+        schoolRankListCache = Caffeine.newBuilder()
+                .refreshAfterWrite(Duration.ofDays(1))
+                .build(key -> schoolRankMapper.selectList(new LambdaQueryWrapper<SchoolRankDO>()
+                        .orderByAsc(SchoolRankDO::getYear)));
+    }
 
     @Override
     public Long createSchoolRank(SchoolRankSaveReqVO createReqVO) {
@@ -90,6 +106,16 @@ public class SchoolRankServiceImpl implements SchoolRankService {
             vo.setSchoolName(item.getSchoolName());
             return vo;
         }).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<SchoolRankDO> getSchoolRankList() {
+        return schoolRankListCache.get("all");
+    }
+
+    @Override
+    public void invalidateSchoolRankListCache() {
+        schoolRankListCache.invalidateAll();
     }
 
 }
