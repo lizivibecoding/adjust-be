@@ -4,12 +4,9 @@ import com.hongguoyan.framework.common.pojo.PageParam;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
-import static com.hongguoyan.framework.common.util.date.DateUtils.FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND;
 
 @Schema(description = "调剂全局搜索-请求")
 @Data
@@ -71,8 +68,7 @@ public class AppAdjustmentSearchReqVO extends PageParam {
     @Schema(description = "院校标签(特性)")
     private String schoolFeature;
 
-    @Schema(description = "发布时间区间")
-    @DateTimeFormat(pattern = FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND)
+    @Schema(description = "发布时间区间（支持 ISO 8601 with Z 或 yyyy-MM-dd HH:mm:ss）")
     private LocalDateTime[] publishTime;
 
     @Schema(description = "科目代码筛选(多选)")

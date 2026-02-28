@@ -1,6 +1,7 @@
 package com.hongguoyan.module.biz.controller.app.adjustment;
 
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.WebDataBinder;
 import jakarta.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
 
@@ -13,6 +14,14 @@ import jakarta.validation.*;
 import jakarta.servlet.http.*;
 import java.util.*;
 import java.io.IOException;
+import java.beans.PropertyEditorSupport;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.hongguoyan.framework.common.pojo.PageParam;
 import com.hongguoyan.framework.common.pojo.PageResult;
@@ -46,6 +55,48 @@ public class AppAdjustmentController {
     private SchoolSpecialOptionsService schoolSpecialOptionsService;
     @Resource
     private AdjustmentAdmitService adjustmentAdmitService;
+
+    /** 解析前端传来的 publishTime JSON 数组字符串，支持 ISO 8601 with Z */
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.registerCustomEditor(LocalDateTime[].class, "publishTime", new PropertyEditorSupport() {
+            @Override
+            public void setAsText(String text) {
+                if (text == null || text.trim().isEmpty()) {
+                    setValue(null);
+                    return;
+                }
+                String raw = text.trim();
+                if (raw.startsWith("[") && raw.endsWith("]")) {
+                    raw = raw.substring(1, raw.length() - 1).trim();
+                }
+                if (raw.isEmpty()) {
+                    setValue(null);
+                    return;
+                }
+                List<LocalDateTime> result = new ArrayList<>();
+                for (String part : raw.split(",")) {
+                    String s = part.trim().replaceAll("^\"|\"$", "");
+                    if (s.isEmpty()) continue;
+                    result.add(parse(s));
+                }
+                setValue(result.isEmpty() ? null : result.toArray(new LocalDateTime[0]));
+            }
+
+            private LocalDateTime parse(String s) {
+                try {
+                    return OffsetDateTime.parse(s, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                            .atZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
+                } catch (DateTimeParseException e) {
+                    try {
+                        return LocalDateTime.parse(s, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                    } catch (DateTimeParseException ex) {
+                        throw new IllegalArgumentException("publishTime 格式无法解析: " + s);
+                    }
+                }
+            }
+        });
+    }
 
     @GetMapping("/search")
     @Operation(summary = "调剂全局搜索")
