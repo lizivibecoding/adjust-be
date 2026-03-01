@@ -23,6 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 import me.zhyd.oauth.model.AuthUser;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.Collections;
@@ -151,9 +153,10 @@ public class SocialUserServiceImpl implements SocialUserService {
         AuthUser authUser = socialClientService.getAuthUser(socialType, userType, code, state);
         Assert.notNull(authUser, "三方用户不能为空");
 
-        // 对同一 openid 加锁，防止并发请求在 system_social_user 中插入重复行
+        // 对同一 openid 加锁，防止并发请求插入重复行
+        // 注意：锁必须在事务提交后释放，否则另一线程进锁时仍看不到未提交的 insert
         String lockKey = "social:auth:" + socialType + ":" + authUser.getUuid();
-        LockInfo lockInfo = lockTemplate.lock(lockKey, 30_000L, 5_0000L);
+        LockInfo lockInfo = lockTemplate.lock(lockKey, 30_000L, 5_000L);
         if (lockInfo == null) {
             throw new ServiceException(0, "社交登录请求过于频繁，请稍后重试");
         }
@@ -177,8 +180,15 @@ public class SocialUserServiceImpl implements SocialUserService {
                 socialUser.clean(); // 避免 updateTime 不更新：https://gitee.com/adjustcode/adjust-boot-mini/issues/ID7FUL
                 socialUserMapper.updateById(socialUser);
             }
+            // 事务提交后再释放锁，保证 Thread B 进锁时能读到 Thread A 已提交的数据
+            LockInfo finalLockInfo = lockInfo;
+            lockInfo = null;
+            releaseLockAfterTx(finalLockInfo);
         } finally {
-            lockTemplate.releaseLock(lockInfo);
+            // 正常路径 lockInfo 已置 null；仅异常时走到这里，事务回滚，直接释放
+            if (lockInfo != null) {
+                lockTemplate.releaseLock(lockInfo);
+            }
         }
         return socialUser;
     }
@@ -249,6 +259,23 @@ public class SocialUserServiceImpl implements SocialUserService {
             return ReflectUtil.getFieldValue(obj, fieldName);
         } catch (Exception ignored) {
             return null;
+        }
+    }
+
+    /**
+     * 若当前存在活跃事务，则在事务提交/回滚后释放锁；否则立即释放。
+     * 目的：防止锁在事务提交前释放，导致另一线程进锁时读到未提交数据。
+     */
+    private void releaseLockAfterTx(LockInfo lockInfo) {
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCompletion(int status) {
+                    lockTemplate.releaseLock(lockInfo);
+                }
+            });
+        } else {
+            lockTemplate.releaseLock(lockInfo);
         }
     }
 

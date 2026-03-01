@@ -32,6 +32,8 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.Objects;
 
@@ -141,8 +143,20 @@ public class MemberAuthServiceImpl implements MemberAuthService {
                     socialUserApi.bindSocialUser(new SocialUserBindReqDTO(user.getId(), getUserType().getValue(),
                             reqVO.getType(), reqVO.getCode(), reqVO.getState()));
                 }
+                // 锁必须在事务提交后释放，否则另一个线程进锁时读到的仍是未提交数据
+                LockInfo finalLockInfo = lockInfo;
+                lockInfo = null;
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCompletion(int status) {
+                        lockTemplate.releaseLock(finalLockInfo);
+                    }
+                });
             } finally {
-                lockTemplate.releaseLock(lockInfo);
+                // 正常路径 lockInfo 已置 null；仅异常时走到这里，事务回滚，直接释放
+                if (lockInfo != null) {
+                    lockTemplate.releaseLock(lockInfo);
+                }
             }
         }
         if (user == null) {

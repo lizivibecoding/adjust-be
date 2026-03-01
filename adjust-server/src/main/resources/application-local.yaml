@@ -46,7 +46,7 @@ spring:
       primary: master
       datasource:
         master:
-          url: jdbc:mysql://rm-uf64101olpm7c18u88o.mysql.rds.aliyuncs.com:3306/adjust_dev?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true&rewriteBatchedStatements=true
+          url: jdbc:mysql://rm-uf64101olpm7c18u88o.mysql.rds.aliyuncs.com:3306/adjust_2?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true&rewriteBatchedStatements=true
           username: root
           password: Rv82&&-xDvfVR
 
