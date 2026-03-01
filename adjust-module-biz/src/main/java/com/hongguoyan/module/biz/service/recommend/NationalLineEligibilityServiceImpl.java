@@ -21,6 +21,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
@@ -73,8 +74,17 @@ public class NationalLineEligibilityServiceImpl implements NationalLineEligibili
             } else {
                 matchedNationalLineB = matchedLine;
             }
-            if (!checkQualified(userProfile, matchedLine)) {
-                throw exception(ErrorCodeConstants.USER_NOT_QUALIFIED, area);
+        }
+        
+        // 优先判断 B 区（门槛较低），只要包含 B 区意向且过了 B 区线，即视为有资格
+        if (intentionAreas.contains("B")) {
+            if (matchedNationalLineB != null && !checkQualified(userProfile, matchedNationalLineB)) {
+                throw exception(ErrorCodeConstants.USER_NOT_QUALIFIED, "B");
+            }
+        } else if (intentionAreas.contains("A")) {
+            // 仅有 A 区意向
+            if (matchedNationalLineA != null && !checkQualified(userProfile, matchedNationalLineA)) {
+                throw exception(ErrorCodeConstants.USER_NOT_QUALIFIED, "A");
             }
         }
         return NationalLineContext.builder()
