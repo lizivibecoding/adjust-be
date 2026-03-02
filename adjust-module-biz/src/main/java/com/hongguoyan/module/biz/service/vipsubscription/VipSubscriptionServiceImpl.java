@@ -119,24 +119,52 @@ public class VipSubscriptionServiceImpl implements VipSubscriptionService {
 
     @Override
     public VipSubscriptionSummaryRespVO getVipSubscriptionSummary() {
+        return getVipSubscriptionSummary(new VipSubscriptionPageReqVO());
+    }
+
+    @Override
+    public VipSubscriptionSummaryRespVO getVipSubscriptionSummary(VipSubscriptionPageReqVO pageReqVO) {
+        VipSubscriptionPageReqVO reqVO = pageReqVO == null ? new VipSubscriptionPageReqVO() : pageReqVO;
+        applyKeywordFilter(reqVO);
+
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime monthStart = LocalDate.now().withDayOfMonth(1).atStartOfDay();
         LocalDateTime monthEnd = LocalDate.now().plusMonths(1).withDayOfMonth(1).atStartOfDay().minusSeconds(1);
 
-        Long vipCount = vipSubscriptionMapper.selectCount(new LambdaQueryWrapperX<VipSubscriptionDO>()
-                .eq(VipSubscriptionDO::getPlanCode, "VIP")
-                .ge(VipSubscriptionDO::getEndTime, now));
-        Long svipCount = vipSubscriptionMapper.selectCount(new LambdaQueryWrapperX<VipSubscriptionDO>()
-                .eq(VipSubscriptionDO::getPlanCode, "SVIP")
-                .ge(VipSubscriptionDO::getEndTime, now));
-        Long monthNewCount = vipSubscriptionMapper.selectCount(new LambdaQueryWrapperX<VipSubscriptionDO>()
-                .between(VipSubscriptionDO::getCreateTime, monthStart, monthEnd));
+        LambdaQueryWrapperX<VipSubscriptionDO> vipWrapper = buildSummaryWrapper(reqVO);
+        vipWrapper.eq(VipSubscriptionDO::getPlanCode, "VIP");
+        if (reqVO.getEndTime() == null) {
+            vipWrapper.ge(VipSubscriptionDO::getEndTime, now);
+        }
+        Long vipCount = vipSubscriptionMapper.selectCount(vipWrapper);
+
+        LambdaQueryWrapperX<VipSubscriptionDO> svipWrapper = buildSummaryWrapper(reqVO);
+        svipWrapper.eq(VipSubscriptionDO::getPlanCode, "SVIP");
+        if (reqVO.getEndTime() == null) {
+            svipWrapper.ge(VipSubscriptionDO::getEndTime, now);
+        }
+        Long svipCount = vipSubscriptionMapper.selectCount(svipWrapper);
+
+        LambdaQueryWrapperX<VipSubscriptionDO> monthNewWrapper = buildSummaryWrapper(reqVO);
+        monthNewWrapper.between(VipSubscriptionDO::getCreateTime, monthStart, monthEnd);
+        Long monthNewCount = vipSubscriptionMapper.selectCount(monthNewWrapper);
 
         VipSubscriptionSummaryRespVO respVO = new VipSubscriptionSummaryRespVO();
         respVO.setVipCount(vipCount == null ? 0L : vipCount);
         respVO.setSvipCount(svipCount == null ? 0L : svipCount);
         respVO.setMonthNewCount(monthNewCount == null ? 0L : monthNewCount);
         return respVO;
+    }
+
+    private LambdaQueryWrapperX<VipSubscriptionDO> buildSummaryWrapper(VipSubscriptionPageReqVO reqVO) {
+        return new LambdaQueryWrapperX<VipSubscriptionDO>()
+                .eqIfPresent(VipSubscriptionDO::getUserId, reqVO.getUserId())
+                .inIfPresent(VipSubscriptionDO::getUserId, reqVO.getUserIds())
+                .eqIfPresent(VipSubscriptionDO::getPlanCode, reqVO.getPlanCode())
+                .betweenIfPresent(VipSubscriptionDO::getStartTime, reqVO.getStartTime())
+                .betweenIfPresent(VipSubscriptionDO::getEndTime, reqVO.getEndTime())
+                .eqIfPresent(VipSubscriptionDO::getSource, reqVO.getSource())
+                .betweenIfPresent(VipSubscriptionDO::getCreateTime, reqVO.getCreateTime());
     }
 
     private void setMemberStatus(VipSubscriptionRespVO respVO) {

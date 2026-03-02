@@ -28,6 +28,14 @@ public interface VipOrderService {
     PageResult<VipOrderRespVO> getVipOrderPage(VipOrderPageReqVO pageReqVO);
 
     /**
+     * 获得会员订单统计
+     *
+     * @param pageReqVO 筛选条件
+     * @return 统计数据
+     */
+    VipOrderSummaryRespVO getVipOrderSummary(VipOrderPageReqVO pageReqVO);
+
+    /**
      * 关闭已过期的待支付会员订单
      *
      * @return 处理数量

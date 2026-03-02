@@ -47,8 +47,8 @@ public class VipSubscriptionController {
     @GetMapping("/summary")
     @Operation(summary = "获得用户会员订阅统计")
     @PreAuthorize("@ss.hasPermission('biz:vip-subscription:query')")
-    public CommonResult<VipSubscriptionSummaryRespVO> getVipSubscriptionSummary() {
-        return success(vipSubscriptionService.getVipSubscriptionSummary());
+    public CommonResult<VipSubscriptionSummaryRespVO> getVipSubscriptionSummary(@Valid VipSubscriptionPageReqVO pageReqVO) {
+        return success(vipSubscriptionService.getVipSubscriptionSummary(pageReqVO));
     }
 
 }

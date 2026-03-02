@@ -29,6 +29,14 @@ public interface VipSubscriptionService {
     /**
      * 获得用户会员订阅统计
      *
+     * @param pageReqVO 筛选条件（可为空）
+     * @return 统计数据
+     */
+    VipSubscriptionSummaryRespVO getVipSubscriptionSummary(VipSubscriptionPageReqVO pageReqVO);
+
+    /**
+     * 获得用户会员订阅统计
+     *
      * @return 统计数据
      */
     VipSubscriptionSummaryRespVO getVipSubscriptionSummary();

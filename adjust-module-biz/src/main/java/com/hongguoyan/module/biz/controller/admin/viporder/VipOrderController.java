@@ -68,4 +68,11 @@ public class VipOrderController {
         return success(vipOrderService.refundLatestPaidOrder(reqVO));
     }
 
+    @GetMapping("/summary")
+    @Operation(summary = "获得会员订单统计")
+    @PreAuthorize("@ss.hasPermission('biz:vip-order:query')")
+    public CommonResult<VipOrderSummaryRespVO> getVipOrderSummary(@Valid VipOrderPageReqVO pageReqVO) {
+        return success(vipOrderService.getVipOrderSummary(pageReqVO));
+    }
+
 }

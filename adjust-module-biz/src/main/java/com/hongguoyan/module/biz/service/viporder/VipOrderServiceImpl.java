@@ -25,6 +25,7 @@ import com.hongguoyan.module.biz.controller.admin.viporder.vo.VipOrderPageReqVO;
 import com.hongguoyan.module.biz.controller.admin.viporder.vo.VipOrderRefundReqVO;
 import com.hongguoyan.module.biz.controller.admin.viporder.vo.VipOrderRefundRespVO;
 import com.hongguoyan.module.biz.controller.admin.viporder.vo.VipOrderRespVO;
+import com.hongguoyan.module.biz.controller.admin.viporder.vo.VipOrderSummaryRespVO;
 import com.hongguoyan.module.biz.dal.dataobject.viporder.VipOrderDO;
 import com.hongguoyan.module.biz.enums.vip.VipOrderStatusEnum;
 import com.hongguoyan.framework.common.pojo.PageResult;
@@ -71,6 +72,20 @@ public class VipOrderServiceImpl implements VipOrderService {
         PageResult<VipOrderRespVO> result = BeanUtils.toBean(pageResult, VipOrderRespVO.class);
         fillUserInfo(result.getList());
         return result;
+    }
+
+    @Override
+    public VipOrderSummaryRespVO getVipOrderSummary(VipOrderPageReqVO pageReqVO) {
+        VipOrderSummaryRespVO respVO = vipOrderMapper.selectSummary(pageReqVO);
+        if (respVO == null) {
+            respVO = new VipOrderSummaryRespVO();
+        }
+        respVO.setVipCount(respVO.getVipCount() == null ? 0L : respVO.getVipCount());
+        respVO.setSvipCount(respVO.getSvipCount() == null ? 0L : respVO.getSvipCount());
+        respVO.setMemberCount(respVO.getMemberCount() == null ? 0L : respVO.getMemberCount());
+        respVO.setIncomeAmount(respVO.getIncomeAmount() == null ? 0L : respVO.getIncomeAmount());
+        respVO.setRefundAmount(respVO.getRefundAmount() == null ? 0L : respVO.getRefundAmount());
+        return respVO;
     }
 
     private void fillUserInfo(List<VipOrderRespVO> list) {
