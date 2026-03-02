@@ -1,11 +1,11 @@
-import { performance } from "node:perf_hooks"
-import fs from "node:fs"
-import path from "node:path"
-import crypto from "node:crypto"
+const { performance } = require("node:perf_hooks")
+const fs = require("node:fs")
+const path = require("node:path")
+const crypto = require("node:crypto")
 
 // ====== 配置（按需改这里）======
 // token 不含 "Bearer " 前缀
-const TOKEN = "ee5b340625894832b1354d2ef4ddfbaf"
+const TOKEN = "CHANGE_ME"
 // 注意：包含 /app-api 前缀（与 curl 一致）
 const BASE_URL = "http://127.0.0.1:48080/app-api"
 
@@ -14,15 +14,13 @@ function usageAndExit(code = 1) {
   console.log(
     [
       "Usage:",
-      "  node same-score.verify.mjs record --tag before",
-      "  node same-score.verify.mjs verify --tag after --against before",
+      "  node same-score.verify.js record",
+      "  node same-score.verify.js verify",
       "",
       "Config:",
       "  Edit TOKEN / BASE_URL constants in this script",
       "",
       "Options:",
-      "  --tag <name>           label for this run (required)",
-      "  --against <tag>        baseline tag to compare (verify mode)",
       "  --iters <n>            benchmark iterations per endpoint (default 30)",
       "  --warmup <n>           warmup iterations per endpoint (default 5)"
     ].join("\n")
@@ -34,9 +32,7 @@ function parseArgs(argv) {
   const args = { _: [] }
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]
-    if (a === "--tag") args.tag = argv[++i]
-    else if (a === "--against") args.against = argv[++i]
-    else if (a === "--iters") args.iters = Number(argv[++i])
+    if (a === "--iters") args.iters = Number(argv[++i])
     else if (a === "--warmup") args.warmup = Number(argv[++i])
     else if (a.startsWith("--")) {
       console.error(`Unknown option: ${a}`)
@@ -48,6 +44,16 @@ function parseArgs(argv) {
 
 function ensureDir(p) {
   fs.mkdirSync(p, { recursive: true })
+}
+
+function resetDir(p) {
+  // Re-run friendly: delete old artifacts and recreate.
+  try {
+    fs.rmSync(p, { recursive: true, force: true })
+  } catch (_) {
+    // ignore
+  }
+  ensureDir(p)
 }
 
 function sha256(s) {
@@ -68,11 +74,6 @@ function stableStringify(value) {
     return out
   }
   return JSON.stringify(normalize(value), null, 2)
-}
-
-function pct(n, d) {
-  if (!Number.isFinite(n) || !Number.isFinite(d) || d === 0) return null
-  return ((n / d) * 100).toFixed(2) + "%"
 }
 
 function stats(msList) {
@@ -176,7 +177,6 @@ async function httpJson(url, token, debugDir) {
     json = text ? JSON.parse(text) : null
   } catch (e) {
     const snippet = text?.slice(0, 300)
-    // Persist response for debugging (usually HTML fallback / redirect landing page)
     try {
       if (debugDir) {
         ensureDir(debugDir)
@@ -219,9 +219,7 @@ async function benchEndpoint({ name, url, token, warmup, iters, normalize, debug
 function loadRun(runDir) {
   const metaPath = path.join(runDir, "meta.json")
   const meta = JSON.parse(fs.readFileSync(metaPath, "utf8"))
-  const sameScore = JSON.parse(
-    fs.readFileSync(path.join(runDir, "same-score.normalized.json"), "utf8")
-  )
+  const sameScore = JSON.parse(fs.readFileSync(path.join(runDir, "same-score.normalized.json"), "utf8"))
   const sameScoreStat = JSON.parse(
     fs.readFileSync(path.join(runDir, "same-score-stat.normalized.json"), "utf8")
   )
@@ -243,12 +241,15 @@ function improvement(before, after) {
 async function main() {
   const args = parseArgs(process.argv.slice(2))
   const mode = args._[0]
-  const tag = args.tag
-  if (!mode || !tag) usageAndExit(2)
+  if (!mode) usageAndExit(2)
+  if (mode !== "record" && mode !== "verify") {
+    console.error(`Unknown mode: ${mode}`)
+    usageAndExit(2)
+  }
 
   const token = TOKEN
-  if (!token) {
-    console.error("Missing TOKEN constant in script (bearer token without prefix).")
+  if (!token || token === "CHANGE_ME") {
+    console.error('Missing TOKEN constant in script (set TOKEN, bearer token without "Bearer " prefix).')
     usageAndExit(2)
   }
 
@@ -286,167 +287,117 @@ async function main() {
 
   const root = path.resolve(process.cwd(), "artifacts", "same-score-verify")
   ensureDir(root)
+
+  const tag = mode === "record" ? "before" : "after"
   const runDir = path.join(root, tag)
+  const baseDir = path.join(root, "before")
+
+  if (mode === "verify" && !fs.existsSync(baseDir)) {
+    console.error(`Baseline not found: ${baseDir}`)
+    process.exit(2)
+  }
+  resetDir(runDir)
+
+  const results = []
+  for (const ep of endpoints) {
+    console.log(`${mode === "record" ? "Recording" : "Verifying"} ${ep.name} ...`)
+    results.push(await benchEndpoint({ ...ep, token, warmup, iters, debugDir: path.join(runDir, "debug") }))
+  }
+
+  const meta = {
+    tag,
+    mode,
+    baseUrl,
+    warmup,
+    iters,
+    createdAt: new Date().toISOString(),
+    endpoints: results.map((r) => ({ name: r.name, url: r.url, stats: r.stats }))
+  }
+  fs.writeFileSync(path.join(runDir, "meta.json"), stableStringify(meta))
+
+  for (const r of results) {
+    const normJsonPath = path.join(runDir, `${r.name}.normalized.json`)
+    const normText = stableStringify(r.normalized)
+    fs.writeFileSync(normJsonPath, normText)
+    fs.writeFileSync(path.join(runDir, `${r.name}.sha256`), sha256(normText) + "\n")
+    fs.writeFileSync(path.join(runDir, `${r.name}.bench.json`), stableStringify({ stats: r.stats, timesMs: r.timesMs }))
+    console.log(formatStats(r.name, r.stats))
+  }
 
   if (mode === "record") {
-    if (fs.existsSync(runDir)) {
-      console.error(`Run tag already exists: ${runDir}`)
-      process.exit(2)
-    }
-    ensureDir(runDir)
-
-    const results = []
-    for (const ep of endpoints) {
-      console.log(`Recording ${ep.name} ...`)
-      results.push(
-        await benchEndpoint({ ...ep, token, warmup, iters, debugDir: path.join(runDir, "debug") })
-      )
-    }
-
-    const meta = {
-      tag,
-      mode,
-      baseUrl,
-      warmup,
-      iters,
-      createdAt: new Date().toISOString(),
-      endpoints: results.map((r) => ({ name: r.name, url: r.url, stats: r.stats }))
-    }
-    fs.writeFileSync(path.join(runDir, "meta.json"), stableStringify(meta))
-
-    for (const r of results) {
-      const normJsonPath = path.join(runDir, `${r.name}.normalized.json`)
-      const normText = stableStringify(r.normalized)
-      fs.writeFileSync(normJsonPath, normText)
-      fs.writeFileSync(path.join(runDir, `${r.name}.sha256`), sha256(normText) + "\n")
-      fs.writeFileSync(
-        path.join(runDir, `${r.name}.bench.json`),
-        stableStringify({ stats: r.stats, timesMs: r.timesMs })
-      )
-      console.log(formatStats(r.name, r.stats))
-    }
-
     console.log(`Saved baseline to: ${runDir}`)
     return
   }
 
-  if (mode === "verify") {
-    const against = args.against
-    if (!against) usageAndExit(2)
-    const baseDir = path.join(root, against)
-    if (!fs.existsSync(baseDir)) {
-      console.error(`Baseline tag not found: ${baseDir}`)
-      process.exit(2)
-    }
+  const okSameScore = diffHashes(path.join(baseDir, "same-score.sha256"), path.join(runDir, "same-score.sha256"))
+  const okStat = diffHashes(
+    path.join(baseDir, "same-score-stat.sha256"),
+    path.join(runDir, "same-score-stat.sha256")
+  )
 
-    ensureDir(runDir)
-    const results = []
-    for (const ep of endpoints) {
-      console.log(`Verifying ${ep.name} ...`)
-      results.push(
-        await benchEndpoint({ ...ep, token, warmup, iters, debugDir: path.join(runDir, "debug") })
-      )
-    }
+  const baseRun = loadRun(baseDir)
+  const curRun = loadRun(runDir)
+  const baseStats = Object.fromEntries(baseRun.meta.endpoints.map((e) => [e.name, e.stats]))
+  const curStats = Object.fromEntries(curRun.meta.endpoints.map((e) => [e.name, e.stats]))
 
-    // Save current run artifacts
-    const meta = {
-      tag,
-      mode,
-      against,
-      baseUrl,
-      warmup,
-      iters,
-      createdAt: new Date().toISOString(),
-      endpoints: results.map((r) => ({ name: r.name, url: r.url, stats: r.stats }))
-    }
-    fs.writeFileSync(path.join(runDir, "meta.json"), stableStringify(meta))
-    for (const r of results) {
-      const normJsonPath = path.join(runDir, `${r.name}.normalized.json`)
-      const normText = stableStringify(r.normalized)
-      fs.writeFileSync(normJsonPath, normText)
-      fs.writeFileSync(path.join(runDir, `${r.name}.sha256`), sha256(normText) + "\n")
-      fs.writeFileSync(
-        path.join(runDir, `${r.name}.bench.json`),
-        stableStringify({ stats: r.stats, timesMs: r.timesMs })
-      )
-      console.log(formatStats(r.name, r.stats))
-    }
-
-    // Compare hashes (fast) and write a small report
-    const okSameScore = diffHashes(
-      path.join(baseDir, "same-score.sha256"),
-      path.join(runDir, "same-score.sha256")
-    )
-    const okStat = diffHashes(
-      path.join(baseDir, "same-score-stat.sha256"),
-      path.join(runDir, "same-score-stat.sha256")
-    )
-
-    const baseRun = loadRun(baseDir)
-    const curRun = loadRun(runDir)
-    const baseStats = Object.fromEntries(baseRun.meta.endpoints.map((e) => [e.name, e.stats]))
-    const curStats = Object.fromEntries(curRun.meta.endpoints.map((e) => [e.name, e.stats]))
-
-    const report = {
-      accuracy: {
-        sameScoreHashEqual: okSameScore,
-        sameScoreStatHashEqual: okStat
+  const report = {
+    accuracy: {
+      sameScoreHashEqual: okSameScore,
+      sameScoreStatHashEqual: okStat
+    },
+    performance: {
+      sameScore: {
+        before: baseStats["same-score"],
+        after: curStats["same-score"],
+        avgImprovementPct: improvement(baseStats["same-score"], curStats["same-score"]),
+        p95ImprovementPct:
+          baseStats["same-score"]?.p95Ms && curStats["same-score"]?.p95Ms
+            ? ((baseStats["same-score"].p95Ms - curStats["same-score"].p95Ms) / baseStats["same-score"].p95Ms) *
+              100
+            : null
       },
-      performance: {
-        sameScore: {
-          before: baseStats["same-score"],
-          after: curStats["same-score"],
-          avgImprovementPct: improvement(baseStats["same-score"], curStats["same-score"]),
-          p95ImprovementPct:
-            baseStats["same-score"]?.p95Ms && curStats["same-score"]?.p95Ms
-              ? ((baseStats["same-score"].p95Ms - curStats["same-score"].p95Ms) /
-                  baseStats["same-score"].p95Ms) *
-                100
-              : null
-        },
-        sameScoreStat: {
-          before: baseStats["same-score-stat"],
-          after: curStats["same-score-stat"],
-          avgImprovementPct: improvement(baseStats["same-score-stat"], curStats["same-score-stat"]),
-          p95ImprovementPct:
-            baseStats["same-score-stat"]?.p95Ms && curStats["same-score-stat"]?.p95Ms
-              ? ((baseStats["same-score-stat"].p95Ms - curStats["same-score-stat"].p95Ms) /
-                  baseStats["same-score-stat"].p95Ms) *
-                100
-              : null
-        }
+      sameScoreStat: {
+        before: baseStats["same-score-stat"],
+        after: curStats["same-score-stat"],
+        avgImprovementPct: improvement(baseStats["same-score-stat"], curStats["same-score-stat"]),
+        p95ImprovementPct:
+          baseStats["same-score-stat"]?.p95Ms && curStats["same-score-stat"]?.p95Ms
+            ? ((baseStats["same-score-stat"].p95Ms - curStats["same-score-stat"].p95Ms) /
+                baseStats["same-score-stat"].p95Ms) *
+              100
+            : null
       }
     }
-    fs.writeFileSync(path.join(runDir, "report.json"), stableStringify(report))
-
-    console.log("")
-    console.log("Accuracy:")
-    console.log(`  same-score:      ${okSameScore ? "OK" : "DIFF (see normalized json)"}`)
-    console.log(`  same-score-stat: ${okStat ? "OK" : "DIFF (see normalized json)"}`)
-    console.log("")
-    console.log("Performance (avg / p95 improvement; positive=faster):")
-    const s1 = report.performance.sameScore
-    const s2 = report.performance.sameScoreStat
-    console.log(
-      `  same-score:      avg ${s1.avgImprovementPct == null ? "?" : s1.avgImprovementPct.toFixed(2) + "%"}, p95 ${
-        s1.p95ImprovementPct == null ? "?" : s1.p95ImprovementPct.toFixed(2) + "%"
-      }`
-    )
-    console.log(
-      `  same-score-stat: avg ${s2.avgImprovementPct == null ? "?" : s2.avgImprovementPct.toFixed(2) + "%"}, p95 ${
-        s2.p95ImprovementPct == null ? "?" : s2.p95ImprovementPct.toFixed(2) + "%"
-      }`
-    )
-
-    if (!okSameScore || !okStat) {
-      process.exitCode = 1
-    }
-    console.log(`\nSaved run to: ${runDir}`)
-    return
   }
+  fs.writeFileSync(path.join(runDir, "report.json"), stableStringify(report))
 
-  console.error(`Unknown mode: ${mode}`)
-  usageAndExit(2)
+  console.log("")
+  console.log("Accuracy:")
+  console.log(`  same-score:      ${okSameScore ? "OK" : "DIFF (see normalized json)"}`)
+  console.log(`  same-score-stat: ${okStat ? "OK" : "DIFF (see normalized json)"}`)
+  console.log("")
+  console.log("Performance (avg / p95 improvement; positive=faster):")
+  const s1 = report.performance.sameScore
+  const s2 = report.performance.sameScoreStat
+  console.log(
+    `  same-score:      avg ${s1.avgImprovementPct == null ? "?" : s1.avgImprovementPct.toFixed(2) + "%"}, p95 ${
+      s1.p95ImprovementPct == null ? "?" : s1.p95ImprovementPct.toFixed(2) + "%"
+    }`
+  )
+  console.log(
+    `  same-score-stat: avg ${s2.avgImprovementPct == null ? "?" : s2.avgImprovementPct.toFixed(2) + "%"}, p95 ${
+      s2.p95ImprovementPct == null ? "?" : s2.p95ImprovementPct.toFixed(2) + "%"
+    }`
+  )
+
+  if (!okSameScore || !okStat) {
+    process.exitCode = 1
+  }
+  console.log(`\nSaved run to: ${runDir}`)
 }
 
-await main()
+main().catch((e) => {
+  console.error(e)
+  process.exit(1)
+})
+

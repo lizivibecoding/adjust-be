@@ -67,23 +67,31 @@ public interface AdjustmentMapper extends BaseMapperX<AdjustmentDO> {
 
     default PageResult<AppAdjustmentSearchRespVO> selectSearchMajorPage(AppAdjustmentSearchReqVO reqVO) {
         Page<AppAdjustmentSearchRespVO> page = MyBatisUtils.buildPage(reqVO);
+        // Do NOT use MP auto count (it wraps full GROUP BY/ORDER BY SQL into subquery), use custom count SQL instead.
+        page.setSearchCount(false);
         List<AppAdjustmentSearchRespVO> records = selectSearchMajorPage(page, reqVO);
-        page.setRecords(records);
-        return new PageResult<>(page.getRecords(), page.getTotal());
+        Long total = selectSearchMajorCount(reqVO);
+        return new PageResult<>(records != null ? records : List.of(), total != null ? total : 0L);
     }
 
     List<AppAdjustmentSearchRespVO> selectSearchMajorPage(IPage<AppAdjustmentSearchRespVO> page,
                                                           @Param("reqVO") AppAdjustmentSearchReqVO reqVO);
 
+    Long selectSearchMajorCount(@Param("reqVO") AppAdjustmentSearchReqVO reqVO);
+
     default PageResult<AppAdjustmentSearchSchoolRespVO> selectSearchSchoolPage(AppAdjustmentSearchReqVO reqVO) {
         Page<AppAdjustmentSearchSchoolRespVO> page = MyBatisUtils.buildPage(reqVO);
+        // Do NOT use MP auto count (it wraps full GROUP BY/ORDER BY SQL into subquery), use custom count SQL instead.
+        page.setSearchCount(false);
         List<AppAdjustmentSearchSchoolRespVO> records = selectSearchSchoolPage(page, reqVO);
-        page.setRecords(records);
-        return new PageResult<>(page.getRecords(), page.getTotal());
+        Long total = selectSearchSchoolCount(reqVO);
+        return new PageResult<>(records != null ? records : List.of(), total != null ? total : 0L);
     }
 
     List<AppAdjustmentSearchSchoolRespVO> selectSearchSchoolPage(IPage<AppAdjustmentSearchSchoolRespVO> page,
                                                                  @Param("reqVO") AppAdjustmentSearchReqVO reqVO);
+
+    Long selectSearchSchoolCount(@Param("reqVO") AppAdjustmentSearchReqVO reqVO);
 
     default PageResult<AppAdjustmentSearchRespVO> selectHotRankingPage(AppAdjustmentHotRankingReqVO reqVO) {
         Page<AppAdjustmentSearchRespVO> page = MyBatisUtils.buildPage(reqVO);
