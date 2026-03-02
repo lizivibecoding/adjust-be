@@ -144,10 +144,10 @@ public interface VipOrderMapper extends BaseMapperX<VipOrderDO> {
         }
 
         wrapper.select(
-                "COUNT(DISTINCT CASE WHEN plan_code = 'VIP' AND status IN (2,4) THEN user_id END) AS vipCount",
-                "COUNT(DISTINCT CASE WHEN plan_code = 'SVIP' AND status IN (2,4) THEN user_id END) AS svipCount",
-                "COUNT(DISTINCT CASE WHEN status IN (2,4) THEN user_id END) AS memberCount",
-                "SUM(CASE WHEN status IN (2,4) THEN amount ELSE 0 END) AS incomeAmount",
+                "COUNT(DISTINCT CASE WHEN plan_code = 'VIP' AND status = 2 THEN user_id END) AS vipCount",
+                "COUNT(DISTINCT CASE WHEN plan_code = 'SVIP' AND status = 2 THEN user_id END) AS svipCount",
+                "COUNT(DISTINCT CASE WHEN status = 2 THEN user_id END) AS memberCount",
+                "SUM(CASE WHEN status = 2 THEN amount ELSE 0 END) AS incomeAmount",
                 "SUM(CASE WHEN status = 4 THEN IFNULL(refund_amount, 0) ELSE 0 END) AS refundAmount"
         );
 
