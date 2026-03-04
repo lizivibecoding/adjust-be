@@ -27,6 +27,10 @@
 <!--            <version>1.1.2</version>-->
 <!--        </dependency>-->
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.hongguoyan</groupId>
             <artifactId>adjust-module-biz</artifactId>
             <version>${revision}</version>
