@@ -34,7 +34,7 @@ public class AppUserAdjustmentCreateReqVO {
     private String title;
 
     @Schema(description = "调剂具体要求", requiredMode = Schema.RequiredMode.REQUIRED, example = "国家线达标")
-    @NotEmpty(message = "调剂具体要求不能为空")
+//    @NotEmpty(message = "调剂具体要求不能为空")
     private String remark;
 }
 

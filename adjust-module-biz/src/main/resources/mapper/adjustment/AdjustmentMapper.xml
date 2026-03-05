@@ -178,7 +178,7 @@
         LEFT JOIN biz_school s ON s.id = a.school_id
         <include refid="SearchWhere" />
         GROUP BY a.year, a.school_id, a.college_id, a.major_id, a.study_mode
-        ORDER BY a.year DESC, hotScore DESC, updateTime DESC
+        ORDER BY a.year DESC, updateTime DESC
     </select>
 
     <select id="selectSearchMajorCount" resultType="java.lang.Long">
