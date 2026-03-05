@@ -32,19 +32,15 @@ public class AppUserAdjustmentApplyCreateReqVO {
     private Long firstMajorId;
 
     @Schema(description = "第一门成绩", requiredMode = Schema.RequiredMode.REQUIRED, example = "70")
-    @NotNull(message = "第一门成绩不能为空")
     private BigDecimal subjectScore1;
 
     @Schema(description = "第二门成绩", requiredMode = Schema.RequiredMode.REQUIRED, example = "68")
-    @NotNull(message = "第二门成绩不能为空")
     private BigDecimal subjectScore2;
 
     @Schema(description = "第三门成绩", requiredMode = Schema.RequiredMode.REQUIRED, example = "120")
-    @NotNull(message = "第三门成绩不能为空")
     private BigDecimal subjectScore3;
 
     @Schema(description = "第四门成绩", requiredMode = Schema.RequiredMode.REQUIRED, example = "116")
-    @NotNull(message = "第四门成绩不能为空")
     private BigDecimal subjectScore4;
 
     @Schema(description = "总分(可不传；不传则后端计算)", example = "374")
